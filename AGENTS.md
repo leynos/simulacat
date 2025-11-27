@@ -151,6 +151,118 @@ When implementing changes, adhere to the following testing procedures:
 - Use GitHub-flavoured Markdown footnotes (`[^1]`) for references and
   footnotes.
 
+## TypeScript Guidance
+
+- **ESM‑only**: Source and build outputs are ES Modules. No CommonJS.
+- **Bun as runner**: Use Bun for scripts and dev server invocations. Prefer
+  `bun <script>` for package scripts and `bunx` for one‑off CLIs.
+
+### Compiler Configuration (Make It Sharp)
+
+Use a strict `tsconfig.json` suitable for browser builds:
+
+- `strict: true`
+- `noUncheckedIndexedAccess: true`
+- `exactOptionalPropertyTypes: true`
+- `noImplicitOverride: true`
+- `useUnknownInCatchVariables: true`
+- `noPropertyAccessFromIndexSignature: true`
+- `verbatimModuleSyntax: true` (and use `import type` / `export type`)
+- `moduleResolution: "bundler"` (lets Vite resolve modern packages)
+- `lib`: include only what you need (e.g., `dom`, `dom.iterable`, `es2022`)
+- Do not emit from `tsc` in app packages (`noEmit: true`); Vite handles
+  emission.
+
+**Order**: Place JSDoc comments above declarations and above any decorators.
+Keep docs close to code.
+
+### Code Style & Structure
+
+- **Immutability first**: Prefer `const`, `readonly`, and `Readonly<T>`; avoid
+  mutating props or inputs.
+- **Functions**: Extract meaningfully named helpers when a function grows long.
+  Keep trivial functions on one line when readability allows:
+
+  ```ts
+  export const mkId = (n: number): Id => new Id(n);
+  ```
+
+- **Parameters**: Group related parameters into typed objects or builders;
+  avoid long positional lists.
+- **Predicates**: When `if/else` grows beyond two branches, extract a predicate
+  function or use a lookup table. Ensure exhaustive `switch` with a `never`
+  guard helper.
+- **Docs**: Every module begins with a `/** @file … */` block describing
+  purpose, responsibilities, and usage.
+- **Public APIs (for libs)**: Export explicit entry points via `package.json`
+  `exports`/`types`. Avoid wildcard re‑exports that mask breaking changes.
+
+### Runtime Validation & Types
+
+- **Runtime schemas**: Validate I/O boundaries (network responses, localStorage
+  payloads, URL params) with `zod`/`valibot`. Generate TS types from schemas or
+  derive schemas from types, but add a CI check to keep them in sync.
+- **Nominal branding**: Use branded types for IDs/tokens to avoid accidental
+    mixing:
+
+    ```ts
+    type UserId = string & { readonly brand: "UserId" };
+    ```
+
+- **Cancellation**: Accept `AbortSignal` for any async that can hang (fetches,
+  long UI work). Wire signals through TanStack Query via `signal` in fetchers.
+- **Time & RNG**: Centralize `now()` and `rng()` adapters; never call
+  `Date.now()` or `Math.random()` directly in business logic.
+
+### Error Handling (Frontend)
+
+- **Semantic errors**: Use discriminated unions for recoverable conditions
+  callers might branch on (e.g.,
+  `{ type: "rate_limited"; retryAfterMs: number }`).
+- **Exceptions**: Reserve `Error` subclasses for exceptional paths
+  (framework/edge). Always attach a `cause` where available.
+- **App boundary**: Map domain errors to user‑facing messages in UI components
+  only. Never leak raw stack traces to the DOM or logs shipped to analytics.
+
+### Testing (Unit, Behavioural, and UI)
+
+- **Runner**: Use `bun test`
+- **Fixtures**: Use factories/builders for component props and server
+  responses. Avoid ad hoc object literals in tests.
+- **Parameterised tests**: Drive variations with helper builders or tight loops
+  rather than copy‑pasting cases.
+- **Mocking**: Prefer dependency injection; if you must stub modules, lean on
+  the `mock` helpers provided by `bun:test`.
+- **Fake timers**: Encapsulate clocks behind adapters; fall back to
+  `mock.timers` from `bun:test` only when necessary.
+- **Snapshots**: Keep deterministic by sorting keys and fixing seeds. Limit
+  snapshot scope to stable UI fragments.
+- **E2E (optional)**: Playwright for flows critical to revenue or safety; keep
+  the set minimal and fast.
+
+### Dependency Management
+
+- **Version policy**: Use caret requirements (`^x.y.z`) for all direct
+  dependencies. Avoid `*`, `>=` or tag aliases like `latest`. Use tilde
+  (`~x.y.z`) only with a documented justification.
+- **Lockfile**: Commit `bun.lock`. Recreate on major tool upgrades; keep
+  `bun.lockb` ignored.
+- **Audit**: Run `bun x pnpm@latest audit` (aliased as `make audit`) locally
+  and in automation. Track exceptions with explicit expiry dates.
+- **Culling**: Prefer small, actively maintained packages. Remove unmaintained
+  or risky dependencies swiftly.
+
+### Linting & Formatting
+
+- **Biome**: One tool for format + lint. Configure with strict rules: disallow
+  `any`, no non‑null `!`, forbid `@ts-ignore` in favour of `@ts-expect-error`
+  (with a reason).
+  - In this repo: use `make fmt` and  `make lint`
+- **Type‑checking**: Run `make typecheck` to surface TypeScript issues
+  early.
+- **Import hygiene**: Enforce sorted, grouped imports; no unused or extraneous
+  dependencies.
+
 ## Additional tooling
 
 The following tooling is available in this environment:

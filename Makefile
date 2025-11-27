@@ -1,7 +1,10 @@
 MDLINT ?= markdownlint-cli2
 NIXIE ?= nixie
 MDFORMAT_ALL ?= mdformat-all
-TOOLS = $(MDFORMAT_ALL) ruff ty $(MDLINT) uv
+BIOME ?= biome
+TSC ?= tsc
+BUN ?= bun
+TOOLS = $(MDFORMAT_ALL) ruff ty $(MDLINT) uv $(BIOME) $(TSC) $(BUN)
 VENV_TOOLS = pytest
 UV_ENV = UV_CACHE_DIR=.uv-cache UV_TOOL_DIR=.uv-tools
 
@@ -53,21 +56,25 @@ $(VENV_TOOLS): ## Verify required CLI tools in venv
 	$(call ensure_tool_venv,$@)
 endif
 
-fmt: ruff $(MDFORMAT_ALL) ## Format sources
+fmt: $(BIOME) ruff $(MDFORMAT_ALL) ## Format sources
+	$(BIOME) check . --write
 	ruff format
 	ruff check --select I --fix
 	$(MDFORMAT_ALL)
 
-check-fmt: ruff ## Verify formatting
+check-fmt: $(BIOME) ruff ## Verify formatting
+	$(BIOME) check .
 	ruff format --check
 	# mdformat-all doesn't currently do checking
 
-lint: ruff ## Run linters
+lint: $(BIOME) ruff ## Run linters
 	ruff check
+	$(BIOME) lint .
 
-typecheck: build ty ## Run typechecking
+typecheck: build ty $(TSC) ## Run typechecking
 	ty --version
 	ty check
+	$(TSC) --noEmit
 
 markdownlint: $(MDLINT) ## Lint Markdown files
 	$(MDLINT) '**/*.md'
@@ -78,6 +85,7 @@ nixie: ## Validate Mermaid diagrams
 
 test: build uv $(VENV_TOOLS) ## Run tests
 	$(UV_ENV) uv run pytest -v -n auto
+	$(BUN) test
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | \
