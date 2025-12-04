@@ -1,3 +1,5 @@
+"""Pure Python implementations for simulacat."""
+
 from __future__ import annotations
 
 

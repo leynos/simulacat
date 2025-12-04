@@ -16,26 +16,26 @@ No specific dates are associated with roadmap items. Items indicate intended ord
 
 Establish a reliable foundation for running tests against a local GitHub API simulator with minimal user configuration.
 
-### Step 1.1 – Simulator orchestration
+### Step 1.1 – Simulator orchestration ✅
 
 Provide a stable process boundary between Python tests and the Simulacrum GitHub API simulator.
 
 **Tasks**
 
-- [ ] Implement a Node.js entry point that:
+- [x] Implement a Bun/TypeScript entry point (`src/github-sim-server.ts`) that:
 
   - reads a JSON configuration file,
   - initialises the GitHub simulator with that configuration,
   - listens on an operating system assigned port,
   - prints a single JSON “listening” event containing the port.
 
-- [ ] Add robust process management in Python:
+- [x] Add robust process management in Python (`simulacat/orchestration.py`):
 
-  - start the Node.js process with captured stdout and stderr,
+  - start the Bun process with captured stdout and stderr,
   - parse the “listening” event and extract the port,
   - fail fast with a detailed error if the simulator does not start.
 
-- [ ] Verify that the simulator shuts down cleanly:
+- [x] Verify that the simulator shuts down cleanly:
 
   - `terminate` on fixture teardown,
   - `kill` only when the process does not exit within a short timeout.
