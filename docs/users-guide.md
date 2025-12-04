@@ -59,7 +59,7 @@ stop_sim_process(proc)
 
 ### Empty Configuration
 
-If you pass an empty dictionary, simulacat provides a minimal valid
+When an empty dictionary is passed, simulacat provides a minimal valid
 configuration:
 
 ```python
@@ -83,7 +83,7 @@ except GitHubSimProcessError as e:
 ### Custom Bun Executable
 
 By default, the orchestration uses the `bun` command from PATH or the `BUN`
-environment variable. You can specify a custom path:
+environment variable. Specify a custom path via the `bun_executable` parameter:
 
 ```python
 proc, port = start_sim_process(

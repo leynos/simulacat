@@ -25,7 +25,7 @@ Provide a stable process boundary between Python tests and the Simulacrum GitHub
 - [x] Implement a Bun/TypeScript entry point (`src/github-sim-server.ts`) that:
 
   - reads a JSON configuration file,
-  - initialises the GitHub simulator with that configuration,
+  - initializes the GitHub simulator with that configuration,
   - listens on an operating system assigned port,
   - prints a single JSON “listening” event containing the port.
 

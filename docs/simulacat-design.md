@@ -24,7 +24,7 @@ The solution consists of the following pieces:
   - waits for the listening event and extracts the port,
 - pytest fixtures (planned for Step 1.2):
   - `github_sim_config` for declaring the simulator configuration as a Python
-    mapping that can be serialised to JSON,
+    mapping that can be serialized to JSON,
   - `github_simulator` for starting the process, constructing a `github3.py`
     client bound to the simulator, and tearing everything down.
 
@@ -173,6 +173,6 @@ The design has several limitations and assumptions.
   suites this may be more expensive than desired. Future work may introduce
   simulator reset hooks for reuse.
 
-These limitations do not affect the core pattern of serialising configuration
+These limitations do not affect the core pattern of serializing configuration
 in Python, passing it into a Simulacrum-based simulator, and talking to that
 simulator through a client bound to a random local port.

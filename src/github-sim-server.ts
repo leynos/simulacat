@@ -70,9 +70,13 @@ async function main(): Promise<void> {
   });
 
   const listening = await sim.listen(0);
-  const port = listening.port ?? 0;
 
-  emit({ event: "listening", port });
+  if (listening.port === undefined || listening.port === null) {
+    emit({ event: "error", message: "Server failed to bind to a port" });
+    process.exit(1);
+  }
+
+  emit({ event: "listening", port: listening.port });
 
   const shutdown = async (): Promise<void> => {
     await listening.ensureClose();

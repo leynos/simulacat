@@ -1,4 +1,28 @@
-"""Unit tests for simulator orchestration."""
+"""Unit tests for simulator orchestration.
+
+This module verifies the orchestration functionality for starting and stopping
+the GitHub API simulator process. Tests cover:
+
+- Entry point discovery (sim_entrypoint)
+- Process startup with various configurations (start_sim_process)
+- Graceful process termination (stop_sim_process)
+- Error handling for invalid executables and configurations
+
+Fixtures
+--------
+- tmp_path: pytest built-in for temporary directories
+
+Running tests
+-------------
+Execute these tests with::
+
+    pytest simulacat/unittests/test_orchestration.py -v
+
+Or run via make::
+
+    make test
+
+"""
 
 from __future__ import annotations
 

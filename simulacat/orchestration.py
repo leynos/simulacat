@@ -9,6 +9,9 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+
+# S404: subprocess is required for spawning the Bun simulator process.
+# All arguments are constructed from validated paths, not user input.
 import subprocess  # noqa: S404
 import time
 import typing as typ
@@ -74,6 +77,7 @@ def _spawn_process(
 ) -> subprocess.Popen[str]:
     """Spawn the simulator process."""
     try:
+        # S603: Arguments are validated paths and executable name, no shell used.
         return subprocess.Popen(  # noqa: S603
             [bun_executable, str(entrypoint), str(config_path)],
             stdout=subprocess.PIPE,
@@ -135,9 +139,7 @@ def _wait_for_port(
             msg = f"Simulator error: {error_msg}"
             raise GitHubSimProcessError(msg)
 
-    _cleanup_failed_process(proc, output_lines)
-    msg = "Unreachable"
-    raise AssertionError(msg)
+    return _cleanup_failed_process(proc, output_lines)
 
 
 def _cleanup_failed_process(

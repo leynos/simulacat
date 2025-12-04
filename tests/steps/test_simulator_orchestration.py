@@ -1,4 +1,30 @@
-"""Step definitions for simulator orchestration behavioral tests."""
+"""Step definitions for simulator orchestration behavioural tests.
+
+This module provides pytest-bdd step bindings for testing the simulator
+orchestration functionality. The steps exercise starting, stopping, and
+configuring the GitHub API simulator process.
+
+Feature files
+-------------
+The step definitions bind to scenarios in:
+- tests/features/simulator_orchestration.feature
+
+Fixtures
+--------
+- simulator_context: Provides shared state for simulator scenarios with
+  automatic cleanup.
+
+Running tests
+-------------
+Execute the behavioural tests with::
+
+    pytest tests/steps/test_simulator_orchestration.py -v
+
+Or run all tests including these::
+
+    make test
+
+"""
 
 from __future__ import annotations
 

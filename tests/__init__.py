@@ -1,1 +1,1 @@
-"""Integration and behavioral tests for simulacat."""
+"""Integration and behavioural tests for simulacat."""

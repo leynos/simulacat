@@ -27,11 +27,30 @@ async function readServerOutput(proc: Subprocess): Promise<ServerEvent> {
   if (!stdout || typeof stdout === "number") {
     throw new Error("stdout is not a readable stream");
   }
+
   const reader = stdout.getReader();
-  const { value } = await reader.read();
-  reader.releaseLock();
-  const text = new TextDecoder().decode(value);
-  return JSON.parse(text.trim()) as ServerEvent;
+  const decoder = new TextDecoder();
+  let accumulated = "";
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+
+      if (done) {
+        throw new Error("Stream ended before receiving a complete JSON line");
+      }
+
+      accumulated += decoder.decode(value, { stream: true });
+
+      const newlineIndex = accumulated.indexOf("\n");
+      if (newlineIndex !== -1) {
+        const line = accumulated.slice(0, newlineIndex).trim();
+        return JSON.parse(line) as ServerEvent;
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 describe("github-sim-server", () => {

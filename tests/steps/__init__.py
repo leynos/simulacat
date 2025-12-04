@@ -1,1 +1,1 @@
-"""Step definitions for pytest-bdd behavioral tests."""
+"""Step definitions for pytest-bdd behavioural tests."""
