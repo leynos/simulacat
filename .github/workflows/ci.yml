@@ -34,6 +34,9 @@ jobs:
           bun install -g @biomejs/biome
           ln -s $(which tsgo) ${HOME}/.bun/bin/tsc
 
+      - name: Install Node dependencies
+        run: bun install
+
       - name: Validate Makefile
         run: mbake validate Makefile
 
