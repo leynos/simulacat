@@ -66,6 +66,11 @@ The following decisions were made during implementation:
    `FileNotFoundError` from subprocess into `GitHubSimProcessError` for
    consistent error handling.
 
+6. **Wheel includes Bun sources**: The Python distribution bundles
+   `src/github-sim-server.ts` along with `package.json` and `bun.lock` so
+   `sim_entrypoint()` can resolve the simulator when installed from PyPI
+   without requiring the repository checkout.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:
