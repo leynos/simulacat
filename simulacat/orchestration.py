@@ -13,7 +13,7 @@ import select
 
 # S404: subprocess is required for spawning the Bun simulator process.
 # All arguments are constructed from validated paths, not user input.
-import subprocess  # noqa: S404
+import subprocess  # noqa: S404  # Required to spawn Bun simulator with validated args, no shell (simulacat#123)
 import time
 import typing as typ
 from pathlib import Path
@@ -151,7 +151,10 @@ def _read_stdout_line(
     return proc.stdout.readline() if proc.stdout else None
 
 
-def _line_status(proc: subprocess.Popen[str], line: str | None) -> str:
+def _line_status(
+    proc: subprocess.Popen[str],
+    line: str | None,
+) -> typ.Literal["break", "continue", "ok"]:
     """Classify stdout read outcomes to simplify control flow."""
     if line is None:
         return "break" if proc.poll() is not None else "continue"
@@ -184,13 +187,11 @@ def _process_stdout_line(
         except (KeyError, TypeError, ValueError):
             msg = f"Invalid listening event from simulator: {evt!r}"
             _cleanup_failed_process(proc, output_lines, message=msg)
-            return None
 
     if evt.get("event") == "error":
         error_msg = evt.get("message", "Unknown error")
         msg = f"Simulator error: {error_msg}"
         _cleanup_failed_process(proc, output_lines, message=msg)
-        return None
 
     return None
 

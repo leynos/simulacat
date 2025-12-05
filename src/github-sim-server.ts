@@ -61,6 +61,7 @@ async function main(): Promise<void> {
       ? (config as { initialState: unknown }).initialState
       : config;
 
+  // Narrow the input to the exact `initialState` type expected by simulation options.
   const sim = simulation({
     initialState: initialState as Parameters<typeof simulation>[0] extends {
       initialState?: infer T;

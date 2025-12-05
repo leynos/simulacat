@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import http.client
 import os
-import subprocess  # noqa: S404
+import subprocess  # noqa: S404  # TODO(simulacat#123): tests spawn controlled local helpers only; no shell usage
 import sys
 import typing as typ
 import zipfile
@@ -139,7 +139,7 @@ class TestPackaging:
         dist_dir = tmp_path / "dist"
         dist_dir.mkdir(parents=True, exist_ok=True)
 
-        build = subprocess.run(  # noqa: S603
+        build = subprocess.run(  # noqa: S603  # TODO(simulacat#123): subprocess.run builds wheel in test only, no shell
             [
                 sys.executable,
                 "-m",
@@ -181,7 +181,7 @@ class TestStartSimProcess:
         proc = _PipeProcess(['{"event": "error", "message": "boom"}\n'])
 
         with pytest.raises(GitHubSimProcessError):
-            _wait_for_port(typ.cast(subprocess.Popen[str], proc), startup_timeout=0.2)
+            _wait_for_port(typ.cast("subprocess.Popen[str]", proc), startup_timeout=0.2)
 
         assert proc.terminated or proc.killed
 
@@ -191,7 +191,7 @@ class TestStartSimProcess:
         proc = _PipeProcess(['{"event": "listening", "port": "abc"}\n'])
 
         with pytest.raises(GitHubSimProcessError):
-            _wait_for_port(typ.cast(subprocess.Popen[str], proc), startup_timeout=0.2)
+            _wait_for_port(typ.cast("subprocess.Popen[str]", proc), startup_timeout=0.2)
 
         assert proc.terminated or proc.killed
 
@@ -201,7 +201,9 @@ class TestStartSimProcess:
         proc = _PipeProcess([], returncode=None)
 
         with pytest.raises(GitHubSimProcessError):
-            _wait_for_port(typ.cast(subprocess.Popen[str], proc), startup_timeout=0.05)
+            _wait_for_port(
+                typ.cast("subprocess.Popen[str]", proc), startup_timeout=0.05
+            )
 
         assert proc.terminated or proc.killed
 
@@ -283,6 +285,7 @@ class TestStopSimProcess:
     """Tests for stopping the simulator process."""
 
     @staticmethod
+    @bun_required
     def test_terminates_running_process(tmp_path: Path) -> None:
         """A running process is terminated cleanly."""
         proc, _port = start_sim_process({}, tmp_path)
@@ -292,6 +295,7 @@ class TestStopSimProcess:
         assert proc.poll() is not None
 
     @staticmethod
+    @bun_required
     def test_handles_already_exited_process(tmp_path: Path) -> None:
         """Stopping an already-exited process does not raise."""
         proc, _port = start_sim_process({}, tmp_path)

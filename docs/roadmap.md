@@ -60,7 +60,7 @@ boundaries.
 - [ ] Provide a `github_simulator` fixture that:
 
   - writes `github_sim_config` to a temporary JSON file,
-  - starts the Node.js simulator and waits for the listening event,
+  - starts the Bun simulator and waits for the listening event,
   - constructs a `github3.GitHub` client pointing at the simulator base URL,
   - yields the client and guarantees simulator teardown.
 
@@ -85,7 +85,7 @@ code.
 
 - [ ] Design a Python-side configuration schema for common GitHub concepts:
 
-  - users and organisations,
+  - users and organizations,
   - repositories, branches, and default branch metadata,
   - pull requests and issues where supported.
 
@@ -143,7 +143,7 @@ simulator supports them.
       the simulator exposes these:
 
   - app installation metadata,
-  - per-installation access to repositories and organisations.
+  - per-installation access to repositories and organizations.
 
 - [ ] Document the limitations of each authentication mode compared with real
       GitHub.
