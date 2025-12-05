@@ -14,6 +14,7 @@ dev = [
     "ruff",
     "pytest-timeout",
     "pytest-xdist",
+    "hatchling",
 ]
 
 [tool.ruff]
@@ -120,8 +121,14 @@ timeout = 30
 [tool.uv]
 package = true
 
+[tool.hatch.build]
+include = [
+    "src/github-sim-server.ts",
+    "package.json",
+    "bun.lock",
+]
+
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
