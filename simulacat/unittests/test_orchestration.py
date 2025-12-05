@@ -26,19 +26,64 @@ Or run via make::
 
 from __future__ import annotations
 
+import http.client
+import os
+import subprocess  # noqa: S404
+import sys
 import typing as typ
+import zipfile
+from pathlib import Path
 
 import pytest
 
 from simulacat.orchestration import (
     GitHubSimProcessError,
+    _empty_initial_state,
+    _wait_for_port,
+    _write_config,
     sim_entrypoint,
     start_sim_process,
     stop_sim_process,
 )
+from tests import conftest as test_conftest
 
-if typ.TYPE_CHECKING:
-    from pathlib import Path
+bun_required = test_conftest.bun_required
+
+
+class _PipeProcess:
+    """Minimal Popen-like object backed by an OS pipe for testing."""
+
+    def __init__(self, lines: list[str], returncode: int | None = None) -> None:
+        read_fd, write_fd = os.pipe()
+        with os.fdopen(write_fd, "w", encoding="utf-8") as writer:
+            for line in lines:
+                writer.write(line)
+            writer.flush()
+        self.stdout = os.fdopen(read_fd, "r", encoding="utf-8")
+        self.returncode = returncode
+        self.terminated = False
+        self.killed = False
+
+    def poll(self) -> int | None:
+        return self.returncode
+
+    def terminate(self) -> None:
+        self.terminated = True
+        if self.returncode is None:
+            self.returncode = 0
+
+    def kill(self) -> None:
+        self.killed = True
+        if self.returncode is None:
+            self.returncode = -9
+
+    def wait(self, timeout: float | None = None) -> int | None:
+        self.wait_timeout = timeout
+        return self.returncode
+
+    def communicate(self, timeout: float | None = None) -> tuple[str, str]:
+        self.communicate_timeout = timeout
+        return "", ""
 
 
 class TestSimEntrypoint:
@@ -60,10 +105,147 @@ class TestSimEntrypoint:
         assert entrypoint.is_file()
 
 
+class TestHelperFunctions:
+    """Tests for orchestration helper utilities."""
+
+    @staticmethod
+    def test_empty_initial_state_has_required_arrays() -> None:
+        """_empty_initial_state returns all required keys with empty lists."""
+        state = _empty_initial_state()
+
+        assert state == {
+            "users": [],
+            "organizations": [],
+            "repositories": [],
+            "branches": [],
+            "blobs": [],
+        }
+
+    @staticmethod
+    def test_write_config_wraps_serialization_errors(tmp_path: Path) -> None:
+        """Non-serialisable config values raise GitHubSimProcessError."""
+        config = {"path": tmp_path / "example"}
+
+        with pytest.raises(GitHubSimProcessError):
+            _write_config(config, tmp_path)
+
+
+class TestPackaging:
+    """Packaging-time guarantees for the simulator entrypoint."""
+
+    @staticmethod
+    def test_wheel_includes_simulator_entrypoint(tmp_path: Path) -> None:
+        """Built wheels ship the Bun entrypoint required at runtime."""
+        dist_dir = tmp_path / "dist"
+        dist_dir.mkdir(parents=True, exist_ok=True)
+
+        build = subprocess.run(  # noqa: S603
+            [
+                sys.executable,
+                "-m",
+                "hatchling",
+                "build",
+                "--target",
+                "wheel",
+                "-d",
+                str(dist_dir),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).resolve().parents[2],
+        )
+
+        assert build.returncode == 0, build.stdout + build.stderr
+
+        wheels = list(dist_dir.glob("simulacat-*.whl"))
+        assert wheels, (
+            f"Wheel not produced; build output: {build.stdout + build.stderr}"
+        )
+
+        with zipfile.ZipFile(wheels[0]) as archive:
+            contents = set(archive.namelist())
+            assert "src/github-sim-server.ts" in contents, (
+                "Wheel missing simulator entrypoint"
+            )
+            assert "package.json" in contents, "Wheel missing Bun package manifest"
+            assert "bun.lock" in contents, "Wheel missing Bun lockfile"
+
+
 class TestStartSimProcess:
     """Tests for starting the simulator process."""
 
     @staticmethod
+    def test_wait_for_port_handles_error_event() -> None:
+        """An error event triggers cleanup and raises GitHubSimProcessError."""
+        proc = _PipeProcess(['{"event": "error", "message": "boom"}\n'])
+
+        with pytest.raises(GitHubSimProcessError):
+            _wait_for_port(typ.cast(subprocess.Popen[str], proc), startup_timeout=0.2)
+
+        assert proc.terminated or proc.killed
+
+    @staticmethod
+    def test_wait_for_port_handles_invalid_listening_event() -> None:
+        """Malformed listening events raise and stop the process."""
+        proc = _PipeProcess(['{"event": "listening", "port": "abc"}\n'])
+
+        with pytest.raises(GitHubSimProcessError):
+            _wait_for_port(typ.cast(subprocess.Popen[str], proc), startup_timeout=0.2)
+
+        assert proc.terminated or proc.killed
+
+    @staticmethod
+    def test_wait_for_port_timeout_triggers_cleanup() -> None:
+        """Lack of events until deadline results in cleanup and error."""
+        proc = _PipeProcess([], returncode=None)
+
+        with pytest.raises(GitHubSimProcessError):
+            _wait_for_port(typ.cast(subprocess.Popen[str], proc), startup_timeout=0.05)
+
+        assert proc.terminated or proc.killed
+
+    @staticmethod
+    @pytest.mark.timeout(1.5)
+    def test_times_out_when_simulator_is_silent(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A silent simulator that never writes stdout triggers the timeout."""
+
+        def silent_proc(*_args: object) -> subprocess.Popen[str]:
+            return subprocess.Popen(  # noqa: S603
+                [sys.executable, "-c", "import time; time.sleep(60)", "--"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+            )
+
+        monkeypatch.setattr(
+            "simulacat.orchestration._spawn_process",
+            silent_proc,
+        )
+
+        with pytest.raises(GitHubSimProcessError):
+            start_sim_process({}, tmp_path, startup_timeout=0.2)
+
+    @staticmethod
+    @pytest.mark.timeout(5)
+    @bun_required
+    def test_start_process_serves_http(tmp_path: Path) -> None:
+        """Start the real simulator and perform an HTTP request."""
+        proc, port = start_sim_process({}, tmp_path)
+        try:
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+            conn.request("GET", "/")
+            response = conn.getresponse()
+            # Any HTTP status demonstrates the server accepted the request.
+            assert response.status >= 100
+        finally:
+            stop_sim_process(proc)
+
+    @staticmethod
+    @bun_required
     def test_starts_with_empty_config(tmp_path: Path) -> None:
         """An empty config successfully starts the simulator."""
         proc, port = start_sim_process({}, tmp_path)
@@ -74,6 +256,7 @@ class TestStartSimProcess:
             stop_sim_process(proc)
 
     @staticmethod
+    @bun_required
     def test_starts_with_minimal_explicit_config(tmp_path: Path) -> None:
         """A minimal explicit config starts the simulator."""
         config = {

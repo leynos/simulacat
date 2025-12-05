@@ -7,7 +7,8 @@ GitHub API simulator powered by `@simulacrum/github-api-simulator`.
 
 - Python 3.10 or later
 - [Bun](https://bun.sh/) runtime installed and available in PATH
-- Node.js dependencies installed (`bun install` in the project root)
+- Node.js dependencies installed (`bun install` in the installed package
+  directory)
 
 ## Installation
 
@@ -23,10 +24,19 @@ Or with uv:
 uv add --group dev simulacat
 ```
 
+## Bundled simulator assets
+
+The published wheel ships the Bun entrypoint (`src/github-sim-server.ts`),
+`package.json`, and `bun.lock`. The orchestration module resolves the
+entrypoint from the installed package, so `start_sim_process` works after a
+plain `pip install simulacat` without cloning the repository. Bun uses the
+packaged manifest to install `@simulacrum/github-api-simulator` when the
+simulator is started.
+
 ## Simulator Orchestration
 
-The `simulacat.orchestration` module provides low-level control over the
-GitHub API simulator process.
+The `simulacat.orchestration` module provides low-level control over the GitHub
+API simulator process.
 
 ### Starting the Simulator
 
@@ -95,16 +105,16 @@ proc, port = start_sim_process(
 
 ## Configuration Schema
 
-The simulator requires a specific initial state structure. All top-level
-arrays are required:
+The simulator requires a specific initial state structure. All top-level arrays
+are required:
 
-| Field           | Type    | Description                        |
-| --------------- | ------- | ---------------------------------- |
-| `users`         | array   | GitHub user objects                |
-| `organizations` | array   | GitHub organization objects        |
-| `repositories`  | array   | GitHub repository objects          |
-| `branches`      | array   | Git branch objects                 |
-| `blobs`         | array   | Git blob objects                   |
+| Field           | Type  | Description                 |
+| --------------- | ----- | --------------------------- |
+| `users`         | array | GitHub user objects         |
+| `organizations` | array | GitHub organization objects |
+| `repositories`  | array | GitHub repository objects   |
+| `branches`      | array | Git branch objects          |
+| `blobs`         | array | Git blob objects            |
 
 ### User Schema
 
@@ -114,7 +124,7 @@ arrays are required:
     "organizations": ["org1"],     # Required, list of org logins
     "id": 1,                       # Optional, auto-generated
     "name": "Display Name",        # Optional
-    "bio": "About me",             # Optional
+    "bio": "Profile bio",         # Optional
     "email": "user@example.com",   # Optional
 }
 ```
@@ -133,6 +143,6 @@ arrays are required:
 
 ## Environment Variables
 
-| Variable | Description                      | Default |
-| -------- | -------------------------------- | ------- |
-| `BUN`    | Path to the Bun executable       | `bun`   |
+| Variable | Description                | Default |
+| -------- | -------------------------- | ------- |
+| `BUN`    | Path to the Bun executable | `bun`   |

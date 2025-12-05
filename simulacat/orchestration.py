@@ -9,6 +9,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import select
 
 # S404: subprocess is required for spawning the Bun simulator process.
 # All arguments are constructed from validated paths, not user input.
@@ -66,7 +67,13 @@ def _write_config(
         effective_config = _empty_initial_state()
 
     config_path = tmpdir / "github-sim-config.json"
-    config_path.write_text(json.dumps(effective_config), encoding="utf-8")
+    try:
+        serialized_config = json.dumps(effective_config)
+    except (TypeError, ValueError) as exc:
+        msg = "Failed to serialize simulator configuration to JSON"
+        raise GitHubSimProcessError(msg) from exc
+
+    config_path.write_text(serialized_config, encoding="utf-8")
     return config_path
 
 
@@ -92,12 +99,10 @@ def _spawn_process(
 
 def _parse_event(line: str) -> dict[str, typ.Any] | None:
     """Parse a JSON event line, returning None if parsing fails."""
-    try:
+    with contextlib.suppress(json.JSONDecodeError):
         evt = json.loads(line)
         if isinstance(evt, dict):
             return evt
-    except json.JSONDecodeError:
-        pass
     return None
 
 
@@ -114,55 +119,122 @@ def _wait_for_port(
     deadline = time.time() + startup_timeout
 
     while time.time() < deadline:
-        line = proc.stdout.readline()
-        if line == "":
-            if proc.poll() is not None:
-                break
-            time.sleep(0.05)
+        line = _read_stdout_line(proc, deadline)
+        status = _line_status(proc, line)
+
+        if status == "continue":
+            continue
+        if status == "break":
+            break
+
+        if line is None:
             continue
 
-        output_lines.append(line)
-        evt = _parse_event(line)
-
-        if evt is None:
-            continue
-
-        if evt.get("event") == "listening":
-            try:
-                return int(evt["port"])
-            except (KeyError, TypeError, ValueError) as exc:
-                msg = f"Invalid listening event from simulator: {evt!r}"
-                raise GitHubSimProcessError(msg) from exc
-
-        if evt.get("event") == "error":
-            error_msg = evt.get("message", "Unknown error")
-            msg = f"Simulator error: {error_msg}"
-            raise GitHubSimProcessError(msg)
+        port = _process_stdout_line(proc, line, output_lines)
+        if port is not None:
+            return port
 
     return _cleanup_failed_process(proc, output_lines)
+
+
+def _read_stdout_line(
+    proc: subprocess.Popen[str],
+    deadline: float,
+) -> str | None:
+    """Read a line from stdout without blocking past the deadline."""
+    remaining = max(0.0, deadline - time.time())
+    ready, _, _ = select.select([proc.stdout], [], [], remaining)
+
+    if not ready:
+        return None
+
+    return proc.stdout.readline() if proc.stdout else None
+
+
+def _line_status(proc: subprocess.Popen[str], line: str | None) -> str:
+    """Classify stdout read outcomes to simplify control flow."""
+    if line is None:
+        return "break" if proc.poll() is not None else "continue"
+
+    if line == "":
+        if proc.poll() is not None:
+            return "break"
+
+        time.sleep(0.05)
+        return "continue"
+
+    return "ok"
+
+
+def _process_stdout_line(
+    proc: subprocess.Popen[str],
+    line: str,
+    output_lines: list[str],
+) -> int | None:
+    """Handle a line of simulator output, returning port if available."""
+    output_lines.append(line)
+    evt = _parse_event(line)
+
+    if evt is None:
+        return None
+
+    if evt.get("event") == "listening":
+        try:
+            return int(evt["port"])
+        except (KeyError, TypeError, ValueError):
+            msg = f"Invalid listening event from simulator: {evt!r}"
+            _cleanup_failed_process(proc, output_lines, message=msg)
+            return None
+
+    if evt.get("event") == "error":
+        error_msg = evt.get("message", "Unknown error")
+        msg = f"Simulator error: {error_msg}"
+        _cleanup_failed_process(proc, output_lines, message=msg)
+        return None
+
+    return None
 
 
 def _cleanup_failed_process(
     proc: subprocess.Popen[str],
     output_lines: list[str],
+    *,
+    message: str | None = None,
 ) -> typ.NoReturn:
     """Clean up a failed process and raise an error."""
-    try:
-        remaining, _ = proc.communicate(timeout=1)
-        if remaining:
-            output_lines.append(remaining)
-    except subprocess.TimeoutExpired:
-        pass
+    _drain_process_output(proc, output_lines)
+    _stop_process(proc)
 
-    with contextlib.suppress(OSError):
-        proc.terminate()
-
-    msg = (
+    msg = message or (
         "Simulator did not report a listening port.\n"
         f"Exit code: {proc.poll()}\n"
         f"Output:\n{''.join(output_lines)}"
     )
     raise GitHubSimProcessError(msg)
+
+
+def _drain_process_output(
+    proc: subprocess.Popen[str],
+    output_lines: list[str],
+) -> None:
+    with contextlib.suppress(subprocess.TimeoutExpired):
+        remaining, _ = proc.communicate(timeout=1)
+        if remaining:
+            output_lines.append(remaining)
+
+
+def _stop_process(proc: subprocess.Popen[str], *, timeout: float = 1.0) -> None:
+    with contextlib.suppress(OSError):
+        proc.terminate()
+
+    with contextlib.suppress(subprocess.TimeoutExpired, OSError):
+        proc.wait(timeout=timeout)
+
+    if proc.poll() is None:
+        with contextlib.suppress(OSError):
+            proc.kill()
+        with contextlib.suppress(subprocess.TimeoutExpired, OSError):
+            proc.wait(timeout=timeout)
 
 
 def start_sim_process(

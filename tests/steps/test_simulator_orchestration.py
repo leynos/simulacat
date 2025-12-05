@@ -34,6 +34,9 @@ import pytest
 from pytest_bdd import given, parsers, scenarios, then, when
 
 from simulacat.orchestration import start_sim_process, stop_sim_process
+from tests import conftest as test_conftest
+
+pytestmark = test_conftest.bun_required
 
 if typ.TYPE_CHECKING:
     import subprocess  # noqa: S404

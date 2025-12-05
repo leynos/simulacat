@@ -23,7 +23,7 @@ interface ErrorEvent {
 type ServerEvent = ListeningEvent | ErrorEvent;
 
 async function readServerOutput(proc: Subprocess): Promise<ServerEvent> {
-  const stdout = proc.stdout;
+  const { stdout } = proc;
   if (!stdout || typeof stdout === "number") {
     throw new Error("stdout is not a readable stream");
   }
@@ -137,5 +137,40 @@ describe("github-sim-server", () => {
 
     await proc.exited;
     expect(proc.exitCode).toBe(1);
+  });
+
+  test("serves HTTP when launched via CLI and exits on kill", async () => {
+    tempDir = mkdtempSync(join(tmpdir(), "sim-test-"));
+    const configPath = join(tempDir, "config.json");
+    writeFileSync(
+      configPath,
+      JSON.stringify(
+        {
+          users: [],
+          organizations: [],
+          repositories: [],
+          branches: [],
+          blobs: [],
+        },
+        null,
+        2,
+      ),
+    );
+
+    proc = spawn(["bun", SERVER_PATH, configPath], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    const event = await readServerOutput(proc);
+    expect(event.event).toBe("listening");
+    const port = (event as ListeningEvent).port;
+
+    const response = await fetch(`http://127.0.0.1:${port}/`);
+    expect(response.status).toBeGreaterThanOrEqual(100);
+
+    proc.kill();
+    await proc.exited;
+    expect(proc.exitCode).not.toBeNull();
   });
 });
