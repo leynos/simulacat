@@ -9,13 +9,15 @@ from __future__ import annotations
 import contextlib
 import json
 import os
-import select
+import queue
 
-# S404: subprocess is required for spawning the Bun simulator process.
-# All arguments are constructed from validated paths, not user input.
-import subprocess  # noqa: S404  # Required to spawn Bun simulator with validated args, no shell (simulacat#123)
+# S404: subprocess is required for spawning the Bun simulator process with
+# validated arguments and without a shell.
+import subprocess  # noqa: S404
+import threading
 import time
 import typing as typ
+from importlib import resources
 from pathlib import Path
 
 if typ.TYPE_CHECKING:
@@ -35,8 +37,20 @@ def sim_entrypoint() -> Path:
         Absolute path to the github-sim-server.ts file.
 
     """
-    package_root = Path(__file__).resolve().parent.parent
-    return package_root / "src" / "github-sim-server.ts"
+    package_root = resources.files("simulacat")
+    packaged_entrypoint = Path(
+        str(package_root.joinpath("src").joinpath("github-sim-server.ts"))
+    )
+    repo_entrypoint = (
+        Path(__file__).resolve().parent.parent / "src" / "github-sim-server.ts"
+    )
+    candidates = [packaged_entrypoint, repo_entrypoint]
+
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+
+    return candidates[0]
 
 
 def _empty_initial_state() -> dict[str, list[typ.Any]]:
@@ -85,7 +99,7 @@ def _spawn_process(
     """Spawn the simulator process."""
     try:
         # S603: Arguments are validated paths and executable name, no shell used.
-        return subprocess.Popen(  # noqa: S603
+        return subprocess.Popen(  # noqa: S603  # validated executable + paths, shell=False
             [bun_executable, str(entrypoint), str(config_path)],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -117,38 +131,65 @@ def _wait_for_port(
 
     output_lines: list[str] = []
     deadline = time.time() + startup_timeout
+    line_queue, reader = _start_stdout_reader(proc)
 
-    while time.time() < deadline:
-        line = _read_stdout_line(proc, deadline)
-        status = _line_status(proc, line)
+    try:
+        while time.time() < deadline:
+            line = _read_stdout_line(deadline, line_queue)
+            status = _line_status(proc, line)
 
-        if status == "continue":
-            continue
-        if status == "break":
-            break
+            if status == "continue":
+                continue
+            if status == "break":
+                break
 
-        if line is None:
-            continue
+            if line is None:
+                continue
 
-        port = _process_stdout_line(proc, line, output_lines)
-        if port is not None:
-            return port
+            port = _process_stdout_line(proc, line, output_lines)
+            if port is not None:
+                return port
+    finally:
+        reader.join(timeout=0.1)
 
     return _cleanup_failed_process(proc, output_lines)
 
 
-def _read_stdout_line(
+def _start_stdout_reader(
     proc: subprocess.Popen[str],
+) -> tuple[queue.Queue[str | None], threading.Thread]:
+    """Start a background reader thread that feeds stdout lines into a queue."""
+    stdout = proc.stdout
+    if stdout is None:
+        msg = "Failed to capture simulator stdout"
+        raise GitHubSimProcessError(msg)
+
+    line_queue: queue.Queue[str | None] = queue.Queue()
+
+    def _reader() -> None:
+        for line in iter(stdout.readline, ""):
+            line_queue.put(line)
+        line_queue.put(None)
+
+    thread = threading.Thread(
+        target=_reader,
+        name="simulator-stdout-reader",
+        daemon=True,
+    )
+    thread.start()
+    return line_queue, thread
+
+
+def _read_stdout_line(
     deadline: float,
+    line_queue: queue.Queue[str | None],
 ) -> str | None:
     """Read a line from stdout without blocking past the deadline."""
     remaining = max(0.0, deadline - time.time())
-    ready, _, _ = select.select([proc.stdout], [], [], remaining)
-
-    if not ready:
+    try:
+        return line_queue.get(timeout=remaining)
+    except queue.Empty:
         return None
-
-    return proc.stdout.readline() if proc.stdout else None
 
 
 def _line_status(
@@ -317,3 +358,5 @@ def stop_sim_process(
     except subprocess.TimeoutExpired:
         with contextlib.suppress(OSError):
             proc.kill()
+        with contextlib.suppress(subprocess.TimeoutExpired, OSError):
+            proc.wait(timeout=timeout)

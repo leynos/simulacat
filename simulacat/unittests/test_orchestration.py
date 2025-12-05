@@ -28,7 +28,9 @@ from __future__ import annotations
 
 import http.client
 import os
-import subprocess  # noqa: S404  # TODO(simulacat#123): tests spawn controlled local helpers only; no shell usage
+
+# S404: tests spawn controlled local helpers only; no shell usage.
+import subprocess  # noqa: S404
 import sys
 import typing as typ
 import zipfile
@@ -134,12 +136,15 @@ class TestPackaging:
     """Packaging-time guarantees for the simulator entrypoint."""
 
     @staticmethod
+    @pytest.mark.slow
+    @pytest.mark.packaging
     def test_wheel_includes_simulator_entrypoint(tmp_path: Path) -> None:
         """Built wheels ship the Bun entrypoint required at runtime."""
         dist_dir = tmp_path / "dist"
         dist_dir.mkdir(parents=True, exist_ok=True)
 
-        build = subprocess.run(  # noqa: S603  # TODO(simulacat#123): subprocess.run builds wheel in test only, no shell
+        # S603: build wheel in test only with explicit args and shell disabled.
+        build = subprocess.run(  # noqa: S603
             [
                 sys.executable,
                 "-m",
@@ -165,11 +170,15 @@ class TestPackaging:
 
         with zipfile.ZipFile(wheels[0]) as archive:
             contents = set(archive.namelist())
-            assert "src/github-sim-server.ts" in contents, (
-                "Wheel missing simulator entrypoint"
+            assert "simulacat/src/github-sim-server.ts" in contents, (
+                "Wheel missing simulator entrypoint inside package"
             )
-            assert "package.json" in contents, "Wheel missing Bun package manifest"
-            assert "bun.lock" in contents, "Wheel missing Bun lockfile"
+            assert "simulacat/package.json" in contents, (
+                "Wheel missing Bun package manifest inside package"
+            )
+            assert "simulacat/bun.lock" in contents, (
+                "Wheel missing Bun lockfile inside package"
+            )
 
 
 class TestStartSimProcess:
@@ -230,6 +239,40 @@ class TestStartSimProcess:
 
         with pytest.raises(GitHubSimProcessError):
             start_sim_process({}, tmp_path, startup_timeout=0.2)
+
+    @staticmethod
+    def test_error_event_from_spawned_process_triggers_cleanup(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An error event from the spawned process raises with cleanup."""
+        fake_proc = _PipeProcess(['{"event": "error", "message": "sim failed"}\n'])
+
+        monkeypatch.setattr(
+            "simulacat.orchestration._spawn_process",
+            lambda *_, **__: typ.cast("subprocess.Popen[str]", fake_proc),
+        )
+
+        with pytest.raises(GitHubSimProcessError, match="sim failed"):
+            start_sim_process({}, tmp_path, bun_executable="bun")
+
+        assert fake_proc.terminated or fake_proc.killed
+
+    @staticmethod
+    def test_malformed_listening_event_triggers_cleanup(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A malformed listening event raises and stops the fake process."""
+        fake_proc = _PipeProcess(['{"event": "listening", "port": "abc"}\n'])
+
+        monkeypatch.setattr(
+            "simulacat.orchestration._spawn_process",
+            lambda *_, **__: typ.cast("subprocess.Popen[str]", fake_proc),
+        )
+
+        with pytest.raises(GitHubSimProcessError):
+            start_sim_process({}, tmp_path, bun_executable="bun")
+
+        assert fake_proc.terminated or fake_proc.killed
 
     @staticmethod
     @pytest.mark.timeout(5)

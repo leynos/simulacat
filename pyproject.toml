@@ -117,6 +117,11 @@ max-args = 4
 [tool.pytest.ini_options]
 # Tests automatically killed after seconds elapsed
 timeout = 30
+markers = [
+    "slow: long-running or packaging-related tests",
+    "packaging: builds distribution artifacts",
+]
+addopts = "-m 'not slow'"
 
 [tool.uv]
 package = true
@@ -127,6 +132,11 @@ include = [
     "package.json",
     "bun.lock",
 ]
+
+[tool.hatch.build.force-include]
+"src/github-sim-server.ts" = "simulacat/src/github-sim-server.ts"
+"package.json" = "simulacat/package.json"
+"bun.lock" = "simulacat/bun.lock"
 
 
 [build-system]
