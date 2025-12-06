@@ -13,7 +13,7 @@ import queue
 
 # S404: subprocess is required for spawning the Bun simulator process with
 # validated arguments and without a shell.
-import subprocess  # noqa: S404
+import subprocess  # noqa: S404  # simulacat#123: spawn Bun simulator with validated args; shell=False
 import threading
 import time
 import typing as typ
@@ -99,7 +99,7 @@ def _spawn_process(
     """Spawn the simulator process."""
     try:
         # S603: Arguments are validated paths and executable name, no shell used.
-        return subprocess.Popen(  # noqa: S603  # validated executable + paths, shell=False
+        return subprocess.Popen(  # noqa: S603  # simulacat#123: validated executable + paths; shell=False
             [bun_executable, str(entrypoint), str(config_path)],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

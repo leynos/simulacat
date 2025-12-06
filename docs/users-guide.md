@@ -146,3 +146,19 @@ are required:
 | Variable | Description                | Default |
 | -------- | -------------------------- | ------- |
 | `BUN`    | Path to the Bun executable | `bun`   |
+
+## Running tests
+
+Use the Makefile target for the full Python + Bun suite:
+
+```bash
+make test
+```
+
+Pytest is configured with `addopts = "-m 'not slow'"`, so tests marked
+`@pytest.mark.slow` (including `@pytest.mark.packaging`) are skipped by
+default. Run the full set, including packaging checks, with:
+
+```bash
+pytest -m slow
+```

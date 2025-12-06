@@ -30,7 +30,7 @@ import http.client
 import os
 
 # S404: tests spawn controlled local helpers only; no shell usage.
-import subprocess  # noqa: S404
+import subprocess  # noqa: S404  # simulacat#123: test helpers spawn controlled subprocesses; shell=False
 import sys
 import typing as typ
 import zipfile
@@ -144,7 +144,7 @@ class TestPackaging:
         dist_dir.mkdir(parents=True, exist_ok=True)
 
         # S603: build wheel in test only with explicit args and shell disabled.
-        build = subprocess.run(  # noqa: S603
+        build = subprocess.run(  # noqa: S603  # simulacat#123: wheel build uses explicit args; shell=False
             [
                 sys.executable,
                 "-m",
@@ -224,7 +224,7 @@ class TestStartSimProcess:
         """A silent simulator that never writes stdout triggers the timeout."""
 
         def silent_proc(*_args: object) -> subprocess.Popen[str]:
-            return subprocess.Popen(  # noqa: S603
+            return subprocess.Popen(  # noqa: S603  # simulacat#123: test helper spawns controlled Python process; shell=False
                 [sys.executable, "-c", "import time; time.sleep(60)", "--"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
