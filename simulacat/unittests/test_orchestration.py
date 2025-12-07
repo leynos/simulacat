@@ -65,6 +65,8 @@ class _PipeProcess:
         self.returncode = returncode
         self.terminated = False
         self.killed = False
+        self.wait_timeout: float | None = None
+        self.communicate_timeout: float | None = None
 
     def poll(self) -> int | None:
         return self.returncode

@@ -167,7 +167,7 @@ Demonstrate reliable use of `simulacat` in continuous integration environments.
 - [ ] Provide troubleshooting guidance with concrete failure signatures:
 
   - simulator startup failures,
-  - configuration serialisation errors,
+  - configuration serialization errors,
   - mismatches between `github3.py` calls and simulator coverage.
 
 ______________________________________________________________________

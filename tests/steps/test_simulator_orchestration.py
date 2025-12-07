@@ -123,20 +123,20 @@ def when_simulator_stopped(simulator_context: SimulatorContext) -> None:
 @then("a listening event is received")
 def then_listening_event_received(simulator_context: SimulatorContext) -> None:
     """Verify that the simulator reported a listening event."""
-    assert simulator_context["port"] is not None
+    assert simulator_context["port"] is not None, "Expected port after listening event"
 
 
 @then("the reported port is greater than zero")
 def then_port_greater_than_zero(simulator_context: SimulatorContext) -> None:
     """Verify that the reported port is a valid port number."""
     port = simulator_context["port"]
-    assert port is not None
-    assert port > 0
+    assert port is not None, "Port was not set"
+    assert port > 0, f"Expected port > 0, got {port}"
 
 
 @then("the simulator process has exited")
 def then_process_exited(simulator_context: SimulatorContext) -> None:
     """Verify that the simulator process has terminated."""
     proc = simulator_context["proc"]
-    assert proc is not None
-    assert proc.poll() is not None
+    assert proc is not None, "No simulator process in context"
+    assert proc.poll() is not None, "Simulator process has not exited"
