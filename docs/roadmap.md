@@ -55,7 +55,7 @@ boundaries.
 
 - [ ] Provide a `github_sim_config` fixture that:
 
-  - returns a JSON-serialisable mapping,
+  - returns a JSON-serializable mapping,
   - can be overridden at function, module, and package scopes.
 - [ ] Provide a `github_simulator` fixture that:
 
@@ -92,7 +92,7 @@ code.
 - [ ] Implement helper functions or data classes that:
 
   - construct valid configuration objects from Python structures,
-  - validate configuration before serialisation with clear error messages.
+  - validate configuration before serialization with clear error messages.
 
 - [ ] Document the configuration model with examples:
 
