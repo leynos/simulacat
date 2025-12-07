@@ -60,7 +60,7 @@ boundaries.
 - [ ] Provide a `github_simulator` fixture that:
 
   - writes `github_sim_config` to a temporary JSON file,
-  - starts the Bun simulator and waits for the listening event,
+  - starts the packaged Bun simulator and waits for the listening event,
   - constructs a `github3.GitHub` client pointing at the simulator base URL,
   - yields the client and guarantees simulator teardown.
 
