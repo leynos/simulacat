@@ -33,6 +33,99 @@ plain `pip install simulacat` without cloning the repository. Bun uses the
 packaged manifest to install `@simulacrum/github-api-simulator` when the
 simulator is started.
 
+## pytest Fixtures
+
+simulacat provides pytest fixtures for configuring the GitHub API simulator in
+your tests.
+
+### github_sim_config
+
+The `github_sim_config` fixture provides simulator configuration as a
+JSON-serializable mapping. Import it in your `conftest.py` or test module:
+
+```python
+from simulacat.fixtures import github_sim_config
+```
+
+The default configuration is an empty dictionary. The orchestration layer
+expands this to a minimal valid simulator state when the simulator starts.
+
+#### Overriding at Module Scope
+
+Override the fixture in your `conftest.py` to provide shared configuration for
+all tests in a module:
+
+```python
+# conftest.py
+import pytest
+from simulacat import GitHubSimConfig
+
+@pytest.fixture
+def github_sim_config() -> GitHubSimConfig:
+    return {
+        "users": [{"login": "testuser", "organizations": []}],
+        "organizations": [],
+        "repositories": [{"owner": "testuser", "name": "my-repo"}],
+        "branches": [],
+        "blobs": [],
+    }
+```
+
+#### Overriding at Function Scope
+
+Override in a specific test file or test function for fine-grained control:
+
+```python
+# test_feature.py
+import pytest
+from simulacat import GitHubSimConfig
+
+@pytest.fixture
+def github_sim_config() -> GitHubSimConfig:
+    return {
+        "users": [{"login": "feature-user", "organizations": ["my-org"]}],
+        "organizations": [{"login": "my-org"}],
+        "repositories": [],
+        "branches": [],
+        "blobs": [],
+    }
+
+def test_with_custom_config(github_sim_config: GitHubSimConfig) -> None:
+    assert github_sim_config["users"][0]["login"] == "feature-user"
+```
+
+### Helper Functions
+
+#### is_json_serializable
+
+Check whether a configuration value can be serialized to JSON:
+
+```python
+from simulacat import is_json_serializable
+
+config = {"users": [{"login": "test"}]}
+assert is_json_serializable(config)
+
+from pathlib import Path
+invalid = {"path": Path("/tmp")}
+assert not is_json_serializable(invalid)
+```
+
+#### merge_configs
+
+Merge multiple configuration mappings, with later values overriding earlier
+ones:
+
+```python
+from simulacat import merge_configs
+
+base = {"users": [{"login": "base"}], "organizations": []}
+override = {"users": [{"login": "override"}]}
+
+merged = merge_configs(base, override)
+# Result: {"users": [{"login": "override"}], "organizations": []}
+```
+
 ## Simulator Orchestration
 
 The `simulacat.orchestration` module provides low-level control over the GitHub
