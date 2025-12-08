@@ -10,18 +10,16 @@ dependencies = []
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-bdd",
     "ruff",
-    "pyright",
     "pytest-timeout",
+    "pytest-xdist",
+    "hatchling",
 ]
-
-[tool.pyright]
-pythonVersion = "3.13"
-typeCheckingMode = "strict"
-include = ["simulacat"]
 
 [tool.ruff]
 line-length = 88
+preview = true
 
 [tool.ruff.lint]
 select = [
@@ -59,6 +57,21 @@ select = [
     "ANN",
     "C90",
     "PLR",
+    "PLE4703",
+    "PLR0202",
+    "PLR0203",
+    "PLR0914",
+    "PLR0916",
+    "PLR1702",
+    "PLR6104",
+    "PLR6201",
+    "PLR6301",
+    "PLW0108",
+    "RUF036",
+    "RUF053",
+    "RUF055",
+    "RUF064",
+    "RUF066",
 ]
 extend-ignore = [
     "D203",  # Conflicts with D211; prefer enforcing no blank line before class docstring.
@@ -104,12 +117,28 @@ max-args = 4
 [tool.pytest.ini_options]
 # Tests automatically killed after seconds elapsed
 timeout = 30
+markers = [
+    "slow: long-running or packaging-related tests",
+    "packaging: builds distribution artifacts",
+]
+addopts = "-m 'not slow'"
 
 [tool.uv]
 package = true
 
+[tool.hatch.build]
+include = [
+    "src/github-sim-server.ts",
+    "package.json",
+    "bun.lock",
+]
+
+[tool.hatch.build.force-include]
+"src/github-sim-server.ts" = "simulacat/src/github-sim-server.ts"
+"package.json" = "simulacat/package.json"
+"bun.lock" = "simulacat/bun.lock"
+
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
+requires = ["hatchling"]
+build-backend = "hatchling.build"

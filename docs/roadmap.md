@@ -1,59 +1,66 @@
 # simulacat roadmap
 
-This document describes the development roadmap for `simulacat`, a library that provides configurable GitHub API simulation for Python test suites using Simulacrum and `github3.py`.
+This document describes the development roadmap for `simulacat`, a library that
+provides configurable GitHub API simulation for Python test suites using
+Simulacrum and `github3.py`.
 
 The roadmap is structured into:
 
-- [ ] **Phases** – strategic milestones that change the overall capability of the library.
+- [ ] **Phases** – strategic milestones that change the overall capability of
+      the library.
 - [ ] **Steps** – coherent workstreams within each phase.
-- [ ] **Tasks** – execution units with clear, verifiable outcomes.
+- [ ] #### Tasks – execution units with clear, verifiable outcomes.
 
-No specific dates are associated with roadmap items. Items indicate intended ordering and dependency, not calendar commitments.
+No specific dates are associated with roadmap items. Items indicate intended
+ordering and dependency, not calendar commitments.
 
----
+______________________________________________________________________
 
 ## Phase 1 – Core simulation and pytest integration
 
-Establish a reliable foundation for running tests against a local GitHub API simulator with minimal user configuration.
+Establish a reliable foundation for running tests against a local GitHub API
+simulator with minimal user configuration.
 
-### Step 1.1 – Simulator orchestration
+### Step 1.1 – Simulator orchestration ✅
 
-Provide a stable process boundary between Python tests and the Simulacrum GitHub API simulator.
+Provide a stable process boundary between Python tests and the Simulacrum
+GitHub API simulator.
 
-**Tasks**
+#### Tasks (Step 1.1)
 
-- [ ] Implement a Node.js entry point that:
+- [x] Implement a Bun/TypeScript entry point (`src/github-sim-server.ts`) that:
 
   - reads a JSON configuration file,
-  - initialises the GitHub simulator with that configuration,
+  - initializes the GitHub simulator with that configuration,
   - listens on an operating system assigned port,
   - prints a single JSON “listening” event containing the port.
 
-- [ ] Add robust process management in Python:
+- [x] Add robust process management in Python (`simulacat/orchestration.py`):
 
-  - start the Node.js process with captured stdout and stderr,
+  - start the Bun process with captured stdout and stderr,
   - parse the “listening” event and extract the port,
   - fail fast with a detailed error if the simulator does not start.
 
-- [ ] Verify that the simulator shuts down cleanly:
+- [x] Verify that the simulator shuts down cleanly:
 
   - `terminate` on fixture teardown,
   - `kill` only when the process does not exit within a short timeout.
 
 ### Step 1.2 – pytest fixture and client binding
 
-Expose the simulator through a `github3.py` client with clear fixture boundaries.
+Expose the simulator through a `github3.py` client with clear fixture
+boundaries.
 
-**Tasks**
+#### Tasks (Step 1.2)
 
 - [ ] Provide a `github_sim_config` fixture that:
 
-  - returns a JSON-serialisable mapping,
+  - returns a JSON-serializable mapping,
   - can be overridden at function, module, and package scopes.
 - [ ] Provide a `github_simulator` fixture that:
 
   - writes `github_sim_config` to a temporary JSON file,
-  - starts the Node.js simulator and waits for the listening event,
+  - starts the packaged Bun simulator and waits for the listening event,
   - constructs a `github3.GitHub` client pointing at the simulator base URL,
   - yields the client and guarantees simulator teardown.
 
@@ -62,28 +69,30 @@ Expose the simulator through a `github3.py` client with clear fixture boundaries
   - repository listing and lookup,
   - issue and pull request retrieval where supported by the simulator.
 
----
+______________________________________________________________________
 
 ## Phase 2 – Scenario modelling and ergonomics
 
-Make it straightforward to describe realistic GitHub states and reuse them across test suites.
+Make it straightforward to describe realistic GitHub states and reuse them
+across test suites.
 
 ### Step 2.1 – Configuration schema and helpers
 
-Define a stable configuration surface that hides simulator internals from test code.
+Define a stable configuration surface that hides simulator internals from test
+code.
 
-**Tasks**
+#### Tasks (Step 2.1)
 
 - [ ] Design a Python-side configuration schema for common GitHub concepts:
 
-  - users and organisations,
+  - users and organizations,
   - repositories, branches, and default branch metadata,
   - pull requests and issues where supported.
 
 - [ ] Implement helper functions or data classes that:
 
   - construct valid configuration objects from Python structures,
-  - validate configuration before serialisation with clear error messages.
+  - validate configuration before serialization with clear error messages.
 
 - [ ] Document the configuration model with examples:
 
@@ -94,7 +103,7 @@ Define a stable configuration surface that hides simulator internals from test c
 
 Enable reuse of common GitHub layouts across tests without duplication.
 
-**Tasks**
+#### Tasks (Step 2.2)
 
 - [ ] Introduce named “scenario” factories, for example:
 
@@ -109,9 +118,10 @@ Enable reuse of common GitHub layouts across tests without duplication.
 - [ ] Ensure scenarios are composable:
 
   - merging multiple scenario fragments into a single configuration,
-  - detecting and reporting conflicting definitions (for example, duplicate repository names under the same owner).
+  - detecting and reporting conflicting definitions (for example, duplicate
+    repository names under the same owner).
 
----
+______________________________________________________________________
 
 ## Phase 3 – Ecosystem integration and advanced use cases
 
@@ -119,27 +129,30 @@ Support more advanced workflows and integration into real project pipelines.
 
 ### Step 3.1 – Authentication and GitHub App workflows
 
-Model authentication flows beyond simple unauthenticated calls where the simulator supports them.
+Model authentication flows beyond simple unauthenticated calls where the
+simulator supports them.
 
-**Tasks**
+#### Tasks (Step 3.1)
 
 - [ ] Add optional token support in client construction:
 
   - configure `Authorization` headers based on the current scenario,
   - model per-token permissions and visibility where available.
 
-- [ ] Provide configuration helpers for GitHub Apps or OAuth applications if the simulator exposes these:
+- [ ] Provide configuration helpers for GitHub Apps or OAuth applications if
+      the simulator exposes these:
 
   - app installation metadata,
-  - per-installation access to repositories and organisations.
+  - per-installation access to repositories and organizations.
 
-- [ ] Document the limitations of each authentication mode compared with real GitHub.
+- [ ] Document the limitations of each authentication mode compared with real
+      GitHub.
 
 ### Step 3.2 – CI usage and reference examples
 
 Demonstrate reliable use of `simulacat` in continuous integration environments.
 
-**Tasks**
+#### Tasks (Step 3.2)
 
 - [ ] Supply minimal reference projects that:
 
@@ -154,10 +167,10 @@ Demonstrate reliable use of `simulacat` in continuous integration environments.
 - [ ] Provide troubleshooting guidance with concrete failure signatures:
 
   - simulator startup failures,
-  - configuration serialisation errors,
+  - configuration serialization errors,
   - mismatches between `github3.py` calls and simulator coverage.
 
----
+______________________________________________________________________
 
 ## Phase 4 – Hardening and compatibility
 
@@ -167,7 +180,7 @@ Increase confidence in `simulacat` as a long-term dependency.
 
 Ensure the library remains stable across supported dependency versions.
 
-**Tasks**
+#### Tasks (Step 4.1)
 
 - [ ] Define a minimum-to-recommended version range for:
 
@@ -187,14 +200,16 @@ Ensure the library remains stable across supported dependency versions.
 
 Provide a predictable public surface for downstream users.
 
-**Tasks**
+#### Tasks (Step 4.2)
 
-- [ ] Mark public modules, fixtures, and configuration helpers as part of the supported API.
+- [ ] Mark public modules, fixtures, and configuration helpers as part of the
+      supported API.
 - [ ] Document the deprecation process for any API changes:
 
   - introduce new APIs alongside old ones,
   - emit warnings with clear migration guidance,
   - remove deprecated APIs only after a documented transition period.
 
-- [ ] Maintain a short changelog that links roadmap items to released capabilities and describes behavioural changes at the level of phases and steps.
-
+- [ ] Maintain a short changelog that links roadmap items to released
+      capabilities and describes behavioural changes at the level of phases and
+      steps.
