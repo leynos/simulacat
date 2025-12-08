@@ -66,6 +66,7 @@ def simulator_context(tmp_path: Path) -> typ.Generator[SimulatorContext, None, N
     yield ctx
     if ctx["proc"] is not None:
         stop_sim_process(ctx["proc"])
+        ctx["proc"] = None
 
 
 @given("an empty simulator configuration")
@@ -78,6 +79,9 @@ def given_empty_config(simulator_context: SimulatorContext) -> None:
 def given_running_simulator(simulator_context: SimulatorContext) -> None:
     """Start a simulator with empty configuration."""
     simulator_context["config"] = {}
+    existing = simulator_context["proc"]
+    if existing is not None:
+        stop_sim_process(existing)
     proc, port = start_sim_process(
         simulator_context["config"],
         simulator_context["tmpdir"],
@@ -104,6 +108,9 @@ def given_config_with_users(
 @when("the simulator is started")
 def when_simulator_started(simulator_context: SimulatorContext) -> None:
     """Start the simulator with the current configuration."""
+    existing = simulator_context["proc"]
+    if existing is not None:
+        stop_sim_process(existing)
     proc, port = start_sim_process(
         simulator_context["config"],
         simulator_context["tmpdir"],

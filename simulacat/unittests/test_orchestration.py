@@ -87,6 +87,8 @@ class _PipeProcess:
 
     def communicate(self, timeout: float | None = None) -> tuple[str, str]:
         self.communicate_timeout = timeout
+        if not self.stdout.closed:
+            self.stdout.close()
         return "", ""
 
 
