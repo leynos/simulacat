@@ -259,10 +259,11 @@ def _drain_process_output(
     proc: subprocess.Popen[str],
     output_lines: list[str],
 ) -> None:
+    # Do not call communicate() since a reader thread may be active on stdout.
+    # Just wait briefly for the process to exit; _stop_process handles cleanup.
     with contextlib.suppress(subprocess.TimeoutExpired):
-        remaining, _ = proc.communicate(timeout=1)
-        if remaining:
-            output_lines.append(remaining)
+        proc.wait(timeout=1)
+    _ = output_lines  # retained for caller diagnostics
 
 
 def _stop_process(proc: subprocess.Popen[str], *, timeout: float = 1.0) -> None:
@@ -320,8 +321,14 @@ def start_sim_process(
         msg = f"Simulator entry point not found: {entrypoint}"
         raise GitHubSimProcessError(msg)
 
-    config_path = _write_config(config, tmpdir)
-    proc = _spawn_process(bun_executable, entrypoint, config_path)
+    try:
+        config_path = _write_config(config, tmpdir)
+        proc = _spawn_process(bun_executable, entrypoint, config_path)
+    except GitHubSimProcessError:
+        raise
+    except Exception as exc:
+        msg = "Failed to start simulator"
+        raise GitHubSimProcessError(msg) from exc
     port = _wait_for_port(proc, startup_timeout)
 
     return proc, port

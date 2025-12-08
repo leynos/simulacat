@@ -80,8 +80,14 @@ async function main(): Promise<void> {
   emit({ event: "listening", port: listening.port });
 
   const shutdown = async (): Promise<void> => {
-    await listening.ensureClose();
-    process.exit(0);
+    try {
+      await listening.ensureClose();
+      process.exit(0);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      emit({ event: "error", message: `Shutdown error: ${message}` });
+      process.exit(1);
+    }
   };
 
   process.on("SIGINT", () => void shutdown());

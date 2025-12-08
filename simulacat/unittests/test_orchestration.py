@@ -138,7 +138,7 @@ class TestHelperFunctions:
 
     @staticmethod
     def test_write_config_wraps_serialization_errors(tmp_path: Path) -> None:
-        """Non-serialisable config values raise GitHubSimProcessError."""
+        """Non-serializable config values raise GitHubSimProcessError."""
         config = {"path": tmp_path / "example"}
 
         with pytest.raises(GitHubSimProcessError):
@@ -305,12 +305,15 @@ class TestStartSimProcess:
         proc, port = start_sim_process({}, tmp_path)
         try:
             conn = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
-            conn.request("GET", "/")
-            response = conn.getresponse()
-            # Any HTTP status demonstrates the server accepted the request.
-            assert response.status >= 100, (
-                f"expected HTTP status >= 100, got {response.status}"
-            )
+            try:
+                conn.request("GET", "/")
+                response = conn.getresponse()
+                # Any HTTP status demonstrates the server accepted the request.
+                assert response.status >= 100, (
+                    f"expected HTTP status >= 100, got {response.status}"
+                )
+            finally:
+                conn.close()
         finally:
             stop_sim_process(proc)
 
