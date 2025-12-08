@@ -2,6 +2,18 @@
 
 This module manages the lifecycle of the Bun-based GitHub API simulator,
 handling process startup, port discovery, and cleanup.
+
+Example:
+-------
+Start and stop a simulator::
+
+    from pathlib import Path
+    from simulacat.orchestration import start_sim_process, stop_sim_process
+
+    proc, port = start_sim_process({}, Path("/tmp"))
+    # Use the simulator at http://127.0.0.1:{port}
+    stop_sim_process(proc)
+
 """
 
 from __future__ import annotations
@@ -204,7 +216,6 @@ def _line_status(
         if proc.poll() is not None:
             return "break"
 
-        time.sleep(0.05)
         return "continue"
 
     return "ok"
@@ -259,11 +270,20 @@ def _drain_process_output(
     proc: subprocess.Popen[str],
     output_lines: list[str],
 ) -> None:
+    """Drain remaining output and wait for the process.
+
+    Parameters
+    ----------
+    proc
+        The subprocess to drain.
+    output_lines
+        Mutable list already populated by caller; retained for diagnostic context.
+
+    """
     # Do not call communicate() since a reader thread may be active on stdout.
     # Just wait briefly for the process to exit; _stop_process handles cleanup.
     with contextlib.suppress(subprocess.TimeoutExpired):
         proc.wait(timeout=1)
-    _ = output_lines  # retained for caller diagnostics
 
 
 def _stop_process(proc: subprocess.Popen[str], *, timeout: float = 1.0) -> None:
