@@ -244,7 +244,7 @@ class TestStartSimProcess:
 
         def silent_proc(*_args: object) -> subprocess.Popen[str]:
             return subprocess.Popen(  # noqa: S603  # simulacat#123: test helper spawns controlled Python process; shell=False
-                [sys.executable, "-c", "import time; time.sleep(60)", "--"],
+                [sys.executable, "-c", "import time; time.sleep(60)"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
