@@ -100,15 +100,23 @@ class TestSimEntrypoint:
         """The entrypoint returns a path to github-sim-server.ts."""
         entrypoint = sim_entrypoint()
 
-        assert entrypoint.name == "github-sim-server.ts"
-        assert entrypoint.parent.name == "src"
+        assert entrypoint.name == "github-sim-server.ts", (
+            f"expected entrypoint.name to be 'github-sim-server.ts', "
+            f"got {entrypoint.name}"
+        )
+        assert entrypoint.parent.name == "src", (
+            f"expected entrypoint parent directory to be 'src', "
+            f"got {entrypoint.parent.name}"
+        )
 
     @staticmethod
     def test_entrypoint_exists() -> None:
         """The returned entrypoint file exists on disk."""
         entrypoint = sim_entrypoint()
 
-        assert entrypoint.is_file()
+        assert entrypoint.is_file(), (
+            f"expected entrypoint to exist as a file: {entrypoint}"
+        )
 
 
 class TestHelperFunctions:
@@ -119,13 +127,14 @@ class TestHelperFunctions:
         """_empty_initial_state returns all required keys with empty lists."""
         state = _empty_initial_state()
 
-        assert state == {
+        expected = {
             "users": [],
             "organizations": [],
             "repositories": [],
             "branches": [],
             "blobs": [],
         }
+        assert state == expected, f"expected initial state {expected}, got {state}"
 
     @staticmethod
     def test_write_config_wraps_serialization_errors(tmp_path: Path) -> None:
@@ -196,7 +205,9 @@ class TestStartSimProcess:
         with pytest.raises(GitHubSimProcessError):
             _wait_for_port(typ.cast("subprocess.Popen[str]", proc), startup_timeout=0.2)
 
-        assert proc.terminated or proc.killed
+        assert proc.terminated or proc.killed, (
+            "expected process to be terminated or killed after error event"
+        )
 
     @staticmethod
     def test_wait_for_port_handles_invalid_listening_event() -> None:
@@ -206,7 +217,9 @@ class TestStartSimProcess:
         with pytest.raises(GitHubSimProcessError):
             _wait_for_port(typ.cast("subprocess.Popen[str]", proc), startup_timeout=0.2)
 
-        assert proc.terminated or proc.killed
+        assert proc.terminated or proc.killed, (
+            "expected process to be terminated or killed after invalid listening event"
+        )
 
     @staticmethod
     def test_wait_for_port_timeout_triggers_cleanup() -> None:
@@ -218,7 +231,9 @@ class TestStartSimProcess:
                 typ.cast("subprocess.Popen[str]", proc), startup_timeout=0.05
             )
 
-        assert proc.terminated or proc.killed
+        assert proc.terminated or proc.killed, (
+            "expected process to be terminated or killed after timeout"
+        )
 
     @staticmethod
     @pytest.mark.timeout(1.5)
@@ -259,7 +274,9 @@ class TestStartSimProcess:
         with pytest.raises(GitHubSimProcessError, match="sim failed"):
             start_sim_process({}, tmp_path, bun_executable="bun")
 
-        assert fake_proc.terminated or fake_proc.killed
+        assert fake_proc.terminated or fake_proc.killed, (
+            "expected fake process to be terminated or killed after error event"
+        )
 
     @staticmethod
     def test_malformed_listening_event_triggers_cleanup(
@@ -276,7 +293,9 @@ class TestStartSimProcess:
         with pytest.raises(GitHubSimProcessError):
             start_sim_process({}, tmp_path, bun_executable="bun")
 
-        assert fake_proc.terminated or fake_proc.killed
+        assert fake_proc.terminated or fake_proc.killed, (
+            "expected fake process to be terminated or killed after malformed event"
+        )
 
     @staticmethod
     @pytest.mark.timeout(5)
@@ -289,7 +308,9 @@ class TestStartSimProcess:
             conn.request("GET", "/")
             response = conn.getresponse()
             # Any HTTP status demonstrates the server accepted the request.
-            assert response.status >= 100
+            assert response.status >= 100, (
+                f"expected HTTP status >= 100, got {response.status}"
+            )
         finally:
             stop_sim_process(proc)
 
@@ -299,8 +320,8 @@ class TestStartSimProcess:
         """An empty config successfully starts the simulator."""
         proc, port = start_sim_process({}, tmp_path)
         try:
-            assert port > 0
-            assert proc.poll() is None
+            assert port > 0, f"expected port > 0, got {port}"
+            assert proc.poll() is None, "expected process to still be running"
         finally:
             stop_sim_process(proc)
 
@@ -317,7 +338,7 @@ class TestStartSimProcess:
         }
         proc, port = start_sim_process(config, tmp_path)
         try:
-            assert port > 0
+            assert port > 0, f"expected port > 0, got {port}"
         finally:
             stop_sim_process(proc)
 
@@ -339,7 +360,7 @@ class TestStopSimProcess:
 
         stop_sim_process(proc)
 
-        assert proc.poll() is not None
+        assert proc.poll() is not None, "expected process to have exited after stop"
 
     @staticmethod
     @bun_required
@@ -360,5 +381,9 @@ class TestGitHubSimProcessError:
         """GitHubSimProcessError is a RuntimeError subclass."""
         error = GitHubSimProcessError("test message")
 
-        assert isinstance(error, RuntimeError)
-        assert str(error) == "test message"
+        assert isinstance(error, RuntimeError), (
+            f"expected GitHubSimProcessError to be a RuntimeError, got {type(error)}"
+        )
+        assert str(error) == "test message", (
+            f"expected error message 'test message', got '{error}'"
+        )
