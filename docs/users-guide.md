@@ -141,6 +141,63 @@ are required:
 }
 ```
 
+## Pytest Fixtures
+
+simulacat registers a pytest plugin that provides fixtures for configuring and
+running the GitHub API simulator. The lowest-level fixture is
+`github_sim_config`.
+
+### github_sim_config
+
+`github_sim_config` returns a JSON-serializable mapping describing the initial
+simulator state. By default it is an empty dictionary (`{}`); the orchestration
+layer expands an empty config into the minimal valid state when starting the
+simulator.
+
+Override the fixture at different scopes using standard pytest rules:
+
+- Function scope via indirect parametrization:
+
+```python
+import pytest
+
+
+@pytest.mark.parametrize(
+    "github_sim_config",
+    [{"users": [{"login": "alice", "organizations": []}]}],
+    indirect=True,
+)
+def test_uses_parametrized_config(github_sim_config):
+    assert github_sim_config["users"][0]["login"] == "alice"
+```
+
+- Module scope by defining a fixture in a test module:
+
+```python
+import pytest
+
+
+@pytest.fixture
+def github_sim_config():
+    return {"users": [{"login": "alice", "organizations": []}]}
+
+
+def test_uses_module_override(github_sim_config):
+    assert github_sim_config["users"][0]["login"] == "alice"
+```
+
+- Package scope by defining a fixture in `conftest.py`:
+
+```python
+# tests/conftest.py
+import pytest
+
+
+@pytest.fixture(scope="package")
+def github_sim_config():
+    return {"users": [{"login": "alice", "organizations": []}]}
+```
+
 ## Environment Variables
 
 | Variable | Description                | Default |

@@ -71,6 +71,31 @@ The following decisions were made during implementation:
    `sim_entrypoint()` can resolve the simulator when installed from PyPI
    without requiring the repository checkout.
 
+### Step 1.2 – pytest fixture and client binding
+
+The following decisions were made during implementation:
+
+1. **Expose fixtures via a pytest plugin**: Fixtures live in
+   `simulacat.pytest_plugin` and are registered under the `pytest11` entry
+   point. This makes them available to consumers without requiring
+   `pytest_plugins` boilerplate.
+
+2. **Function-scoped default fixture**: `github_sim_config` is function scoped
+   to keep tests isolated. Consumers may override the fixture with narrower or
+   broader scopes as required.
+
+3. **Empty default configuration**: The fixture returns `{}` by default. The
+   orchestration layer already expands empty configurations into the minimal
+   valid simulator state.
+
+4. **Indirect parametrization support**: The fixture accepts
+   `request.param` when parametrized with `indirect=True`, enabling concise
+   per-test configuration overrides.
+
+5. **TypedDict schema for type safety**: A `GitHubSimConfig` `TypedDict`
+   describes the top-level simulator keys while allowing partial
+   configurations.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:

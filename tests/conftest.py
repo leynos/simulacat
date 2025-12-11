@@ -6,7 +6,7 @@ import shutil
 
 import pytest
 
-pytest_plugins = ["pytest_bdd"]
+pytest_plugins = ["pytest_bdd", "simulacat.pytest_plugin"]
 
 
 def _is_bun_available() -> bool:

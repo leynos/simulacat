@@ -7,6 +7,9 @@ requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = []
 
+[project.entry-points.pytest11]
+simulacat = "simulacat.pytest_plugin"
+
 [dependency-groups]
 dev = [
     "pytest",
