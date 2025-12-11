@@ -11,14 +11,12 @@ import typing as typ
 
 import pytest
 
-from simulacat.types import GitHubSimConfig
-
 if typ.TYPE_CHECKING:
-    from pytest import FixtureRequest
+    from simulacat.types import GitHubSimConfig
 
 
 @pytest.fixture
-def github_sim_config(request: FixtureRequest) -> GitHubSimConfig:
+def github_sim_config(request: pytest.FixtureRequest) -> GitHubSimConfig:
     """Return configuration for the GitHub API simulator.
 
     The fixture defaults to an empty mapping. Tests can override it by defining
@@ -42,6 +40,7 @@ def github_sim_config(request: FixtureRequest) -> GitHubSimConfig:
     TypeError
         If the provided configuration is not a mapping or cannot be serialized
         to JSON.
+
     """
     raw_config: object = getattr(request, "param", {})
     if raw_config is None:
@@ -57,5 +56,4 @@ def github_sim_config(request: FixtureRequest) -> GitHubSimConfig:
         msg = "github_sim_config must be JSON serializable"
         raise TypeError(msg) from exc
 
-    return typ.cast(GitHubSimConfig, raw_config)
-
+    return typ.cast("GitHubSimConfig", raw_config)

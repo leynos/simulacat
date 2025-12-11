@@ -29,7 +29,8 @@ import typing as typ
 import pytest
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from simulacat.types import GitHubSimConfig
+if typ.TYPE_CHECKING:
+    from simulacat.types import GitHubSimConfig
 
 scenarios("../features/github_sim_config.feature")
 
@@ -96,4 +97,3 @@ def then_configuration_json_serializable(config_context: ConfigContext) -> None:
     config = config_context["config"]
     assert config is not None, "Expected configuration to be set"
     json.dumps(config)
-

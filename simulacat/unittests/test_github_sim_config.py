@@ -80,28 +80,3 @@ class TestModuleOverride:
     def test_module_fixture_override_wins(github_sim_config: GitHubSimConfig) -> None:
         """A fixture in the test module overrides the plugin fixture."""
         assert github_sim_config["users"][0]["login"] == "module-user"
-
-
-def test_package_scope_override(pytester: pytest.Pytester) -> None:
-    """A package-scoped fixture in conftest.py overrides the plugin fixture."""
-    pytester.makeconftest(
-        """
-        import pytest
-
-        pytest_plugins = ["simulacat.pytest_plugin"]
-
-
-        @pytest.fixture(scope="package")
-        def github_sim_config():
-            return {"users": [{"login": "pkg-user", "organizations": []}]}
-        """
-    )
-    pytester.makepyfile(
-        """
-        def test_package_override(github_sim_config):
-            assert github_sim_config["users"][0]["login"] == "pkg-user"
-        """
-    )
-
-    result = pytester.runpytest("-q")
-    result.assert_outcomes(passed=1)

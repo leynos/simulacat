@@ -357,7 +357,7 @@ def start_sim_process(
 def stop_sim_process(
     proc: subprocess.Popen[str],
     *,
-    timeout: float = 5.0,
+    timeout: float = 1.0,
 ) -> None:
     """Stop the simulator process gracefully.
 

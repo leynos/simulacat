@@ -22,4 +22,3 @@ class GitHubSimConfig(typ.TypedDict, total=False):
     repositories: list[dict[str, typ.Any]]
     branches: list[dict[str, typ.Any]]
     blobs: list[dict[str, typ.Any]]
-
