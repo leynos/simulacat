@@ -116,6 +116,11 @@ are required:
 | `branches`      | array | Git branch objects          |
 | `blobs`         | array | Git blob objects            |
 
+When starting the simulator with `start_sim_process`, simulacat fills any
+missing required top-level arrays with empty lists. This allows callers to
+provide partial configurations (for example, only `users`) without manually
+including the other keys.
+
 ### User Schema
 
 ```python
@@ -141,7 +146,7 @@ are required:
 }
 ```
 
-## Pytest Fixtures
+## Pytest fixtures
 
 simulacat registers a pytest plugin that provides fixtures for configuring and
 running the GitHub API simulator. The lowest-level fixture is
@@ -150,7 +155,7 @@ running the GitHub API simulator. The lowest-level fixture is
 ### github_sim_config
 
 `github_sim_config` returns a JSON-serializable mapping describing the initial
-simulator state. By default it is an empty dictionary (`{}`); the orchestration
+simulator state. By default, it is an empty dictionary (`{}`); the orchestration
 layer expands an empty config into the minimal valid state when starting the
 simulator.
 

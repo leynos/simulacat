@@ -76,7 +76,9 @@ def when_fixture_requested(
 @then("the configuration is an empty mapping")
 def then_configuration_empty(config_context: ConfigContext) -> None:
     """Assert that the configuration is empty."""
-    assert config_context["config"] == {}
+    config = config_context["config"]
+    assert config is not None, "Expected configuration to be set"
+    assert config == {}
 
 
 @then(parsers.parse("the configuration contains {count:d} users"))
@@ -88,6 +90,7 @@ def then_configuration_contains_users(
     config = config_context["config"]
     assert config is not None, "Expected configuration to be set"
     users = config.get("users", [])
+    assert isinstance(users, list), "Expected users to be a list"
     assert len(users) == count
 
 

@@ -6,6 +6,7 @@ GitHub API simulator.
 
 from __future__ import annotations
 
+import collections.abc as cabc
 import json
 import typing as typ
 
@@ -13,6 +14,15 @@ import pytest
 
 if typ.TYPE_CHECKING:
     from simulacat.types import GitHubSimConfig
+
+
+_REQUIRED_SIMULATOR_KEYS: tuple[str, ...] = (
+    "users",
+    "organizations",
+    "repositories",
+    "branches",
+    "blobs",
+)
 
 
 @pytest.fixture
@@ -46,14 +56,33 @@ def github_sim_config(request: pytest.FixtureRequest) -> GitHubSimConfig:
     if raw_config is None:
         raw_config = {}
 
-    if not isinstance(raw_config, dict):
+    if not isinstance(raw_config, cabc.Mapping):
         msg = "github_sim_config must be a mapping"
         raise TypeError(msg)
 
+    if not all(isinstance(key, str) for key in raw_config):
+        msg = "github_sim_config keys must be strings"
+        raise TypeError(msg)
+
+    config: dict[str, object] = dict(raw_config)
+
+    if config:
+        for key in _REQUIRED_SIMULATOR_KEYS:
+            if key not in config:
+                config[key] = []
+                continue
+
+            value = config[key]
+            if isinstance(value, list):
+                continue
+
+            msg = f"github_sim_config[{key!r}] must be a list"
+            raise TypeError(msg)
+
     try:
-        json.dumps(raw_config)
+        json.dumps(config)
     except (TypeError, ValueError) as exc:
         msg = "github_sim_config must be JSON serializable"
         raise TypeError(msg) from exc
 
-    return typ.cast("GitHubSimConfig", raw_config)
+    return typ.cast("GitHubSimConfig", config)

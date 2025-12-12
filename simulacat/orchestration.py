@@ -40,6 +40,9 @@ class GitHubSimProcessError(RuntimeError):
     """Exception raised when the simulator process fails to start or run."""
 
 
+DEFAULT_STOP_TIMEOUT_SECONDS = 1.0
+
+
 def sim_entrypoint() -> Path:
     """Return the path to the simulator entry point script.
 
@@ -88,9 +91,8 @@ def _write_config(
     tmpdir: Path,
 ) -> Path:
     """Write simulator configuration to a temporary file."""
-    effective_config: dict[str, typ.Any] = dict(config) if config else {}
-    if not effective_config:
-        effective_config = _empty_initial_state()
+    effective_config: dict[str, typ.Any] = _empty_initial_state()
+    effective_config.update(dict(config))
 
     config_path = tmpdir / "github-sim-config.json"
     try:
@@ -357,7 +359,7 @@ def start_sim_process(
 def stop_sim_process(
     proc: subprocess.Popen[str],
     *,
-    timeout: float = 1.0,
+    timeout: float = DEFAULT_STOP_TIMEOUT_SECONDS,
 ) -> None:
     """Stop the simulator process gracefully.
 

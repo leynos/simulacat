@@ -15,6 +15,9 @@ class GitHubSimConfig(typ.TypedDict, total=False):
 
     All keys are optional so that callers can supply partial configurations.
     The orchestration layer fills missing required arrays when needed.
+
+    Values are typed using `Any` to allow arbitrary JSON-serializable
+    structures; the pytest fixture validates JSON serializability at runtime.
     """
 
     users: list[dict[str, typ.Any]]

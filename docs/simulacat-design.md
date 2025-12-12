@@ -54,8 +54,9 @@ The following decisions were made during implementation:
    - `branches`
    - `blobs`
 
-   The Python orchestration provides a minimal valid default when an empty
-   config is passed.
+   The Python orchestration provides a minimal valid default when required
+   arrays are missing from the configuration (including when an empty config is
+   passed).
 
 4. **Error event protocol**: The server emits JSON events for both success
    (`{"event":"listening","port":N}`) and error cases
