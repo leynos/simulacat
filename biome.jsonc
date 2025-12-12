@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/stable/schema.json",
   "files": {
-    "include": ["biome.jsonc", "bunfig.toml", "package.json", "tsconfig.json", "src/**/*"],
+    "includes": ["biome.jsonc", "bunfig.toml", "package.json", "tsconfig.json", "src/**/*"],
     "ignoreUnknown": true
   },
   "vcs": {
@@ -40,7 +40,7 @@
   },
   "overrides": [
     {
-      "include": ["**/*.d.ts"],
+      "includes": ["**/*.d.ts"],
       "formatter": {
         "enabled": false
       },
