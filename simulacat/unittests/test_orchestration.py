@@ -316,7 +316,7 @@ class TestStartSimProcess:
             finally:
                 conn.close()
         finally:
-            stop_sim_process(proc)
+            stop_sim_process(proc, timeout=1.0)
 
     @staticmethod
     @bun_required
@@ -327,7 +327,7 @@ class TestStartSimProcess:
             assert port > 0, f"expected port > 0, got {port}"
             assert proc.poll() is None, "expected process to still be running"
         finally:
-            stop_sim_process(proc)
+            stop_sim_process(proc, timeout=1.0)
 
     @staticmethod
     @bun_required
@@ -344,7 +344,7 @@ class TestStartSimProcess:
         try:
             assert port > 0, f"expected port > 0, got {port}"
         finally:
-            stop_sim_process(proc)
+            stop_sim_process(proc, timeout=1.0)
 
     @staticmethod
     def test_raises_for_invalid_bun_executable(tmp_path: Path) -> None:
@@ -396,7 +396,7 @@ class TestStopSimProcess:
         """A running process is terminated cleanly."""
         proc, _port = start_sim_process({}, tmp_path)
 
-        stop_sim_process(proc)
+        stop_sim_process(proc, timeout=1.0)
 
         assert proc.poll() is not None, "expected process to have exited after stop"
 
@@ -408,33 +408,60 @@ class TestStopSimProcess:
         proc.terminate()
         proc.wait(timeout=5)
 
-        stop_sim_process(proc)
+        stop_sim_process(proc, timeout=1.0)
 
     @staticmethod
-    def test_default_timeout_kills_slow_process() -> None:
-        """The default timeout is used and triggers kill on slow shutdown."""
+    def test_default_timeout_is_five_seconds() -> None:
+        """The public default timeout remains conservative to avoid flakiness."""
+        assert DEFAULT_STOP_TIMEOUT_SECONDS == 5.0
+
+    @staticmethod
+    def test_default_timeout_allows_slow_exit() -> None:
+        """The public default should allow reasonably slow exits without kill."""
         proc = TestStopSimProcess._SlowToExitProcess(exit_after_seconds=2.0)
 
         stop_sim_process(typ.cast("subprocess.Popen[str]", proc))
 
         assert proc._terminated, "expected stop_sim_process to terminate the process"
-        assert proc._killed, "expected stop_sim_process to kill after timeout"
-        assert proc.wait_timeouts == [
-            DEFAULT_STOP_TIMEOUT_SECONDS,
-            DEFAULT_STOP_TIMEOUT_SECONDS,
-        ], "expected stop_sim_process to use the default timeout for waits"
+        assert not proc._killed, "did not expect stop_sim_process to kill the process"
+        assert proc.wait_timeouts == [DEFAULT_STOP_TIMEOUT_SECONDS], (
+            "expected stop_sim_process to wait using the public default timeout"
+        )
 
     @staticmethod
-    def test_custom_timeout_allows_slow_exit() -> None:
-        """A custom timeout allows a slow process to exit without kill."""
-        proc = TestStopSimProcess._SlowToExitProcess(exit_after_seconds=2.0)
+    def test_default_timeout_kills_very_slow_process() -> None:
+        """If the process does not exit within the default timeout, it is killed."""
+        proc = TestStopSimProcess._SlowToExitProcess(exit_after_seconds=6.0)
 
-        stop_sim_process(typ.cast("subprocess.Popen[str]", proc), timeout=5.0)
+        stop_sim_process(typ.cast("subprocess.Popen[str]", proc))
 
         assert proc._terminated, "expected stop_sim_process to terminate the process"
-        assert not proc._killed, "did not expect stop_sim_process to kill the process"
-        assert proc.wait_timeouts == [5.0], (
+        assert proc._killed, "expected stop_sim_process to kill after timeout"
+        assert proc.wait_timeouts[0] == DEFAULT_STOP_TIMEOUT_SECONDS, (
+            "expected first wait to use the public default timeout"
+        )
+        kill_wait_timeout = proc.wait_timeouts[1]
+        assert kill_wait_timeout is not None, "expected a bounded wait after kill"
+        assert kill_wait_timeout <= 1.0, (
+            "expected kill wait to be bounded to keep teardown responsive"
+        )
+
+    @staticmethod
+    def test_custom_timeout_kills_slow_exit() -> None:
+        """A smaller custom timeout can force kill for faster teardowns."""
+        proc = TestStopSimProcess._SlowToExitProcess(exit_after_seconds=2.0)
+
+        stop_sim_process(typ.cast("subprocess.Popen[str]", proc), timeout=1.0)
+
+        assert proc._terminated, "expected stop_sim_process to terminate the process"
+        assert proc._killed, "expected stop_sim_process to kill after custom timeout"
+        assert proc.wait_timeouts[0] == 1.0, (
             "expected stop_sim_process to use the provided timeout"
+        )
+        kill_wait_timeout = proc.wait_timeouts[1]
+        assert kill_wait_timeout is not None, "expected a bounded wait after kill"
+        assert kill_wait_timeout <= 1.0, (
+            "expected kill wait to be bounded to keep teardown responsive"
         )
 
 

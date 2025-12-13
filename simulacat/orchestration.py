@@ -40,7 +40,8 @@ class GitHubSimProcessError(RuntimeError):
     """Exception raised when the simulator process fails to start or run."""
 
 
-DEFAULT_STOP_TIMEOUT_SECONDS = 1.0
+DEFAULT_STOP_TIMEOUT_SECONDS = 5.0
+_KILL_WAIT_TIMEOUT_SECONDS = 1.0
 
 
 def sim_entrypoint() -> Path:
@@ -387,5 +388,6 @@ def stop_sim_process(
     except subprocess.TimeoutExpired:
         with contextlib.suppress(OSError):
             proc.kill()
+        kill_wait_timeout = min(timeout, _KILL_WAIT_TIMEOUT_SECONDS)
         with contextlib.suppress(subprocess.TimeoutExpired, OSError):
-            proc.wait(timeout=timeout)
+            proc.wait(timeout=kill_wait_timeout)
