@@ -39,6 +39,7 @@ from pathlib import Path
 import pytest
 
 from simulacat.orchestration import (
+    DEFAULT_STOP_TIMEOUT_SECONDS,
     GitHubSimProcessError,
     _empty_initial_state,
     _wait_for_port,
@@ -355,6 +356,40 @@ class TestStartSimProcess:
 class TestStopSimProcess:
     """Tests for stopping the simulator process."""
 
+    class _SlowToExitProcess:
+        """Popen-like stub that only exits if given enough wait timeout."""
+
+        def __init__(self, *, exit_after_seconds: float) -> None:
+            self._exit_after_seconds = exit_after_seconds
+            self._returncode: int | None = None
+            self._terminated = False
+            self._killed = False
+            self.wait_timeouts: list[float | None] = []
+
+            # subprocess.TimeoutExpired expects a "cmd" for the args parameter.
+            self.args = ["fake-process"]
+
+        def poll(self) -> int | None:
+            return self._returncode
+
+        def terminate(self) -> None:
+            self._terminated = True
+
+        def kill(self) -> None:
+            self._killed = True
+            self._returncode = -9
+
+        def wait(self, timeout: float | None = None) -> int | None:
+            self.wait_timeouts.append(timeout)
+            if self._returncode is not None:
+                return self._returncode
+
+            if timeout is None or timeout >= self._exit_after_seconds:
+                self._returncode = 0
+                return self._returncode
+
+            raise subprocess.TimeoutExpired(self.args, timeout)
+
     @staticmethod
     @bun_required
     def test_terminates_running_process(tmp_path: Path) -> None:
@@ -374,6 +409,33 @@ class TestStopSimProcess:
         proc.wait(timeout=5)
 
         stop_sim_process(proc)
+
+    @staticmethod
+    def test_default_timeout_kills_slow_process() -> None:
+        """The default timeout is used and triggers kill on slow shutdown."""
+        proc = TestStopSimProcess._SlowToExitProcess(exit_after_seconds=2.0)
+
+        stop_sim_process(typ.cast("subprocess.Popen[str]", proc))
+
+        assert proc._terminated, "expected stop_sim_process to terminate the process"
+        assert proc._killed, "expected stop_sim_process to kill after timeout"
+        assert proc.wait_timeouts == [
+            DEFAULT_STOP_TIMEOUT_SECONDS,
+            DEFAULT_STOP_TIMEOUT_SECONDS,
+        ], "expected stop_sim_process to use the default timeout for waits"
+
+    @staticmethod
+    def test_custom_timeout_allows_slow_exit() -> None:
+        """A custom timeout allows a slow process to exit without kill."""
+        proc = TestStopSimProcess._SlowToExitProcess(exit_after_seconds=2.0)
+
+        stop_sim_process(typ.cast("subprocess.Popen[str]", proc), timeout=5.0)
+
+        assert proc._terminated, "expected stop_sim_process to terminate the process"
+        assert not proc._killed, "did not expect stop_sim_process to kill the process"
+        assert proc.wait_timeouts == [5.0], (
+            "expected stop_sim_process to use the provided timeout"
+        )
 
 
 class TestGitHubSimProcessError:
