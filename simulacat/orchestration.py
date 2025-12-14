@@ -43,6 +43,10 @@ class GitHubSimProcessError(RuntimeError):
 DEFAULT_STOP_TIMEOUT_SECONDS = 5.0
 _KILL_WAIT_TIMEOUT_SECONDS = 1.0
 
+# The public default is conservative to reduce teardown flakiness on slower
+# runners. After escalating to `kill()`, the follow-up `wait()` is bounded to
+# keep teardown responsive rather than waiting a second full timeout window.
+
 
 def sim_entrypoint() -> Path:
     """Return the path to the simulator entry point script.
@@ -373,6 +377,7 @@ def stop_sim_process(
         The subprocess handle for the simulator.
     timeout
         Maximum seconds to wait for graceful termination before killing.
+        Defaults to `DEFAULT_STOP_TIMEOUT_SECONDS`.
 
     """
     if proc.poll() is not None:

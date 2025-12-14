@@ -67,6 +67,9 @@ print(f"Simulator listening on port {port}")
 stop_sim_process(proc)
 ```
 
+By default, `stop_sim_process` waits up to 5 seconds for the process to exit
+before sending `kill()`. You can adjust the timeout by passing `timeout=...`.
+
 ### Empty Configuration
 
 When an empty dictionary is passed, simulacat provides a minimal valid

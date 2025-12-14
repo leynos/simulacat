@@ -174,7 +174,8 @@ This design provides the following capabilities.
 
   The orchestration records the process handle, terminates the simulator on
   teardown, and escalates to `kill()` if the process does not exit within a
-  short timeout. If startup fails, the orchestration raises a
+  short timeout (5 seconds by default). If startup fails, the orchestration
+  raises a
   `GitHubSimProcessError` that includes captured output from the simulator
   process.
 
