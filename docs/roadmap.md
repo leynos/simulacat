@@ -53,7 +53,7 @@ boundaries.
 
 #### Tasks (Step 1.2)
 
-- [ ] Provide a `github_sim_config` fixture that:
+- [x] Provide a `github_sim_config` fixture that:
 
   - returns a JSON-serializable mapping,
   - can be overridden at function, module, and package scopes.

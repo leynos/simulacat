@@ -7,6 +7,9 @@ requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = []
 
+[project.entry-points.pytest11]
+simulacat = "simulacat.pytest_plugin"
+
 [dependency-groups]
 dev = [
     "pytest",
@@ -128,6 +131,7 @@ package = true
 
 [tool.hatch.build]
 include = [
+    "simulacat/**/*.py",
     "src/github-sim-server.ts",
     "package.json",
     "bun.lock",
@@ -137,6 +141,9 @@ include = [
 "src/github-sim-server.ts" = "simulacat/src/github-sim-server.ts"
 "package.json" = "simulacat/package.json"
 "bun.lock" = "simulacat/bun.lock"
+
+[tool.hatch.build.targets.wheel]
+packages = ["simulacat"]
 
 
 [build-system]

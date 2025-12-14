@@ -40,6 +40,14 @@ class GitHubSimProcessError(RuntimeError):
     """Exception raised when the simulator process fails to start or run."""
 
 
+DEFAULT_STOP_TIMEOUT_SECONDS = 5.0
+_KILL_WAIT_TIMEOUT_SECONDS = 1.0
+
+# The public default is conservative to reduce teardown flakiness on slower
+# runners. After escalating to `kill()`, the follow-up `wait()` is bounded to
+# keep teardown responsive rather than waiting a second full timeout window.
+
+
 def sim_entrypoint() -> Path:
     """Return the path to the simulator entry point script.
 
@@ -88,9 +96,8 @@ def _write_config(
     tmpdir: Path,
 ) -> Path:
     """Write simulator configuration to a temporary file."""
-    effective_config: dict[str, typ.Any] = dict(config) if config else {}
-    if not effective_config:
-        effective_config = _empty_initial_state()
+    effective_config: dict[str, typ.Any] = _empty_initial_state()
+    effective_config.update(dict(config))
 
     config_path = tmpdir / "github-sim-config.json"
     try:
@@ -357,7 +364,7 @@ def start_sim_process(
 def stop_sim_process(
     proc: subprocess.Popen[str],
     *,
-    timeout: float = 5.0,
+    timeout: float = DEFAULT_STOP_TIMEOUT_SECONDS,
 ) -> None:
     """Stop the simulator process gracefully.
 
@@ -370,6 +377,7 @@ def stop_sim_process(
         The subprocess handle for the simulator.
     timeout
         Maximum seconds to wait for graceful termination before killing.
+        Defaults to `DEFAULT_STOP_TIMEOUT_SECONDS`.
 
     """
     if proc.poll() is not None:
@@ -385,5 +393,6 @@ def stop_sim_process(
     except subprocess.TimeoutExpired:
         with contextlib.suppress(OSError):
             proc.kill()
+        kill_wait_timeout = min(timeout, _KILL_WAIT_TIMEOUT_SECONDS)
         with contextlib.suppress(subprocess.TimeoutExpired, OSError):
-            proc.wait(timeout=timeout)
+            proc.wait(timeout=kill_wait_timeout)
