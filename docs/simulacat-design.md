@@ -82,10 +82,11 @@ The following decisions were made during implementation of the
    minimal valid simulator state when the simulator is started. This keeps the
    fixture simple while ensuring valid configuration at runtime.
 
-2. **Type alias for configuration**: A `GitHubSimConfig` type alias
-   (`dict[str, Any]`) is provided for type annotations. This allows consumers
-   to annotate their override fixtures and helper functions with a consistent
-   type.
+2. **TypedDict for configuration**: A `GitHubSimConfig` TypedDict in
+   `simulacat/types.py` describes the top-level simulator keys while allowing
+   partial configurations. This allows consumers to annotate their override
+   fixtures and helper functions with a consistent type that provides IDE
+   support for known fields.
 
 3. **JSON serializability validation**: The `is_json_serializable()` helper
    function allows tests to verify that configuration values can be passed to

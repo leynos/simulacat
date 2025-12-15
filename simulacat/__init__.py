@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from .fixtures import (
-    GitHubSimConfig,
+from .config import (
     default_github_sim_config,
-    github_sim_config,
     is_json_serializable,
     merge_configs,
 )
+from .types import GitHubSimConfig
 
 PACKAGE_NAME = "simulacat"
 
@@ -21,7 +20,6 @@ except ModuleNotFoundError:  # pragma: no cover - Python fallback
 __all__ = [
     "GitHubSimConfig",
     "default_github_sim_config",
-    "github_sim_config",
     "hello",
     "is_json_serializable",
     "merge_configs",

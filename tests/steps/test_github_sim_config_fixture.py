@@ -111,7 +111,7 @@ def given_module_override_with_users(config_context: ConfigContext) -> None:
 @when("the github_sim_config fixture is requested without overrides")
 def when_config_requested_no_overrides(config_context: ConfigContext) -> None:
     """Request the default github_sim_config fixture."""
-    from simulacat.fixtures import default_github_sim_config
+    from simulacat.config import default_github_sim_config
 
     config_context["config"] = default_github_sim_config()
 

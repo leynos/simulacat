@@ -36,23 +36,20 @@ simulator is started.
 ## pytest Fixtures
 
 simulacat provides pytest fixtures for configuring the GitHub API simulator in
-your tests.
+tests.
 
 ### github_sim_config
 
 The `github_sim_config` fixture provides simulator configuration as a
-JSON-serializable mapping. Import it in your `conftest.py` or test module:
-
-```python
-from simulacat.fixtures import github_sim_config
-```
+JSON-serializable mapping. The fixture is automatically available via the
+simulacat pytest plugin (registered as a `pytest11` entry point).
 
 The default configuration is an empty dictionary. The orchestration layer
 expands this to a minimal valid simulator state when the simulator starts.
 
 #### Overriding at Module Scope
 
-Override the fixture in your `conftest.py` to provide shared configuration for
+Override the fixture in a `conftest.py` file to provide shared configuration for
 all tests in a module:
 
 ```python

@@ -32,7 +32,7 @@ from pathlib import Path
 import pytest
 
 if typ.TYPE_CHECKING:
-    from simulacat.fixtures import GitHubSimConfig
+    from simulacat.types import GitHubSimConfig
 
 
 class TestDefaultGithubSimConfig:
@@ -41,7 +41,7 @@ class TestDefaultGithubSimConfig:
     @staticmethod
     def test_returns_empty_mapping() -> None:
         """The default configuration is an empty mapping."""
-        from simulacat.fixtures import default_github_sim_config
+        from simulacat.config import default_github_sim_config
 
         config = default_github_sim_config()
 
@@ -50,7 +50,7 @@ class TestDefaultGithubSimConfig:
     @staticmethod
     def test_returns_dict_type() -> None:
         """The default configuration returns a dict instance."""
-        from simulacat.fixtures import default_github_sim_config
+        from simulacat.config import default_github_sim_config
 
         config = default_github_sim_config()
 
@@ -59,7 +59,7 @@ class TestDefaultGithubSimConfig:
     @staticmethod
     def test_is_json_serializable() -> None:
         """The default configuration can be serialized to JSON."""
-        from simulacat.fixtures import default_github_sim_config
+        from simulacat.config import default_github_sim_config
 
         config = default_github_sim_config()
 
@@ -76,14 +76,14 @@ class TestIsJsonSerializable:
     @staticmethod
     def test_accepts_empty_dict() -> None:
         """Empty dictionaries are serializable."""
-        from simulacat.fixtures import is_json_serializable
+        from simulacat.config import is_json_serializable
 
         assert is_json_serializable({}) is True
 
     @staticmethod
     def test_accepts_nested_dicts() -> None:
         """Nested dictionaries with JSON types are serializable."""
-        from simulacat.fixtures import is_json_serializable
+        from simulacat.config import is_json_serializable
 
         config = {
             "users": [{"login": "test", "organizations": []}],
@@ -98,7 +98,7 @@ class TestIsJsonSerializable:
     @staticmethod
     def test_rejects_path_objects() -> None:
         """Path objects are not JSON serializable."""
-        from simulacat.fixtures import is_json_serializable
+        from simulacat.config import is_json_serializable
 
         config = {"path": Path("/example/test")}
 
@@ -107,7 +107,7 @@ class TestIsJsonSerializable:
     @staticmethod
     def test_rejects_functions() -> None:
         """Function objects are not JSON serializable."""
-        from simulacat.fixtures import is_json_serializable
+        from simulacat.config import is_json_serializable
 
         config = {"callback": lambda x: x}
 
@@ -116,7 +116,7 @@ class TestIsJsonSerializable:
     @staticmethod
     def test_rejects_custom_objects() -> None:
         """Custom class instances are not JSON serializable."""
-        from simulacat.fixtures import is_json_serializable
+        from simulacat.config import is_json_serializable
 
         class Custom:
             pass
@@ -152,9 +152,18 @@ class TestMergeConfigs:
     """Tests for configuration merging utility."""
 
     @staticmethod
+    def test_no_args_returns_empty() -> None:
+        """Calling merge_configs() with no arguments returns empty dict."""
+        from simulacat.config import merge_configs
+
+        result = merge_configs()
+
+        assert result == {}
+
+    @staticmethod
     def test_empty_configs_return_empty() -> None:
         """Merging empty configs returns empty dict."""
-        from simulacat.fixtures import merge_configs
+        from simulacat.config import merge_configs
 
         result = merge_configs({}, {})
 
@@ -163,7 +172,7 @@ class TestMergeConfigs:
     @staticmethod
     def test_later_config_wins() -> None:
         """Later configurations override earlier ones."""
-        from simulacat.fixtures import merge_configs
+        from simulacat.config import merge_configs
 
         base = {"users": [{"login": "base"}]}
         override = {"users": [{"login": "override"}]}
@@ -175,7 +184,7 @@ class TestMergeConfigs:
     @staticmethod
     def test_preserves_unoverridden_keys() -> None:
         """Keys not in override are preserved from base."""
-        from simulacat.fixtures import merge_configs
+        from simulacat.config import merge_configs
 
         base = {"users": [{"login": "base"}], "organizations": []}
         override = {"users": [{"login": "override"}]}
@@ -188,7 +197,7 @@ class TestMergeConfigs:
     @staticmethod
     def test_multiple_configs_merge_in_order() -> None:
         """Multiple configs merge left to right."""
-        from simulacat.fixtures import merge_configs
+        from simulacat.config import merge_configs
 
         first = {"a": 1}
         second = {"b": 2}
@@ -200,16 +209,23 @@ class TestMergeConfigs:
 
 
 class TestFixtureRegistration:
-    """Tests verifying the fixture is properly registered."""
+    """Tests verifying the modules are properly structured."""
 
     @staticmethod
-    def test_plugin_module_exists() -> None:
+    def test_config_module_exists() -> None:
+        """The config module exists and can be imported."""
+        from simulacat import config
+
+        assert hasattr(config, "default_github_sim_config")
+        assert hasattr(config, "is_json_serializable")
+        assert hasattr(config, "merge_configs")
+
+    @staticmethod
+    def test_fixtures_module_exists() -> None:
         """The fixtures module exists and can be imported."""
         from simulacat import fixtures
 
-        assert hasattr(fixtures, "default_github_sim_config")
         assert hasattr(fixtures, "github_sim_config")
-        assert hasattr(fixtures, "GitHubSimConfig")
 
     @staticmethod
     def test_github_sim_config_is_callable() -> None:
