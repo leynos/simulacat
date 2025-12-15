@@ -54,8 +54,9 @@ The following decisions were made during implementation:
    - `branches`
    - `blobs`
 
-   The Python orchestration provides a minimal valid default when an empty
-   config is passed.
+   The Python orchestration provides a minimal valid default when required
+   arrays are missing from the configuration (including when an empty config is
+   passed).
 
 4. **Error event protocol**: The server emits JSON events for both success
    (`{"event":"listening","port":N}`) and error cases
@@ -106,6 +107,28 @@ The following decisions were made during implementation of the
    `simulacat/fixtures.py` and must be imported or the module must be
    registered in `conftest.py`. This avoids implicit behaviour and makes the
    dependency explicit.
+The following decisions were made during implementation:
+
+1. **Expose fixtures via a pytest plugin**: Fixtures live in
+   `simulacat.pytest_plugin` and are registered under the `pytest11` entry
+   point. This makes them available to consumers without requiring
+   `pytest_plugins` boilerplate.
+
+2. **Function-scoped default fixture**: `github_sim_config` is function scoped
+   to keep tests isolated. Consumers may override the fixture with narrower or
+   broader scopes as required.
+
+3. **Empty default configuration**: The fixture returns `{}` by default. The
+   orchestration layer already expands empty configurations into the minimal
+   valid simulator state.
+
+4. **Indirect parametrization support**: The fixture accepts
+   `request.param` when parametrized with `indirect=True`, enabling concise
+   per-test configuration overrides.
+
+5. **TypedDict schema for type safety**: A `GitHubSimConfig` `TypedDict`
+   describes the top-level simulator keys while allowing partial
+   configurations.
 
 ## Bun entrypoint
 
@@ -184,7 +207,8 @@ This design provides the following capabilities.
 
   The orchestration records the process handle, terminates the simulator on
   teardown, and escalates to `kill()` if the process does not exit within a
-  short timeout. If startup fails, the orchestration raises a
+  short timeout (5 seconds by default). If startup fails, the orchestration
+  raises a
   `GitHubSimProcessError` that includes captured output from the simulator
   process.
 
