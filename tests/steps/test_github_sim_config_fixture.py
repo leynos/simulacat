@@ -142,6 +142,7 @@ def when_config_serialized(
         serialization_context["serialized"] = json.dumps(github_sim_config)
         serialization_context["error"] = None
     except (TypeError, ValueError) as exc:
+        serialization_context["serialized"] = None
         serialization_context["error"] = exc
 
 
