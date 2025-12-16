@@ -4,6 +4,12 @@ This module provides pytest fixtures for configuring and running a local GitHub
 API simulator. The primary fixture `github_sim_config` returns a JSON-serializable
 mapping that can be overridden at function, module, or package scopes.
 
+Note
+----
+The fixture is automatically registered as a pytest plugin via the
+``pytest11`` entry point. You do not need to import this module directly;
+pytest will discover and load the fixture automatically.
+
 Example
 -------
 Override configuration at module scope::
@@ -36,46 +42,27 @@ from __future__ import annotations
 
 import typing as typ
 
-import pytest
 
-from .config import default_github_sim_config
+def __getattr__(name: str) -> typ.Any:  # noqa: ANN401
+    """Lazily import pytest-dependent fixtures to avoid hard runtime dependency.
 
-if typ.TYPE_CHECKING:
-    from .types import GitHubSimConfig
-
-
-@pytest.fixture
-def github_sim_config() -> GitHubSimConfig:
-    """Provide simulator configuration for tests.
-
-    This fixture returns a JSON-serializable mapping that configures the
-    GitHub API simulator. Override this fixture at function, module, or
-    package scope to customize the simulator's initial state.
-
-    Returns
-    -------
-    GitHubSimConfig
-        A dictionary containing simulator configuration. The default is
-        an empty mapping.
-
-    Example
-    -------
-    Override at module level in conftest.py::
-
-        @pytest.fixture
-        def github_sim_config():
-            return {
-                "users": [{"login": "testuser", "organizations": []}],
-                "organizations": [],
-                "repositories": [{"owner": "testuser", "name": "my-repo"}],
-                "branches": [],
-                "blobs": [],
-            }
-
+    This allows ``import simulacat.fixtures`` to succeed even when pytest is not
+    installed, while still providing access to the fixture when pytest is available.
     """
-    return default_github_sim_config()
+    if name == "github_sim_config":
+        from .pytest_plugin import github_sim_config
+
+        return github_sim_config
+
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
+
+
+def __dir__() -> list[str]:
+    """List available attributes including lazily-imported fixtures."""
+    return ["github_sim_config"]
 
 
 __all__ = [
-    "github_sim_config",
+    "github_sim_config",  # noqa: F822 - dynamically available via __getattr__
 ]
