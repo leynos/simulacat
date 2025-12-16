@@ -43,7 +43,7 @@ from __future__ import annotations
 import typing as typ
 
 
-def __getattr__(name: str) -> typ.Any:  # noqa: ANN401
+def __getattr__(name: str) -> typ.Any:  # noqa: ANN401 - module __getattr__ returns dynamic types
     """Lazily import pytest-dependent fixtures to avoid hard runtime dependency.
 
     This allows ``import simulacat.fixtures`` to succeed even when pytest is not
