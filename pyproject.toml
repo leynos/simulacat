@@ -81,6 +81,9 @@ extend-ignore = [
     "D213",  # Conflicts with D212; keep summary on the first line.
 ]
 
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
 [tool.ruff.lint.per-file-ignores]
 "**/test_*.py" = ["S101", "PLR0913", "PLR2004"]
 "tests/steps/*.py" = ["S101", "PLR0913", "PLR2004"]

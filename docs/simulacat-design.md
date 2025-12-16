@@ -22,11 +22,11 @@ The solution consists of the following pieces:
   - locates the Bun entrypoint,
   - starts and stops the simulator process,
   - waits for the listening event and extracts the port,
-- pytest fixtures (planned for Step 1.2):
+- pytest fixtures:
   - `github_sim_config` for declaring the simulator configuration as a Python
-    mapping that can be serialized to JSON,
+    mapping that can be serialized to JSON (Step 1.2),
   - `github_simulator` for starting the process, constructing a `github3.py`
-    client bound to the simulator, and tearing everything down.
+    client bound to the simulator, and tearing everything down (planned).
 
 This document focuses on the orchestration pattern. The exact configuration
 shape expected by the simulator will depend on the version of
@@ -74,6 +74,40 @@ The following decisions were made during implementation:
 
 ### Step 1.2 – pytest fixture and client binding
 
+The following decisions were made during implementation of the
+`github_sim_config` fixture:
+
+1. **Empty default configuration**: The `github_sim_config` fixture returns an
+   empty dictionary by default. The orchestration layer expands this to a
+   minimal valid simulator state when the simulator is started. This keeps the
+   fixture simple while ensuring valid configuration at runtime.
+
+2. **TypedDict for configuration**: A `GitHubSimConfig` TypedDict in
+   `simulacat/types.py` describes the top-level simulator keys while allowing
+   partial configurations. This allows consumers to annotate their override
+   fixtures and helper functions with a consistent type that provides IDE
+   support for known fields.
+
+3. **JSON serializability validation**: The `is_json_serializable()` helper
+   function allows tests to verify that configuration values can be passed to
+   the simulator. This catches common mistakes like including `Path` objects
+   or functions in configuration dictionaries.
+
+4. **Configuration merging**: The `merge_configs()` helper supports layering
+   configurations from package, module, and function scopes. Later
+   configurations override earlier ones using shallow dictionary update
+   semantics.
+
+5. **Fixture override pattern**: The fixture is designed to be overridden at
+   any pytest scope (function, module, or package) using standard pytest
+   fixture mechanics. Users define their own `github_sim_config` fixture in
+   their `conftest.py` or test module, and pytest's fixture resolution selects
+   the most specific definition.
+
+6. **No automatic registration as pytest plugin**: The fixture is defined in
+   `simulacat/fixtures.py` and must be imported or the module must be
+   registered in `conftest.py`. This avoids implicit behaviour and makes the
+   dependency explicit.
 The following decisions were made during implementation:
 
 1. **Expose fixtures via a pytest plugin**: Fixtures live in

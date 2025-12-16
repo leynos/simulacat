@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+from .config import (
+    default_github_sim_config,
+    is_json_serializable,
+    merge_configs,
+)
+from .types import GitHubSimConfig
+
 PACKAGE_NAME = "simulacat"
 
 try:  # pragma: no cover - Rust optional
@@ -10,4 +17,10 @@ try:  # pragma: no cover - Rust optional
 except ModuleNotFoundError:  # pragma: no cover - Python fallback
     from .pure import hello
 
-__all__ = ["hello"]
+__all__ = [
+    "GitHubSimConfig",
+    "default_github_sim_config",
+    "hello",
+    "is_json_serializable",
+    "merge_configs",
+]
