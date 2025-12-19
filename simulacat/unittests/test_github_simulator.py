@@ -20,6 +20,7 @@ Or run via make::
 
 from __future__ import annotations
 
+import re
 import sys
 import textwrap
 import typing as typ
@@ -54,8 +55,10 @@ def test_github_simulator_skips_when_bun_is_unavailable(
             """
         )
     )
-    result = pytester.runpytest("-q")
+    result = pytester.runpytest("-q", "-rs")
     result.assert_outcomes(skipped=1)
+    output = result.stdout.str() + result.stderr.str()
+    assert re.search(r"SKIPPED.*Bun", output, re.IGNORECASE), output
 
 
 def test_github_simulator_constructs_client_and_passes_config(
@@ -155,6 +158,68 @@ def test_github_simulator_constructs_client_and_passes_config(
     assert (pytester.path / "session-base-url.txt").read_text(
         encoding="utf-8"
     ) == "http://127.0.0.1:4242"
+
+
+def test_teardown_runs_even_when_fixture_setup_fails(
+    pytester: Pytester,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The fixture still triggers stop_sim_process when setup fails after start."""
+    monkeypatch.setenv("BUN", sys.executable)
+
+    pytester.makeconftest(
+        textwrap.dedent(
+            """\
+            from __future__ import annotations
+
+            import sys
+            from pathlib import Path
+
+            import github3
+            import github3.session as github3_session
+
+            from simulacat import orchestration, pytest_plugin
+
+            pytest_plugin.shutil.which = lambda *_: sys.executable
+
+
+            def start_sim_process(config, tmpdir, **_):
+                return object(), 4242
+
+
+            def stop_sim_process(proc, **_):
+                Path(__file__).with_name("stopped.txt").write_text(
+                    "stopped",
+                    encoding="utf-8",
+                )
+
+
+            orchestration.start_sim_process = start_sim_process
+            orchestration.stop_sim_process = stop_sim_process
+
+
+            def GitHubSession():
+                raise RuntimeError("boom during fixture setup")
+
+
+            github3_session.GitHubSession = GitHubSession
+            github3.GitHub = lambda **_: object()
+            """
+        )
+    )
+    pytester.makepyfile(
+        textwrap.dedent(
+            """\
+            def test_setup_failure_still_tears_down(github_simulator):
+                # The test body is not reached because fixture setup fails.
+                assert github_simulator is not None
+            """
+        )
+    )
+
+    result = pytester.runpytest("-q")
+    result.assert_outcomes(errors=1)
+    assert (pytester.path / "stopped.txt").is_file()
 
 
 def test_teardown_runs_even_when_test_fails(
