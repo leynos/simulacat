@@ -5,7 +5,7 @@ description = "simulacat package"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-dependencies = []
+dependencies = ["github3.py>=4.0.0"]
 
 [project.entry-points.pytest11]
 simulacat = "simulacat.pytest_plugin"

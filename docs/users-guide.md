@@ -296,6 +296,26 @@ def github_sim_config():
     return {"users": [{"login": "alice", "organizations": []}]}
 ```
 
+### github_simulator
+
+`github_simulator` starts the Bun-based GitHub API simulator using the current
+`github_sim_config`, then yields a `github3.GitHub` client configured to send
+requests to the local simulator.
+
+```python
+def test_rate_limit(github_simulator):
+    payload = github_simulator.rate_limit()
+    assert payload["rate"]["limit"] > 0
+```
+
+The simulator process is stopped after the test, even if the test fails.
+
+Some higher-level `github3.py` methods instantiate rich model objects from API
+responses and may raise `github3.exceptions.IncompleteResponse` if the
+simulator response is missing fields that the client library expects. In those
+cases, prefer endpoints like `rate_limit()` or use `github_simulator.session`
+to make raw HTTP requests.
+
 ## Environment Variables
 
 | Variable | Description                | Default |

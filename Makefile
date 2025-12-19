@@ -1,15 +1,17 @@
 MDLINT ?= markdownlint-cli2
 NIXIE ?= nixie
 MDFORMAT_ALL ?= mdformat-all
-BIOME ?= biome
-TSC ?= tsc
+BIOME ?= ./node_modules/.bin/biome
+TSC ?= ./node_modules/.bin/tsc
 BUN ?= bun
-TOOLS = $(MDFORMAT_ALL) ruff ty $(MDLINT) uv $(BIOME) $(TSC) $(BUN)
+NODE_TOOLS = $(BIOME) $(TSC)
+TOOLS = $(MDFORMAT_ALL) ruff ty $(MDLINT) uv $(BUN)
 VENV_TOOLS = pytest
 UV_ENV = UV_CACHE_DIR=.uv-cache UV_TOOL_DIR=.uv-tools
 
 .PHONY: help all clean build build-release lint fmt check-fmt \
         markdownlint nixie test typecheck $(TOOLS) $(VENV_TOOLS)
+.PHONY: $(NODE_TOOLS)
 
 .DEFAULT_GOAL := all
 
@@ -23,6 +25,9 @@ build: uv .venv ## Build virtual-env and install deps
 
 build-release: ## Build artefacts (sdist & wheel)
 	python -m build --sdist --wheel
+
+node_modules: package.json bun.lock
+	$(BUN) install
 
 clean: ## Remove build artifacts
 	rm -rf build dist *.egg-info \
@@ -46,6 +51,11 @@ endef
 
 ifneq ($(strip $(TOOLS)),)
 $(TOOLS): ## Verify required CLI tools
+	$(call ensure_tool,$@)
+endif
+
+ifneq ($(strip $(NODE_TOOLS)),)
+$(NODE_TOOLS): node_modules ## Verify required CLI tools installed via Bun
 	$(call ensure_tool,$@)
 endif
 
@@ -83,7 +93,7 @@ nixie: ## Validate Mermaid diagrams
 	$(call ensure_tool,$(NIXIE))
 	$(NIXIE) --no-sandbox
 
-test: build uv $(VENV_TOOLS) ## Run tests
+test: build node_modules uv $(VENV_TOOLS) ## Run tests
 	$(UV_ENV) uv run pytest -v -n auto
 	$(BUN) test
 

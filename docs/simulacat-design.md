@@ -26,7 +26,7 @@ The solution consists of the following pieces:
   - `github_sim_config` for declaring the simulator configuration as a Python
     mapping that can be serialized to JSON (Step 1.2),
   - `github_simulator` for starting the process, constructing a `github3.py`
-    client bound to the simulator, and tearing everything down (planned).
+    client bound to the simulator, and tearing everything down.
 
 This document focuses on the orchestration pattern. The exact configuration
 shape expected by the simulator will depend on the version of
@@ -130,6 +130,34 @@ The following decisions were made during implementation:
 5. **TypedDict schema for type safety**: A `GitHubSimConfig` `TypedDict`
    describes the top-level simulator keys while allowing partial
    configurations.
+
+#### github_simulator fixture
+
+The following decisions were made during implementation of the
+`github_simulator` fixture:
+
+1. **Use `github3.GitHub` with a custom session**: The Simulacrum simulator
+   serves the REST API at the server root (for example, `/rate_limit`) rather
+   than the GitHub Enterprise `/api/v3` prefix. The fixture constructs
+   `github3.GitHub(session=GitHubSession(...))` and sets
+   `GitHubSession.base_url` to the simulator base URL to ensure generated URLs
+   match simulator routes.
+
+2. **Skip on missing Bun**: If Bun cannot be located (based on the configured
+   `BUN` environment variable or the `bun` executable on `PATH`), the fixture
+   calls `pytest.skip()` with a clear message rather than failing with a
+   subprocess error.
+
+3. **Lifecycle managed via orchestration**: The fixture delegates startup and
+   port discovery to `start_sim_process()` and always invokes
+   `stop_sim_process()` in a `finally` block so teardown runs even if the test
+   body fails.
+
+4. **Known compatibility gaps are surfaced explicitly**: Some `github3.py`
+   high-level convenience methods instantiate model objects and may raise
+   `github3.exceptions.IncompleteResponse` if the simulator response is missing
+   fields that the client expects. The fixture still supports raw API access
+   via the `github3.GitHub` client and its underlying session.
 
 ## Bun entrypoint
 
