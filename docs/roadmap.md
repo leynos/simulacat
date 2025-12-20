@@ -57,7 +57,7 @@ boundaries.
 
   - returns a JSON-serializable mapping,
   - can be overridden at function, module, and package scopes.
-- [ ] Provide a `github_simulator` fixture that:
+- [x] Provide a `github_simulator` fixture that:
 
   - writes `github_sim_config` to a temporary JSON file,
   - starts the packaged Bun simulator and waits for the listening event,

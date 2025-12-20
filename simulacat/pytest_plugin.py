@@ -8,11 +8,16 @@ from __future__ import annotations
 
 import collections.abc as cabc
 import json
+import os
+import shutil
 import typing as typ
 
 import pytest
 
 if typ.TYPE_CHECKING:
+    import subprocess  # noqa: S404  # simulacat#123: typing-only; fixture doesn't spawn processes directly
+    from pathlib import Path
+
     from simulacat.types import GitHubSimConfig
 
 
@@ -86,3 +91,46 @@ def github_sim_config(request: pytest.FixtureRequest) -> GitHubSimConfig:
         raise TypeError(msg) from exc
 
     return typ.cast("GitHubSimConfig", config)
+
+
+def _is_bun_available() -> bool:
+    """Return True if the configured Bun executable is available.
+
+    The orchestration layer defaults to using the `BUN` environment variable
+    and falls back to `bun` on PATH. The fixture mirrors that behaviour so
+    missing Bun yields a clean skip rather than a subprocess failure.
+    """
+    bun_executable = os.environ.get("BUN", "bun")
+    return shutil.which(bun_executable) is not None
+
+
+@pytest.fixture
+def github_simulator(
+    github_sim_config: GitHubSimConfig,
+    tmp_path: Path,
+) -> typ.Generator[typ.Any, None, None]:
+    """Provide a github3.py client connected to a running simulator."""
+    if not _is_bun_available():
+        pytest.skip("Bun is required for github_simulator fixture")
+
+    try:
+        import github3
+    except ModuleNotFoundError as exc:  # pragma: no cover - dependency is required
+        msg = "github3.py is required for github_simulator fixture"
+        raise RuntimeError(msg) from exc
+
+    from simulacat.orchestration import start_sim_process, stop_sim_process
+
+    proc: subprocess.Popen[str] | None = None
+    try:
+        proc, port = start_sim_process(github_sim_config, tmp_path)
+        base_url = f"http://127.0.0.1:{port}"
+        from github3.session import GitHubSession
+
+        session = GitHubSession()
+        session.base_url = base_url
+        client = github3.GitHub(session=session)
+        yield client
+    finally:
+        if proc is not None:
+            stop_sim_process(proc)

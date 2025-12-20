@@ -53,6 +53,10 @@ def __getattr__(name: str) -> typ.Any:  # noqa: ANN401 - module __getattr__ retu
         from .pytest_plugin import github_sim_config
 
         return github_sim_config
+    if name == "github_simulator":
+        from .pytest_plugin import github_simulator
+
+        return github_simulator
 
     msg = f"module {__name__!r} has no attribute {name!r}"
     raise AttributeError(msg)
@@ -60,9 +64,10 @@ def __getattr__(name: str) -> typ.Any:  # noqa: ANN401 - module __getattr__ retu
 
 def __dir__() -> list[str]:
     """List available attributes including lazily-imported fixtures."""
-    return ["github_sim_config"]
+    return ["github_sim_config", "github_simulator"]
 
 
 __all__ = [
     "github_sim_config",  # noqa: F822 - dynamically available via __getattr__
+    "github_simulator",  # noqa: F822 - dynamically available via __getattr__
 ]

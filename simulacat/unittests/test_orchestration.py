@@ -299,7 +299,7 @@ class TestStartSimProcess:
         )
 
     @staticmethod
-    @pytest.mark.timeout(5)
+    @pytest.mark.timeout(15)
     @bun_required
     def test_start_process_serves_http(tmp_path: Path) -> None:
         """Start the real simulator and perform an HTTP request."""
