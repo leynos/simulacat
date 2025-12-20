@@ -43,8 +43,37 @@ scenarios("../features/github_simulator.feature")
 class ClientContext(typ.TypedDict):
     """Scenario context for github_simulator steps."""
 
-    client: object | None
+    client: GitHubClient | None
     base_url: str | None
+
+
+class GitHubClient(typ.Protocol):
+    """Protocol for the subset of github3.GitHub used in behavioural tests."""
+
+    def issue(self, owner: str, repository: str, number: int) -> object:
+        """Return a single issue by number."""
+
+    def organization(self, login: str) -> object:
+        """Return an organization object by login."""
+
+    def pull_request(self, owner: str, repository: str, number: int) -> object:
+        """Return a single pull request by number."""
+
+    def rate_limit(self) -> dict[str, object]:
+        """Return the rate limit payload."""
+
+    def repositories_by(self, username: str) -> typ.Iterable[object]:
+        """Iterate over repositories owned by a user/org."""
+
+    def repository(self, owner: str, repository: str) -> object:
+        """Return a repository by owner/name."""
+
+
+class OrganizationClient(typ.Protocol):
+    """Protocol for the subset of github3 Organization used in behavioural tests."""
+
+    def repositories(self) -> typ.Iterable[object]:
+        """Iterate over repositories in this organization."""
 
 
 @pytest.fixture
@@ -129,7 +158,7 @@ def _repo_full_name(repo: object) -> str:
     raise AssertionError(msg)
 
 
-def _require_github3_client(client_context: ClientContext) -> object:
+def _require_github3_client(client_context: ClientContext) -> GitHubClient:
     """Return the stored github3 client or fail with a clear assertion."""
     client = client_context["client"]
     assert client is not None, "Expected github3 client to be stored in context"
@@ -139,7 +168,7 @@ def _require_github3_client(client_context: ClientContext) -> object:
 @then(parsers.parse('the github3 client can look up repository "{full_name}"'))
 def then_repo_lookup_works(client_context: ClientContext, full_name: str) -> None:
     """Assert that github3 repository lookup works against the simulator."""
-    client: typ.Any = _require_github3_client(client_context)
+    client = _require_github3_client(client_context)
     owner, name = full_name.split("/", 1)
 
     repo = client.repository(owner, name)
@@ -149,7 +178,7 @@ def then_repo_lookup_works(client_context: ClientContext, full_name: str) -> Non
 @then(parsers.parse('the github3 client can list repositories for user "{login}"'))
 def then_user_repo_listing_works(client_context: ClientContext, login: str) -> None:
     """Assert that github3 can list repositories for a user."""
-    client: typ.Any = _require_github3_client(client_context)
+    client = _require_github3_client(client_context)
     repos = list(client.repositories_by(login))
     assert repos, f"Expected at least one repository listed for user {login!r}"
 
@@ -159,8 +188,8 @@ def then_user_repo_listing_works(client_context: ClientContext, login: str) -> N
 )
 def then_org_repo_listing_works(client_context: ClientContext, login: str) -> None:
     """Assert that github3 can list repositories for an organization."""
-    client: typ.Any = _require_github3_client(client_context)
-    org: typ.Any = client.organization(login)
+    client = _require_github3_client(client_context)
+    org = typ.cast("OrganizationClient", client.organization(login))
     repos = list(org.repositories())
     assert repos, f"Expected at least one repository listed for org {login!r}"
 
@@ -168,14 +197,14 @@ def then_org_repo_listing_works(client_context: ClientContext, login: str) -> No
 @then(parsers.parse('the repository listing includes "{full_name}"'))
 def then_listing_contains_repo(client_context: ClientContext, full_name: str) -> None:
     """Assert that either user or org repo listing includes the target repository."""
-    client: typ.Any = _require_github3_client(client_context)
+    client = _require_github3_client(client_context)
     owner, _name = full_name.split("/", 1)
 
     full_names: set[str] = set()
     full_names.update(_repo_full_name(repo) for repo in client.repositories_by(owner))
 
     if not full_names:
-        org: typ.Any = client.organization(owner)
+        org = typ.cast("OrganizationClient", client.organization(owner))
         full_names.update(_repo_full_name(repo) for repo in org.repositories())
 
     assert full_name in full_names, f"Expected {full_name!r} in {sorted(full_names)!r}"
@@ -190,7 +219,7 @@ def then_issue_retrieval_works(
     full_name: str,
 ) -> None:
     """Assert that github3 Issue retrieval works and includes rich body fields."""
-    client: typ.Any = _require_github3_client(client_context)
+    client = _require_github3_client(client_context)
     owner, name = full_name.split("/", 1)
     issue = client.issue(owner, name, number)
     assert getattr(issue, "number", None) == number
@@ -209,7 +238,7 @@ def then_pull_request_retrieval_works(
     full_name: str,
 ) -> None:
     """Assert that github3 PullRequest retrieval works and includes rich body fields."""
-    client: typ.Any = _require_github3_client(client_context)
+    client = _require_github3_client(client_context)
     owner, name = full_name.split("/", 1)
     pr = client.pull_request(owner, name, number)
     assert getattr(pr, "number", None) == number
@@ -220,7 +249,7 @@ def then_pull_request_retrieval_works(
 @when("the github_simulator fixture is requested")
 def when_fixture_requested(
     client_context: ClientContext,
-    github_simulator: object,
+    github_simulator: GitHubClient,
 ) -> None:
     """Store the github_simulator fixture value for later assertions."""
     client_context["client"] = github_simulator
@@ -243,11 +272,7 @@ def then_client_bound_to_simulator(client_context: ClientContext) -> None:
 @then("the simulator responds to an HTTP request")
 def then_simulator_responds(client_context: ClientContext) -> None:
     """Assert that github3 can perform a request against the simulator."""
-    client = client_context["client"]
-    assert client is not None, "Expected client to be stored in context"
-    rate_limit = getattr(client, "rate_limit", None)
-    assert callable(rate_limit), "Expected github3 client to expose rate_limit()"
-
-    payload = rate_limit()
+    client = _require_github3_client(client_context)
+    payload = client.rate_limit()
     assert isinstance(payload, dict), f"Expected dict payload, got {type(payload)}"
     assert "rate" in payload, "Expected rate_limit payload to include 'rate'"
