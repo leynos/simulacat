@@ -27,6 +27,7 @@ build-release: ## Build artefacts (sdist & wheel)
 	python -m build --sdist --wheel
 
 node_modules: package.json bun.lock
+	$(call ensure_tool,$(BUN))
 	$(BUN) install
 
 clean: ## Remove build artifacts

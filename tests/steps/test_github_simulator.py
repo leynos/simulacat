@@ -55,6 +55,8 @@ def client_context() -> ClientContext:
 
 def _resolve_base_url(client: object) -> str:
     """Best-effort extraction of the configured API URL from github3.py clients."""
+    # Targets github3.py 4.x clients (`github3.GitHub` / `github3.GitHubEnterprise`)
+    # which may expose the base URL via different attributes across client/session.
     candidates: list[object] = [
         getattr(client, attr, None) for attr in ("base_url", "url")
     ]
