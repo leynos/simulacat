@@ -134,7 +134,7 @@ def test_indirect_parametrization_rejects_non_mapping(pytester: Pytester) -> Non
             assert False, "fixture should fail before reaching test body"
         """
     )
-    result = pytester.runpytest("-q")
+    result = pytester.runpytest_subprocess("-q")
     result.assert_outcomes(errors=1)
     assert (
         "github_sim_config must be a mapping"
@@ -154,7 +154,7 @@ def test_indirect_parametrization_rejects_non_string_keys(pytester: Pytester) ->
             assert False, "fixture should fail before reaching test body"
         """
     )
-    result = pytester.runpytest("-q")
+    result = pytester.runpytest_subprocess("-q")
     result.assert_outcomes(errors=1)
     assert (
         "github_sim_config keys must be strings"
@@ -180,7 +180,7 @@ def test_indirect_parametrization_rejects_non_json_serializable(
             assert False, "fixture should fail before reaching test body"
         """
     )
-    result = pytester.runpytest("-q")
+    result = pytester.runpytest_subprocess("-q")
     result.assert_outcomes(errors=1)
     assert (
         "github_sim_config must be JSON serializable"
@@ -217,5 +217,5 @@ def test_package_scoped_override_via_conftest(pytester: Pytester) -> None:
         encoding="utf-8",
     )
 
-    result = pytester.runpytest(str(pkg), "-q")
+    result = pytester.runpytest_subprocess(str(pkg), "-q")
     result.assert_outcomes(passed=1)

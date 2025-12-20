@@ -49,8 +49,8 @@ expands this to a minimal valid simulator state when the simulator starts.
 
 #### Overriding at Module Scope
 
-Override the fixture in a `conftest.py` file to provide shared configuration for
-all tests in a module:
+Override the fixture in a `conftest.py` file to provide shared configuration
+for all tests in a module:
 
 ```python
 # conftest.py
@@ -248,9 +248,9 @@ running the GitHub API simulator. The lowest-level fixture is
 ### github_sim_config
 
 `github_sim_config` returns a JSON-serializable mapping describing the initial
-simulator state. By default, it is an empty dictionary (`{}`); the orchestration
-layer expands an empty config into the minimal valid state when starting the
-simulator.
+simulator state. By default, it is an empty dictionary (`{}`); the
+orchestration layer expands an empty config into the minimal valid state when
+starting the simulator.
 
 Override the fixture at different scopes using standard pytest rules:
 
@@ -310,11 +310,15 @@ def test_rate_limit(github_simulator):
 
 The simulator process is stopped after the test, even if the test fails.
 
-Some higher-level `github3.py` methods instantiate rich model objects from API
-responses and may raise `github3.exceptions.IncompleteResponse` if the
-simulator response is missing fields that the client library expects. In those
-cases, prefer endpoints like `rate_limit()` or use `github_simulator.session`
-to make raw HTTP requests.
+simulacat patches simulator responses for common `github3.py` calls (repository
+lookup and listing, issue retrieval, and pull request retrieval) so that rich
+model objects can be constructed when the client sends the
+`application/vnd.github.v3.full+json` accept header.
+
+Other `github3.py` methods may still raise
+`github3.exceptions.IncompleteResponse` if the simulator response is missing
+fields that the client library expects. In those cases, prefer endpoints like
+`rate_limit()` or use `github_simulator.session` to make raw HTTP requests.
 
 ## Environment Variables
 

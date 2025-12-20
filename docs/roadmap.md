@@ -46,7 +46,7 @@ GitHub API simulator.
   - `terminate` on fixture teardown,
   - `kill` only when the process does not exit within a short timeout.
 
-### Step 1.2 – pytest fixture and client binding
+### Step 1.2 – pytest fixture and client binding ✅
 
 Expose the simulator through a `github3.py` client with clear fixture
 boundaries.
@@ -64,7 +64,7 @@ boundaries.
   - constructs a `github3.GitHub` client pointing at the simulator base URL,
   - yields the client and guarantees simulator teardown.
 
-- [ ] Confirm compatibility with typical `github3.py` usage patterns:
+- [x] Confirm compatibility with typical `github3.py` usage patterns:
 
   - repository listing and lookup,
   - issue and pull request retrieval where supported by the simulator.
