@@ -71,25 +71,31 @@ def given_pytest_available() -> None:
 @given("a github_sim_config with test data", target_fixture="github_sim_config")
 def given_config_with_test_data() -> GitHubSimConfig:
     """Set up a configuration with test data via fixture injection."""
-    return {
-        "users": [{"login": "testuser", "organizations": []}],
-        "organizations": [],
-        "repositories": [],
-        "branches": [],
-        "blobs": [],
-    }
+    return typ.cast(
+        "GitHubSimConfig",
+        {
+            "users": [{"login": "testuser", "organizations": []}],
+            "organizations": [],
+            "repositories": [],
+            "branches": [],
+            "blobs": [],
+        },
+    )
 
 
 @given("a module-level github_sim_config override", target_fixture="github_sim_config")
 def given_module_level_override() -> GitHubSimConfig:
     """Provide a module-level configuration override via target_fixture."""
-    return {
-        "users": [{"login": "module-user", "organizations": []}],
-        "organizations": [],
-        "repositories": [],
-        "branches": [],
-        "blobs": [],
-    }
+    return typ.cast(
+        "GitHubSimConfig",
+        {
+            "users": [{"login": "module-user", "organizations": []}],
+            "organizations": [],
+            "repositories": [],
+            "branches": [],
+            "blobs": [],
+        },
+    )
 
 
 @given(
@@ -97,13 +103,16 @@ def given_module_level_override() -> GitHubSimConfig:
 )
 def given_function_level_override() -> GitHubSimConfig:
     """Provide a function-level configuration override (takes precedence)."""
-    return {
-        "users": [{"login": "function-user", "organizations": []}],
-        "organizations": [],
-        "repositories": [],
-        "branches": [],
-        "blobs": [],
-    }
+    return typ.cast(
+        "GitHubSimConfig",
+        {
+            "users": [{"login": "function-user", "organizations": []}],
+            "organizations": [],
+            "repositories": [],
+            "branches": [],
+            "blobs": [],
+        },
+    )
 
 
 @given(
@@ -112,13 +121,16 @@ def given_function_level_override() -> GitHubSimConfig:
 )
 def given_module_override_with_users() -> GitHubSimConfig:
     """Set up a module-level configuration with users via target_fixture."""
-    return {
-        "users": [{"login": "shared-user", "organizations": []}],
-        "organizations": [],
-        "repositories": [],
-        "branches": [],
-        "blobs": [],
-    }
+    return typ.cast(
+        "GitHubSimConfig",
+        {
+            "users": [{"login": "shared-user", "organizations": []}],
+            "organizations": [],
+            "repositories": [],
+            "branches": [],
+            "blobs": [],
+        },
+    )
 
 
 # -----------------------------------------------------------------------------

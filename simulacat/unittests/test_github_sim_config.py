@@ -40,6 +40,8 @@ def test_github_sim_config_typed_dict_has_expected_keys() -> None:
         "organizations",
         "repositories",
         "branches",
+        "issues",
+        "pull_requests",
         "blobs",
     }
 

@@ -83,18 +83,18 @@ code.
 
 #### Tasks (Step 2.1)
 
-- [ ] Design a Python-side configuration schema for common GitHub concepts:
+- [x] Design a Python-side configuration schema for common GitHub concepts:
 
   - users and organizations,
   - repositories, branches, and default branch metadata,
   - pull requests and issues where supported.
 
-- [ ] Implement helper functions or data classes that:
+- [x] Implement helper functions or data classes that:
 
   - construct valid configuration objects from Python structures,
   - validate configuration before serialization with clear error messages.
 
-- [ ] Document the configuration model with examples:
+- [x] Document the configuration model with examples:
 
   - “single repo, single user” smoke test,
   - “multiple repositories with public and private visibility”.

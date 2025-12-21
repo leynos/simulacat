@@ -41,7 +41,7 @@ tests.
 ### github_sim_config (advanced)
 
 The `github_sim_config` fixture provides simulator configuration as a
-JSON-serializable mapping. The fixture is automatically available via the
+JSON-serialisable mapping. The fixture is automatically available via the
 simulacat pytest plugin (registered as a `pytest11` entry point).
 
 The default configuration is an empty dictionary. The orchestration layer
@@ -95,7 +95,7 @@ def test_with_custom_config(github_sim_config: GitHubSimConfig) -> None:
 
 #### is_json_serializable
 
-Check whether a configuration value can be serialized to JSON:
+Check whether a configuration value can be serialised to JSON:
 
 ```python
 from simulacat import is_json_serializable
@@ -196,10 +196,81 @@ proc, port = start_sim_process(
 )
 ```
 
+## Scenario configuration helpers
+
+For most tests, prefer the scenario configuration dataclasses. They provide a
+stable, Python-friendly way to describe GitHub users, organisations,
+repositories, branches, and optional issues or pull requests without relying on
+the simulator's internal JSON structure.
+
+To pass a scenario into the simulator, call `to_simulator_config()` and return
+the resulting mapping from `github_sim_config`.
+
+### Example: single repo, single user
+
+```python
+from simulacat import DefaultBranch, Repository, ScenarioConfig, User
+
+scenario = ScenarioConfig(
+    users=(User(login="alice"),),
+    repositories=(
+        Repository(
+            owner="alice",
+            name="rocket",
+            default_branch=DefaultBranch(name="main"),
+        ),
+    ),
+)
+
+config = scenario.to_simulator_config()
+```
+
+### Example: multiple repositories with public and private visibility
+
+```python
+from simulacat import Repository, ScenarioConfig, User
+
+scenario = ScenarioConfig(
+    users=(User(login="alice"),),
+    repositories=(
+        Repository(owner="alice", name="public-repo"),
+        Repository(owner="alice", name="private-repo", is_private=True),
+    ),
+)
+
+config = scenario.to_simulator_config()
+```
+
+### Optional issues and pull requests
+
+Issues and pull requests are modelled in the scenario schema, but they are only
+serialised when requested because simulator support may vary. Pass
+`include_unsupported=True` to include them in the serialised configuration.
+
+```python
+from simulacat import Issue, PullRequest, Repository, ScenarioConfig, User
+
+scenario = ScenarioConfig(
+    users=(User(login="alice"),),
+    repositories=(Repository(owner="alice", name="rocket"),),
+    issues=(Issue(owner="alice", repository="rocket", number=1, title="Bug"),),
+    pull_requests=(
+        PullRequest(
+            owner="alice",
+            repository="rocket",
+            number=2,
+            title="Fix",
+        ),
+    ),
+)
+
+config = scenario.to_simulator_config(include_unsupported=True)
+```
+
 ## Configuration Schema
 
-The simulator requires a specific initial state structure. All top-level arrays
-are required:
+The simulator requires a specific initial state structure. The following
+top-level arrays are required by the simulator:
 
 | Field           | Type  | Description                 |
 | --------------- | ----- | --------------------------- |
@@ -208,6 +279,13 @@ are required:
 | `repositories`  | array | GitHub repository objects   |
 | `branches`      | array | Git branch objects          |
 | `blobs`         | array | Git blob objects            |
+
+Optional arrays, when supported by the simulator version in use:
+
+| Field           | Type  | Description                 |
+| --------------- | ----- | --------------------------- |
+| `issues`        | array | GitHub issue objects        |
+| `pull_requests` | array | GitHub pull request objects |
 
 When starting the simulator with `start_sim_process`, simulacat fills any
 missing required top-level arrays with empty lists. This allows callers to
@@ -236,6 +314,19 @@ including the other keys.
     "id": 1,                       # Optional, auto-generated
     "description": "About repo",   # Optional
     "private": False,              # Optional
+    "default_branch": "main",      # Optional
+}
+```
+
+### Branch Schema
+
+```python
+{
+    "owner": "username",           # Required
+    "repository": "repo-name",     # Required
+    "name": "main",                # Required
+    "sha": "abc123",               # Optional
+    "protected": False,            # Optional
 }
 ```
 
@@ -247,7 +338,7 @@ running the GitHub API simulator. The lowest-level fixture is
 
 ### github_sim_config
 
-`github_sim_config` returns a JSON-serializable mapping describing the initial
+`github_sim_config` returns a JSON-serialisable mapping describing the initial
 simulator state. By default, it is an empty dictionary (`{}`); the
 orchestration layer expands an empty config into the minimal valid state when
 starting the simulator.

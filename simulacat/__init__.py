@@ -7,6 +7,17 @@ from .config import (
     is_json_serializable,
     merge_configs,
 )
+from .scenario import (
+    Branch,
+    ConfigValidationError,
+    DefaultBranch,
+    Issue,
+    Organization,
+    PullRequest,
+    Repository,
+    ScenarioConfig,
+    User,
+)
 from .types import GitHubSimConfig
 
 PACKAGE_NAME = "simulacat"
@@ -18,7 +29,16 @@ except ModuleNotFoundError:  # pragma: no cover - Python fallback
     from .pure import hello
 
 __all__ = [
+    "Branch",
+    "ConfigValidationError",
+    "DefaultBranch",
     "GitHubSimConfig",
+    "Issue",
+    "Organization",
+    "PullRequest",
+    "Repository",
+    "ScenarioConfig",
+    "User",
     "default_github_sim_config",
     "hello",
     "is_json_serializable",

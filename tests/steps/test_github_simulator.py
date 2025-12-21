@@ -115,15 +115,18 @@ def _resolve_base_url(client: object) -> str:
 )
 def given_fixture_with_users(count: int) -> GitHubSimConfig:
     """Return a configuration containing the requested number of users."""
-    return {
-        "users": [
-            {
-                "login": f"user{i}",
-                "organizations": [],
-            }
-            for i in range(count)
-        ]
-    }
+    return typ.cast(
+        "GitHubSimConfig",
+        {
+            "users": [
+                {
+                    "login": f"user{i}",
+                    "organizations": [],
+                }
+                for i in range(count)
+            ]
+        },
+    )
 
 
 @given(
@@ -132,14 +135,17 @@ def given_fixture_with_users(count: int) -> GitHubSimConfig:
 )
 def given_fixture_with_repos() -> GitHubSimConfig:
     """Return a configuration containing users, orgs, and repositories."""
-    return {
-        "users": [{"login": "alice", "organizations": ["acme"]}],
-        "organizations": [{"login": "acme"}],
-        "repositories": [
-            {"owner": "alice", "name": "repo1"},
-            {"owner": "acme", "name": "orgrepo"},
-        ],
-    }
+    return typ.cast(
+        "GitHubSimConfig",
+        {
+            "users": [{"login": "alice", "organizations": ["acme"]}],
+            "organizations": [{"login": "acme"}],
+            "repositories": [
+                {"owner": "alice", "name": "repo1"},
+                {"owner": "acme", "name": "orgrepo"},
+            ],
+        },
+    )
 
 
 def _repo_full_name(repo: object) -> str:

@@ -168,6 +168,31 @@ The following decisions were made during implementation of the
    directly to the Express response and return `undefined` to avoid the
    validation hook and prevent connection resets on keep-alive sessions.
 
+### Step 2.1 – Configuration schema and helpers
+
+The following decisions were made during implementation of the scenario
+configuration schema:
+
+1. **Dataclass-based scenario schema**: A new scenario layer uses dataclasses
+   (`User`, `Organization`, `Repository`, `Branch`, `DefaultBranch`, `Issue`,
+   `PullRequest`, and `ScenarioConfig`) to provide a stable, Python-friendly
+   surface that hides simulator internals from test code.
+
+2. **Centralised validation with clear errors**: `ScenarioConfig.validate()`
+   raises `ConfigValidationError` with explicit messages when owners,
+   repositories, branches, or state values are inconsistent. This ensures
+   invalid scenarios fail before JSON serialization.
+
+3. **Default branch metadata propagation**: Repositories expose a
+   `default_branch` field. When serialized, this metadata is emitted into both
+   the repository object (`default_branch`) and the branch list, merging with
+   explicit branches when present.
+
+4. **Optional serialization for issues and pull requests**: Issues and pull
+   requests are part of the scenario schema, but they are only included in the
+   simulator configuration when `include_unsupported=True`, acknowledging that
+   simulator support can vary by version.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:
