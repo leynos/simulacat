@@ -43,6 +43,7 @@ type GitHubResponseTemplate = Record<string, unknown> & {
   owner?: unknown;
   repos_url?: unknown;
   repository_url?: unknown;
+  issue_url?: unknown;
   url?: unknown;
   user?: unknown;
 };
@@ -116,6 +117,91 @@ function resolveRequestHost(request: { protocol?: string; headers?: unknown }): 
   return `${protocol}://${hostHeader}`;
 }
 
+type MockResponseApi = {
+  mockResponseForOperation: (operationId: string) => { status: number; mock: unknown };
+};
+
+function getMockTemplate(
+  api: MockResponseApi,
+  request: { protocol?: string; headers?: unknown },
+  operationId: string,
+): { status: number; host: string; template: GitHubResponseTemplate } {
+  const host = resolveRequestHost(request);
+  const { status, mock } = api.mockResponseForOperation(operationId);
+  return { status, host, template: cloneJson(mock as GitHubResponseTemplate) };
+}
+
+function extractOwnerRepoFromUrl(value: unknown): { owner: string; repo: string } | null {
+  if (typeof value !== "string") return null;
+  const match = value.match(/\/repos\/([^/]+)\/([^/]+)/);
+  if (!match) return null;
+  const owner = match[1];
+  const repo = match[2];
+  if (!owner || !repo) return null;
+  return { owner, repo };
+}
+
+function buildRepoReplacer(args: {
+  oldOwner: string;
+  oldName: string;
+  oldFullName: string;
+  newOwner: string;
+  newName: string;
+  host: string;
+}): (value: string) => string {
+  const newFullName = `${args.newOwner}/${args.newName}`;
+  return (value) =>
+    replaceApiHost(
+      value
+        .replaceAll(args.oldFullName, newFullName)
+        .replaceAll(args.oldOwner, args.newOwner)
+        .replaceAll(args.oldName, args.newName),
+      args.host,
+    );
+}
+
+function buildRepoResponse(args: {
+  template: GitHubResponseTemplate;
+  owner: string;
+  name: string;
+  host: string;
+}): GitHubResponseTemplate {
+  const templateOwner = args.template.owner as GitHubOwnerTemplate | undefined;
+  const oldOwner = typeof templateOwner?.login === "string" ? templateOwner.login : "octocat";
+  const oldName = typeof args.template.name === "string" ? args.template.name : "Hello-World";
+  const oldFullName =
+    typeof args.template.full_name === "string"
+      ? args.template.full_name
+      : `${oldOwner}/${oldName}`;
+
+  args.template.name = args.name;
+  args.template.full_name = `${args.owner}/${args.name}`;
+  if (typeof args.template.owner === "object" && args.template.owner !== null) {
+    (args.template.owner as GitHubOwnerTemplate).login = args.owner;
+  }
+
+  const patched = replaceInStrings(
+    args.template,
+    buildRepoReplacer({
+      oldOwner,
+      oldName,
+      oldFullName,
+      newOwner: args.owner,
+      newName: args.name,
+      host: args.host,
+    }),
+  ) as GitHubResponseTemplate;
+
+  if (!("language" in patched)) patched.language = null;
+  ensureRepositoryLanguage(patched);
+  return patched;
+}
+
+function ensureBodyFields(template: GitHubResponseTemplate): void {
+  if (!("body_html" in template)) template.body_html = template.body ?? "";
+  if (!("body_text" in template)) template.body_text = template.body ?? "";
+}
+
 function loadConfig(configPath: string): unknown {
   if (!existsSync(configPath)) {
     throw new Error(`Config file not found: ${configPath}`);
@@ -170,12 +256,11 @@ async function main(): Promise<void> {
             return;
           }
 
-          const host = resolveRequestHost(request);
-          const { status, mock } = context.api.mockResponseForOperation(
+          const { status, host, template } = getMockTemplate(
+            context.api,
+            request,
             context.operation.operationId ?? "orgs/get",
           );
-
-          const template = cloneJson(mock as GitHubResponseTemplate);
           const oldLogin = typeof template.login === "string" ? template.login : "github";
           template.login = org;
 
@@ -201,12 +286,11 @@ async function main(): Promise<void> {
             return;
           }
 
-          const host = resolveRequestHost(request);
-          const { status, mock } = context.api.mockResponseForOperation(
+          const { status, host, template } = getMockTemplate(
+            context.api,
+            request,
             context.operation.operationId ?? "users/get-by-username",
           );
-
-          const template = cloneJson(mock as GitHubResponseTemplate);
           const oldLogin = typeof template.login === "string" ? template.login : "octocat";
           template.login = username;
 
@@ -231,43 +315,22 @@ async function main(): Promise<void> {
             return;
           }
 
-          const host = resolveRequestHost(request);
           const repos = simulationStore.schema.repositories
             .selectTableAsList(state)
             .filter((repo) => repo.owner === username);
 
+          const { host, template: baseTemplate } = getMockTemplate(
+            context.api,
+            request,
+            "repos/get",
+          );
           const results = repos.map((repo) => {
-            const { mock } = context.api.mockResponseForOperation("repos/get");
-            const template = cloneJson(mock as GitHubResponseTemplate);
-            const templateOwner = template.owner as GitHubOwnerTemplate | undefined;
-            const oldOwner =
-              typeof templateOwner?.login === "string" ? templateOwner.login : "octocat";
-            const oldName = typeof template.name === "string" ? template.name : "Hello-World";
-            const oldFullName =
-              typeof template.full_name === "string"
-                ? template.full_name
-                : `${oldOwner}/${oldName}`;
-            const newFullName = `${username}/${repo.name}`;
-
-            template.name = repo.name;
-            template.full_name = newFullName;
-            if (typeof template.owner === "object" && template.owner !== null) {
-              (template.owner as GitHubOwnerTemplate).login = username;
-            }
-
-            const patched = replaceInStrings(template, (value) =>
-              replaceApiHost(
-                value
-                  .replaceAll(oldFullName, newFullName)
-                  .replaceAll(oldOwner, username)
-                  .replaceAll(oldName, repo.name),
-                host,
-              ),
-            ) as GitHubResponseTemplate;
-
-            if (!("language" in patched)) patched.language = null;
-            ensureRepositoryLanguage(patched);
-            return patched;
+            return buildRepoResponse({
+              template: cloneJson(baseTemplate),
+              owner: username,
+              name: repo.name,
+              host,
+            });
           });
 
           response.status(200).json(results);
@@ -282,47 +345,28 @@ async function main(): Promise<void> {
             return;
           }
 
-          const host = resolveRequestHost(request);
-          const { status, mock } = context.api.mockResponseForOperation(
+          const { status, host, template } = getMockTemplate(
+            context.api,
+            request,
             context.operation.operationId ?? "repos/get",
           );
-          const template = cloneJson(mock as GitHubResponseTemplate);
-          const templateOwner = template.owner as GitHubOwnerTemplate | undefined;
-
-          const oldOwner =
-            typeof templateOwner?.login === "string" ? templateOwner.login : "octocat";
-          const oldName = typeof template.name === "string" ? template.name : "Hello-World";
-          const oldFullName =
-            typeof template.full_name === "string" ? template.full_name : `${oldOwner}/${oldName}`;
-          const newFullName = `${owner}/${repo}`;
-
-          template.name = repo;
-          template.full_name = newFullName;
-          if (typeof template.owner === "object" && template.owner !== null) {
-            (template.owner as GitHubOwnerTemplate).login = owner;
-          }
-
-          const patched = replaceInStrings(template, (value) =>
-            replaceApiHost(
-              value
-                .replaceAll(oldFullName, newFullName)
-                .replaceAll(oldOwner, owner)
-                .replaceAll(oldName, repo),
-              host,
-            ),
-          ) as GitHubResponseTemplate;
-
-          if (!("language" in patched)) patched.language = null;
-          ensureRepositoryLanguage(patched);
-          response.status(status).json(patched);
+          response.status(status).json(buildRepoResponse({ template, owner, name: repo, host }));
         },
         "issues/get": async (context, request, response) => {
           const { owner, repo, issue_number } = context.request.params;
-          const host = resolveRequestHost(request);
-          const { status, mock } = context.api.mockResponseForOperation(
+          const state = simulationStore.store.getState();
+          const repos = simulationStore.schema.repositories.selectTableAsList(state);
+          const exists = repos.some((entry) => entry.owner === owner && entry.name === repo);
+          if (!exists) {
+            response.status(404).send("Not Found");
+            return;
+          }
+
+          const { status, host, template } = getMockTemplate(
+            context.api,
+            request,
             context.operation.operationId ?? "issues/get",
           );
-          const template = cloneJson(mock as GitHubResponseTemplate);
           const templateUser = template.user as GitHubOwnerTemplate | undefined;
 
           const issueNumber = Number.parseInt(issue_number, 10);
@@ -331,30 +375,45 @@ async function main(): Promise<void> {
             return;
           }
 
-          const oldOwner = typeof templateUser?.login === "string" ? templateUser.login : "octocat";
-          const oldRepo =
-            typeof template.repository_url === "string"
-              ? (template.repository_url.split("/").at(-1) ?? "Hello-World")
-              : "Hello-World";
+          const extracted = extractOwnerRepoFromUrl(template.repository_url);
+          const oldOwner =
+            extracted?.owner ??
+            (typeof templateUser?.login === "string" ? templateUser.login : "octocat");
+          const oldRepo = extracted?.repo ?? "Hello-World";
 
           template.number = issueNumber;
-          if (!("body_html" in template)) template.body_html = template.body ?? "";
-          if (!("body_text" in template)) template.body_text = template.body ?? "";
+          ensureBodyFields(template);
           if (!("closed_by" in template)) template.closed_by = null;
 
-          const patched = replaceInStrings(template, (value) =>
-            replaceApiHost(value.replaceAll(oldOwner, owner).replaceAll(oldRepo, repo), host),
+          const patched = replaceInStrings(
+            template,
+            buildRepoReplacer({
+              oldOwner,
+              oldName: oldRepo,
+              oldFullName: `${oldOwner}/${oldRepo}`,
+              newOwner: owner,
+              newName: repo,
+              host,
+            }),
           ) as GitHubResponseTemplate;
 
           response.status(status).json(patched);
         },
         "pulls/get": async (context, request, response) => {
           const { owner, repo, pull_number } = context.request.params;
-          const host = resolveRequestHost(request);
-          const { status, mock } = context.api.mockResponseForOperation(
+          const state = simulationStore.store.getState();
+          const repos = simulationStore.schema.repositories.selectTableAsList(state);
+          const exists = repos.some((entry) => entry.owner === owner && entry.name === repo);
+          if (!exists) {
+            response.status(404).send("Not Found");
+            return;
+          }
+
+          const { status, host, template } = getMockTemplate(
+            context.api,
+            request,
             context.operation.operationId ?? "pulls/get",
           );
-          const template = cloneJson(mock as GitHubResponseTemplate);
           const templateUser = template.user as GitHubOwnerTemplate | undefined;
 
           const pullNumber = Number.parseInt(pull_number, 10);
@@ -363,17 +422,28 @@ async function main(): Promise<void> {
             return;
           }
 
-          const oldOwner = typeof templateUser?.login === "string" ? templateUser.login : "octocat";
+          const extracted =
+            extractOwnerRepoFromUrl(template.url) ??
+            extractOwnerRepoFromUrl(template.issue_url) ??
+            extractOwnerRepoFromUrl(template.repository_url);
+          const oldOwner =
+            extracted?.owner ??
+            (typeof templateUser?.login === "string" ? templateUser.login : "octocat");
+          const oldRepo = extracted?.repo ?? "Hello-World";
 
           template.number = pullNumber;
-          if (!("body_html" in template)) template.body_html = template.body ?? "";
-          if (!("body_text" in template)) template.body_text = template.body ?? "";
+          ensureBodyFields(template);
 
-          const patched = replaceInStrings(template, (value) =>
-            replaceApiHost(value.replaceAll(oldOwner, owner), host).replaceAll(
-              "/repos/octocat/Hello-World",
-              `/repos/${owner}/${repo}`,
-            ),
+          const patched = replaceInStrings(
+            template,
+            buildRepoReplacer({
+              oldOwner,
+              oldName: oldRepo,
+              oldFullName: `${oldOwner}/${oldRepo}`,
+              newOwner: owner,
+              newName: repo,
+              host,
+            }),
           ) as GitHubResponseTemplate;
 
           response.status(status).json(patched);

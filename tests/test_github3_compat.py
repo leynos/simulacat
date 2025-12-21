@@ -37,6 +37,12 @@ def test_repository_lookup_returns_configured_repository(
     """github3.GitHub.repository can look up repositories on the simulator."""
     repo = github_simulator.repository("alice", "repo1")  # type: ignore[attr-defined]
     assert getattr(repo, "full_name", None) == "alice/repo1"
+    language = getattr(repo, "language", None)
+    assert language is None or isinstance(language, str)
+
+    owner = getattr(repo, "owner", None)
+    assert owner is not None
+    assert getattr(owner, "login", None) == "alice"
 
 
 def test_repository_listing_returns_configured_user_repositories(
@@ -46,6 +52,13 @@ def test_repository_listing_returns_configured_user_repositories(
     repos = list(github_simulator.repositories_by("alice"))  # type: ignore[attr-defined]
     full_names = {getattr(repo, "full_name", "") for repo in repos}
     assert "alice/repo1" in full_names
+    for repo in repos:
+        language = getattr(repo, "language", None)
+        assert language is None or isinstance(language, str)
+
+        owner = getattr(repo, "owner", None)
+        assert owner is not None
+        assert getattr(owner, "login", None) == "alice"
 
 
 def test_repository_listing_returns_configured_org_repositories(
@@ -56,6 +69,13 @@ def test_repository_listing_returns_configured_org_repositories(
     repos = list(org.repositories())  # type: ignore[attr-defined]
     full_names = {getattr(repo, "full_name", "") for repo in repos}
     assert "acme/orgrepo" in full_names
+    for repo in repos:
+        language = getattr(repo, "language", None)
+        assert language is None or isinstance(language, str)
+
+        owner = getattr(repo, "owner", None)
+        assert owner is not None
+        assert getattr(owner, "login", None) == "acme"
 
 
 def test_issue_and_pull_request_retrieval_exposes_rich_body_fields(

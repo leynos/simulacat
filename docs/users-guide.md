@@ -38,7 +38,7 @@ simulator is started.
 simulacat provides pytest fixtures for configuring the GitHub API simulator in
 tests.
 
-### github_sim_config
+### github_sim_config (advanced)
 
 The `github_sim_config` fixture provides simulator configuration as a
 JSON-serializable mapping. The fixture is automatically available via the
