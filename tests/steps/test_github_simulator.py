@@ -196,7 +196,13 @@ def then_org_repo_listing_works(client_context: ClientContext, login: str) -> No
 
 @then(parsers.parse('the repository listing includes "{full_name}"'))
 def then_listing_contains_repo(client_context: ClientContext, full_name: str) -> None:
-    """Assert that either user or org repo listing includes the target repository."""
+    """Assert that the repository is listed.
+
+    This step first attempts to list repositories via
+    `GitHub.repositories_by(owner)`. If that returns no repositories, it falls
+    back to treating the owner as an organization and lists repositories via
+    `GitHub.organization(owner).repositories()`.
+    """
     client = _require_github3_client(client_context)
     owner, _name = full_name.split("/", 1)
 
