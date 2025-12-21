@@ -90,8 +90,8 @@ The following decisions were made during implementation of the
 
 3. **JSON serializability validation**: The `is_json_serializable()` helper
    function allows tests to verify that configuration values can be passed to
-   the simulator. This catches common mistakes like including `Path` objects
-   or functions in configuration dictionaries.
+   the simulator. This catches common mistakes like including `Path` objects or
+   functions in configuration dictionaries.
 
 4. **Configuration merging**: The `merge_configs()` helper supports layering
    configurations from package, module, and function scopes. Later
@@ -107,29 +107,27 @@ The following decisions were made during implementation of the
 6. **No automatic registration as pytest plugin**: The fixture is defined in
    `simulacat/fixtures.py` and must be imported or the module must be
    registered in `conftest.py`. This avoids implicit behaviour and makes the
-   dependency explicit.
-The following decisions were made during implementation:
+   dependency explicit. The following decisions were made during implementation:
 
-1. **Expose fixtures via a pytest plugin**: Fixtures live in
+7. **Expose fixtures via a pytest plugin**: Fixtures live in
    `simulacat.pytest_plugin` and are registered under the `pytest11` entry
    point. This makes them available to consumers without requiring
    `pytest_plugins` boilerplate.
 
-2. **Function-scoped default fixture**: `github_sim_config` is function scoped
+8. **Function-scoped default fixture**: `github_sim_config` is function scoped
    to keep tests isolated. Consumers may override the fixture with narrower or
    broader scopes as required.
 
-3. **Empty default configuration**: The fixture returns `{}` by default. The
+9. **Empty default configuration**: The fixture returns `{}` by default. The
    orchestration layer already expands empty configurations into the minimal
    valid simulator state.
 
-4. **Indirect parametrization support**: The fixture accepts
+10. **Indirect parametrization support**: The fixture accepts
    `request.param` when parametrized with `indirect=True`, enabling concise
    per-test configuration overrides.
 
-5. **TypedDict schema for type safety**: A `GitHubSimConfig` `TypedDict`
-   describes the top-level simulator keys while allowing partial
-   configurations.
+11. **TypedDict schema for type safety**: A `GitHubSimConfig` `TypedDict`
+   describes the top-level simulator keys while allowing partial configurations.
 
 #### github_simulator fixture
 
@@ -153,11 +151,22 @@ The following decisions were made during implementation of the
    `stop_sim_process()` in a `finally` block so teardown runs even if the test
    body fails.
 
-4. **Known compatibility gaps are surfaced explicitly**: Some `github3.py`
-   high-level convenience methods instantiate model objects and may raise
-   `github3.exceptions.IncompleteResponse` if the simulator response is missing
-   fields that the client expects. The fixture still supports raw API access
-   via the `github3.GitHub` client and its underlying session.
+4. **Compatibility is handled explicitly for common calls**: The Bun entrypoint
+   extends the simulator's OpenAPI handlers for a small set of endpoints that
+   `github3.py` exercises heavily:
+
+   - repository lookup and listing,
+   - issue and pull request retrieval.
+
+   The handlers start from OpenAPI examples and patch response fields that
+   `github3.py` expects when sending the `application/vnd.github.v3.full+json`
+   accept header (for example, `language`, `body_html`, and `body_text`).
+
+5. **OpenAPI response validation is avoided in these handlers**: The upstream
+   GitHub OpenAPI schema includes constructs (notably `nullable`) that can
+   trigger Ajv compilation errors when validating responses. The handlers write
+   directly to the Express response and return `undefined` to avoid the
+   validation hook and prevent connection resets on keep-alive sessions.
 
 ## Bun entrypoint
 
@@ -237,9 +246,8 @@ This design provides the following capabilities.
   The orchestration records the process handle, terminates the simulator on
   teardown, and escalates to `kill()` if the process does not exit within a
   short timeout (5 seconds by default). If startup fails, the orchestration
-  raises a
-  `GitHubSimProcessError` that includes captured output from the simulator
-  process.
+  raises a `GitHubSimProcessError` that includes captured output from the
+  simulator process.
 
 - Minimal default configuration.
 

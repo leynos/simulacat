@@ -55,7 +55,7 @@ def test_github_simulator_skips_when_bun_is_unavailable(
             """
         )
     )
-    result = pytester.runpytest("-q", "-rs")
+    result = pytester.runpytest_subprocess("-q", "-rs")
     result.assert_outcomes(skipped=1)
     output = result.stdout.str() + result.stderr.str()
     assert re.search(r"SKIPPED.*Bun", output, re.IGNORECASE), output
@@ -152,7 +152,7 @@ def test_github_simulator_constructs_client_and_passes_config(
             """
         )
     )
-    result = pytester.runpytest("-q")
+    result = pytester.runpytest_subprocess("-q")
     result.assert_outcomes(passed=1)
     assert (pytester.path / "stopped.txt").is_file()
     assert (pytester.path / "session-base-url.txt").read_text(
@@ -217,7 +217,7 @@ def test_teardown_runs_even_when_fixture_setup_fails(
         )
     )
 
-    result = pytester.runpytest("-q")
+    result = pytester.runpytest_subprocess("-q")
     result.assert_outcomes(errors=1)
     assert (pytester.path / "stopped.txt").is_file()
 
@@ -268,7 +268,7 @@ def test_teardown_runs_even_when_test_fails(
             """
         )
     )
-    result = pytester.runpytest("-q")
+    result = pytester.runpytest_subprocess("-q")
     result.assert_outcomes(failed=1)
     assert (pytester.path / "stopped.txt").is_file(), (
         "expected github_simulator teardown to write stopped.txt"
