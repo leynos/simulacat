@@ -78,6 +78,8 @@ def given_config_with_test_data() -> GitHubSimConfig:
             "organizations": [],
             "repositories": [],
             "branches": [],
+            "issues": [],
+            "pull_requests": [],
             "blobs": [],
         },
     )
@@ -93,6 +95,8 @@ def given_module_level_override() -> GitHubSimConfig:
             "organizations": [],
             "repositories": [],
             "branches": [],
+            "issues": [],
+            "pull_requests": [],
             "blobs": [],
         },
     )
@@ -110,6 +114,8 @@ def given_function_level_override() -> GitHubSimConfig:
             "organizations": [],
             "repositories": [],
             "branches": [],
+            "issues": [],
+            "pull_requests": [],
             "blobs": [],
         },
     )
@@ -128,6 +134,8 @@ def given_module_override_with_users() -> GitHubSimConfig:
             "organizations": [],
             "repositories": [],
             "branches": [],
+            "issues": [],
+            "pull_requests": [],
             "blobs": [],
         },
     )

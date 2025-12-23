@@ -41,7 +41,7 @@ tests.
 ### github_sim_config (advanced)
 
 The `github_sim_config` fixture provides simulator configuration as a
-JSON-serialisable mapping. The fixture is automatically available via the
+JSON-serializable mapping. The fixture is automatically available via the
 simulacat pytest plugin (registered as a `pytest11` entry point).
 
 The default configuration is an empty dictionary. The orchestration layer
@@ -95,7 +95,7 @@ def test_with_custom_config(github_sim_config: GitHubSimConfig) -> None:
 
 #### is_json_serializable
 
-Check whether a configuration value can be serialised to JSON:
+Check whether a configuration value can be serialized to JSON:
 
 ```python
 from simulacat import is_json_serializable
@@ -199,7 +199,7 @@ proc, port = start_sim_process(
 ## Scenario configuration helpers
 
 For most tests, prefer the scenario configuration dataclasses. They provide a
-stable, Python-friendly way to describe GitHub users, organisations,
+stable, Python-friendly way to describe GitHub users, organizations,
 repositories, branches, and optional issues or pull requests without relying on
 the simulator's internal JSON structure.
 
@@ -244,8 +244,8 @@ config = scenario.to_simulator_config()
 ### Optional issues and pull requests
 
 Issues and pull requests are modelled in the scenario schema, but they are only
-serialised when requested because simulator support may vary. Pass
-`include_unsupported=True` to include them in the serialised configuration.
+serialized when requested because simulator support may vary. Pass
+`include_unsupported=True` to include them in the serialized configuration.
 
 ```python
 from simulacat import Issue, PullRequest, Repository, ScenarioConfig, User
@@ -338,7 +338,7 @@ running the GitHub API simulator. The lowest-level fixture is
 
 ### github_sim_config
 
-`github_sim_config` returns a JSON-serialisable mapping describing the initial
+`github_sim_config` returns a JSON-serializable mapping describing the initial
 simulator state. By default, it is an empty dictionary (`{}`); the
 orchestration layer expands an empty config into the minimal valid state when
 starting the simulator.

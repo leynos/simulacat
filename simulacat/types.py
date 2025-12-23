@@ -22,7 +22,7 @@ class GitHubUserConfig(typ.TypedDict, total=False):
 
 
 class GitHubOrganizationConfig(typ.TypedDict, total=False):
-    """Configuration schema for a GitHub organisation entry."""
+    """Configuration schema for a GitHub organization entry."""
 
     login: str
     id: int
@@ -52,6 +52,18 @@ class GitHubBranchConfig(typ.TypedDict, total=False):
     protected: bool
 
 
+class GitHubUserRefConfig(typ.TypedDict, total=False):
+    """Lightweight user reference used in nested objects."""
+
+    login: str
+
+
+class GitHubPullRequestRefConfig(typ.TypedDict, total=False):
+    """Reference object for pull request base/head branches."""
+
+    ref: str
+
+
 class GitHubIssueConfig(typ.TypedDict, total=False):
     """Configuration schema for a GitHub issue entry."""
 
@@ -61,7 +73,7 @@ class GitHubIssueConfig(typ.TypedDict, total=False):
     title: str
     body: str
     state: str
-    user: dict[str, typ.Any]
+    user: GitHubUserRefConfig
 
 
 class GitHubPullRequestConfig(typ.TypedDict, total=False):
@@ -73,9 +85,9 @@ class GitHubPullRequestConfig(typ.TypedDict, total=False):
     title: str
     body: str
     state: str
-    user: dict[str, typ.Any]
-    base: dict[str, typ.Any]
-    head: dict[str, typ.Any]
+    user: GitHubUserRefConfig
+    base: GitHubPullRequestRefConfig
+    head: GitHubPullRequestRefConfig
     draft: bool
 
 
@@ -85,8 +97,9 @@ class GitHubSimConfig(typ.TypedDict, total=False):
     All keys are optional so that callers can supply partial configurations.
     The orchestration layer fills missing required arrays when needed.
 
-    Values are typed using `Any` to allow arbitrary JSON-serializable
-    structures; the pytest fixture validates JSON serializability at runtime.
+    Most fields use strongly-typed structures for improved type safety. The
+    `blobs` field remains untyped to allow arbitrary JSON-serializable
+    structures. The pytest fixture validates JSON serializability at runtime.
     """
 
     users: list[GitHubUserConfig]

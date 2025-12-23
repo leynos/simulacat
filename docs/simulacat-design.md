@@ -178,7 +178,7 @@ configuration schema:
    `PullRequest`, and `ScenarioConfig`) to provide a stable, Python-friendly
    surface that hides simulator internals from test code.
 
-2. **Centralised validation with clear errors**: `ScenarioConfig.validate()`
+2. **Centralized validation with clear errors**: `ScenarioConfig.validate()`
    raises `ConfigValidationError` with explicit messages when owners,
    repositories, branches, or state values are inconsistent. This ensures
    invalid scenarios fail before JSON serialization.

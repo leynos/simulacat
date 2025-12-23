@@ -5,9 +5,17 @@ from __future__ import annotations
 import typing as typ
 
 import pytest
-from pytest_bdd import given, scenarios, then, when
+from pytest_bdd import given, parsers, scenarios, then, when
 
-from simulacat.scenario import DefaultBranch, Repository, ScenarioConfig, User
+from simulacat.scenario import (
+    Branch,
+    DefaultBranch,
+    Issue,
+    PullRequest,
+    Repository,
+    ScenarioConfig,
+    User,
+)
 
 if typ.TYPE_CHECKING:
     from simulacat.types import (
@@ -88,6 +96,36 @@ def given_mixed_visibility_scenario() -> ScenarioConfig:
     )
 
 
+@given(
+    "a scenario with issues and pull requests",
+    target_fixture="scenario_config",
+)
+def given_issues_and_pulls_scenario() -> ScenarioConfig:
+    """Create a scenario with issues and pull requests."""
+    return ScenarioConfig(
+        users=(User(login="alice"),),
+        repositories=(
+            Repository(
+                owner="alice",
+                name="rocket",
+                default_branch=DefaultBranch(name="main"),
+            ),
+        ),
+        branches=(Branch(owner="alice", repository="rocket", name="feature"),),
+        issues=(Issue(owner="alice", repository="rocket", number=1, title="Bug"),),
+        pull_requests=(
+            PullRequest(
+                owner="alice",
+                repository="rocket",
+                number=2,
+                title="Feature",
+                base_branch="main",
+                head_branch="feature",
+            ),
+        ),
+    )
+
+
 @when("the scenario is serialized for the simulator")
 def when_scenario_serialized(
     scenario_config: ScenarioConfig,
@@ -95,6 +133,17 @@ def when_scenario_serialized(
 ) -> None:
     """Serialize the scenario configuration for the simulator."""
     scenario_context["config"] = scenario_config.to_simulator_config()
+
+
+@when("the scenario is serialized for the simulator with issues and pull requests")
+def when_scenario_serialized_with_issues(
+    scenario_config: ScenarioConfig,
+    scenario_context: ScenarioContext,
+) -> None:
+    """Serialize the scenario configuration including issues and pull requests."""
+    scenario_context["config"] = scenario_config.to_simulator_config(
+        include_unsupported=True
+    )
 
 
 @then('the configuration includes repository "alice/rocket" with default branch "main"')
@@ -130,3 +179,29 @@ def then_private_repo_visibility(scenario_context: ScenarioContext) -> None:
     assert config is not None, "Expected configuration to be set"
     repo = _find_repo(config, "alice/private-repo")
     assert repo.get("private") is True
+
+
+@then(parsers.parse("the configuration includes {count:d} issue"))
+def then_configuration_includes_issues(
+    scenario_context: ScenarioContext,
+    count: int,
+) -> None:
+    """Assert that issues are serialized when requested."""
+    config = scenario_context["config"]
+    assert config is not None, "Expected configuration to be set"
+    issues = typ.cast("list[dict[str, typ.Any]]", config.get("issues", []))
+    assert len(issues) == count
+
+
+@then(parsers.parse("the configuration includes {count:d} pull request"))
+def then_configuration_includes_pull_requests(
+    scenario_context: ScenarioContext,
+    count: int,
+) -> None:
+    """Assert that pull requests are serialized when requested."""
+    config = scenario_context["config"]
+    assert config is not None, "Expected configuration to be set"
+    pull_requests = typ.cast(
+        "list[dict[str, typ.Any]]", config.get("pull_requests", [])
+    )
+    assert len(pull_requests) == count
