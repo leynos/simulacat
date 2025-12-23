@@ -1,4 +1,10 @@
-"""Step definitions for scenario configuration helpers."""
+"""BDD step definitions for scenario configuration helpers.
+
+These steps build ScenarioConfig instances, serialize them for the simulator,
+and assert that repositories, branches, issues, and pull requests are emitted
+as expected. The definitions back the scenarios in
+``tests/features/scenario_config.feature``.
+"""
 
 from __future__ import annotations
 
@@ -191,6 +197,10 @@ def then_configuration_includes_issues(
     assert config is not None, "Expected configuration to be set"
     issues = typ.cast("list[dict[str, typ.Any]]", config.get("issues", []))
     assert len(issues) == count
+    for issue in issues:
+        assert isinstance(issue.get("number"), int)
+        assert isinstance(issue.get("title"), str)
+        assert isinstance(issue.get("state"), str)
 
 
 @then(parsers.parse("the configuration includes {count:d} pull request"))
@@ -205,3 +215,7 @@ def then_configuration_includes_pull_requests(
         "list[dict[str, typ.Any]]", config.get("pull_requests", [])
     )
     assert len(pull_requests) == count
+    for pull_request in pull_requests:
+        assert isinstance(pull_request.get("number"), int)
+        assert isinstance(pull_request.get("title"), str)
+        assert isinstance(pull_request.get("state"), str)

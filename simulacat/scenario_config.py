@@ -1,4 +1,21 @@
-"""Scenario configuration and validation helpers."""
+"""Scenario configuration and validation helpers.
+
+This module provides validation and serialization for scenario configuration
+data classes, keeping test code insulated from the simulator's JSON schema.
+Use :class:`ScenarioConfig` to validate inputs and emit a simulator-ready
+configuration mapping.
+
+Examples
+--------
+Build a scenario and serialize it for the simulator:
+
+>>> from simulacat.scenario import Repository, ScenarioConfig, User
+>>> scenario = ScenarioConfig(
+...     users=(User(login="alice"),),
+...     repositories=(Repository(owner="alice", name="demo"),),
+... )
+>>> config = scenario.to_simulator_config()
+"""
 
 from __future__ import annotations
 
@@ -23,10 +40,10 @@ class ConfigValidationError(ValueError):
     """Raised when a ScenarioConfig fails validation."""
 
 
-RepositoryKey = tuple[str, str]
+RepositoryKey: typ.TypeAlias = tuple[str, str]
 
 
-@dc.dataclass(slots=True)
+@dc.dataclass(frozen=True, slots=True)
 class _ScenarioIndexes:
     """Internal validated indexes for scenario configuration."""
 
@@ -44,7 +61,7 @@ def _require_text(value: object, label: str) -> str:
 
 
 def _require_positive_int(value: object, label: str) -> int:
-    if not isinstance(value, int) or value <= 0:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         msg = f"{label} must be a positive integer"
         raise ConfigValidationError(msg)
     return value

@@ -1,4 +1,16 @@
-"""Scenario data models for GitHub simulator configuration."""
+"""Scenario data models for GitHub simulator configuration.
+
+These dataclasses capture the domain concepts used by the simulator (users,
+repositories, branches, issues, and pull requests) while remaining independent
+of the simulator's JSON schema. They are intended to be composed into a
+``ScenarioConfig`` and serialized by the configuration layer.
+
+Examples
+--------
+>>> from simulacat.scenario_models import Repository, User
+>>> user = User(login="alice")
+>>> repo = Repository(owner="alice", name="demo")
+"""
 
 from __future__ import annotations
 
