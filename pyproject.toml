@@ -10,7 +10,7 @@ keywords = ["github", "simulator", "testing", "pytest", "api"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved",
+    "License :: OSI Approved :: ISC License (ISCL)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
@@ -164,5 +164,5 @@ packages = ["simulacat"]
 
 
 [build-system]
-requires = ["hatchling", "trove-classifiers"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
