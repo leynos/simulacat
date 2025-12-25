@@ -197,10 +197,19 @@ def then_configuration_includes_issues(
     assert config is not None, "Expected configuration to be set"
     issues = typ.cast("list[dict[str, typ.Any]]", config.get("issues", []))
     assert len(issues) == count
-    for issue in issues:
-        assert isinstance(issue.get("number"), int)
-        assert isinstance(issue.get("title"), str)
-        assert isinstance(issue.get("state"), str)
+    for index, issue in enumerate(issues):
+        number = issue.get("number")
+        assert isinstance(number, int), (
+            f"expected issue[{index}]['number'] to be int, got {type(number)!r}"
+        )
+        title = issue.get("title")
+        assert isinstance(title, str), (
+            f"expected issue[{index}]['title'] to be str, got {type(title)!r}"
+        )
+        state = issue.get("state")
+        assert isinstance(state, str), (
+            f"expected issue[{index}]['state'] to be str, got {type(state)!r}"
+        )
 
 
 @then(parsers.parse("the configuration includes {count:d} pull request"))
@@ -215,7 +224,16 @@ def then_configuration_includes_pull_requests(
         "list[dict[str, typ.Any]]", config.get("pull_requests", [])
     )
     assert len(pull_requests) == count
-    for pull_request in pull_requests:
-        assert isinstance(pull_request.get("number"), int)
-        assert isinstance(pull_request.get("title"), str)
-        assert isinstance(pull_request.get("state"), str)
+    for index, pull_request in enumerate(pull_requests):
+        number = pull_request.get("number")
+        assert isinstance(number, int), (
+            f"expected pull_request[{index}]['number'] to be int, got {type(number)!r}"
+        )
+        title = pull_request.get("title")
+        assert isinstance(title, str), (
+            f"expected pull_request[{index}]['title'] to be str, got {type(title)!r}"
+        )
+        state = pull_request.get("state")
+        assert isinstance(state, str), (
+            f"expected pull_request[{index}]['state'] to be str, got {type(state)!r}"
+        )

@@ -4,7 +4,20 @@ version = "0.1.0"
 description = "simulacat package"
 readme = "README.md"
 requires-python = ">=3.12"
-license = { text = "MIT" }
+license = { text = "ISC" }
+authors = [{ name = "Payton McIntosh", email = "pmcintosh@df12.net" }]
+keywords = ["github", "simulator", "testing", "pytest", "api"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: Pytest",
+    "Topic :: Software Development :: Testing",
+]
 dependencies = ["github3.py>=4.0.0,<5.0.0"]
 
 [project.entry-points.pytest11]
@@ -151,5 +164,5 @@ packages = ["simulacat"]
 
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "trove-classifiers"]
 build-backend = "hatchling.build"
