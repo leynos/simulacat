@@ -5,7 +5,7 @@ GitHub API simulator powered by `@simulacrum/github-api-simulator`.
 
 ## Prerequisites
 
-- Python 3.10 or later
+- Python 3.12 or later
 - [Bun](https://bun.sh/) runtime installed and available in PATH
 - Node.js dependencies installed (`bun install` in the installed package
   directory)

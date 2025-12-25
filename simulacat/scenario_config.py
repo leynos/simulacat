@@ -40,7 +40,7 @@ class ConfigValidationError(ValueError):
     """Raised when a ScenarioConfig fails validation."""
 
 
-RepositoryKey: typ.TypeAlias = tuple[str, str]
+type RepositoryKey = tuple[str, str]
 
 
 @dc.dataclass(frozen=True, slots=True)
