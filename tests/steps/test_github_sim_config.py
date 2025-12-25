@@ -53,15 +53,18 @@ def config_context() -> ConfigContext:
 )
 def given_fixture_with_users(count: int) -> GitHubSimConfig:
     """Return a configuration containing the requested number of users."""
-    return {
-        "users": [
-            {
-                "login": f"user{i}",
-                "organizations": [],
-            }
-            for i in range(count)
-        ]
-    }
+    return typ.cast(
+        "GitHubSimConfig",
+        {
+            "users": [
+                {
+                    "login": f"user{i}",
+                    "organizations": [],
+                }
+                for i in range(count)
+            ]
+        },
+    )
 
 
 @when("the github_sim_config fixture is requested")

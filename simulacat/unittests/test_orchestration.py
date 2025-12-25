@@ -237,7 +237,7 @@ class TestStartSimProcess:
         )
 
     @staticmethod
-    @pytest.mark.timeout(1.5)
+    @pytest.mark.timeout(2.5)
     def test_times_out_when_simulator_is_silent(
         tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:

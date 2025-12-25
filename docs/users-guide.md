@@ -5,7 +5,7 @@ GitHub API simulator powered by `@simulacrum/github-api-simulator`.
 
 ## Prerequisites
 
-- Python 3.10 or later
+- Python 3.12 or later
 - [Bun](https://bun.sh/) runtime installed and available in PATH
 - Node.js dependencies installed (`bun install` in the installed package
   directory)
@@ -196,10 +196,81 @@ proc, port = start_sim_process(
 )
 ```
 
+## Scenario configuration helpers
+
+For most tests, prefer the scenario configuration dataclasses. They provide a
+stable, Python-friendly way to describe GitHub users, organizations,
+repositories, branches, and optional issues or pull requests without relying on
+the simulator's internal JSON structure.
+
+To pass a scenario into the simulator, call `to_simulator_config()` and return
+the resulting mapping from `github_sim_config`.
+
+### Example: single repo, single user
+
+```python
+from simulacat import DefaultBranch, Repository, ScenarioConfig, User
+
+scenario = ScenarioConfig(
+    users=(User(login="alice"),),
+    repositories=(
+        Repository(
+            owner="alice",
+            name="rocket",
+            default_branch=DefaultBranch(name="main"),
+        ),
+    ),
+)
+
+config = scenario.to_simulator_config()
+```
+
+### Example: multiple repositories with public and private visibility
+
+```python
+from simulacat import Repository, ScenarioConfig, User
+
+scenario = ScenarioConfig(
+    users=(User(login="alice"),),
+    repositories=(
+        Repository(owner="alice", name="public-repo"),
+        Repository(owner="alice", name="private-repo", is_private=True),
+    ),
+)
+
+config = scenario.to_simulator_config()
+```
+
+### Optional issues and pull requests
+
+Issues and pull requests are modelled in the scenario schema, but they are only
+serialized when requested because simulator support may vary. Pass
+`include_unsupported=True` to include them in the serialized configuration.
+
+```python
+from simulacat import Issue, PullRequest, Repository, ScenarioConfig, User
+
+scenario = ScenarioConfig(
+    users=(User(login="alice"),),
+    repositories=(Repository(owner="alice", name="rocket"),),
+    issues=(Issue(owner="alice", repository="rocket", number=1, title="Bug"),),
+    pull_requests=(
+        PullRequest(
+            owner="alice",
+            repository="rocket",
+            number=2,
+            title="Fix",
+        ),
+    ),
+)
+
+config = scenario.to_simulator_config(include_unsupported=True)
+```
+
 ## Configuration Schema
 
-The simulator requires a specific initial state structure. All top-level arrays
-are required:
+The simulator requires a specific initial state structure. The following
+top-level arrays are required by the simulator:
 
 | Field           | Type  | Description                 |
 | --------------- | ----- | --------------------------- |
@@ -208,6 +279,13 @@ are required:
 | `repositories`  | array | GitHub repository objects   |
 | `branches`      | array | Git branch objects          |
 | `blobs`         | array | Git blob objects            |
+
+Optional arrays, when supported by the simulator version in use:
+
+| Field           | Type  | Description                 |
+| --------------- | ----- | --------------------------- |
+| `issues`        | array | GitHub issue objects        |
+| `pull_requests` | array | GitHub pull request objects |
 
 When starting the simulator with `start_sim_process`, simulacat fills any
 missing required top-level arrays with empty lists. This allows callers to
@@ -236,6 +314,19 @@ including the other keys.
     "id": 1,                       # Optional, auto-generated
     "description": "About repo",   # Optional
     "private": False,              # Optional
+    "default_branch": "main",      # Optional
+}
+```
+
+### Branch Schema
+
+```python
+{
+    "owner": "username",           # Required
+    "repository": "repo-name",     # Required
+    "name": "main",                # Required
+    "sha": "abc123",               # Optional
+    "protected": False,            # Optional
 }
 ```
 

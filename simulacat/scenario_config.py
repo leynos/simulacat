@@ -1,0 +1,408 @@
+"""Scenario configuration and validation helpers.
+
+This module provides validation and serialization for scenario configuration
+data classes, keeping test code insulated from the simulator's JSON schema.
+Use :class:`ScenarioConfig` to validate inputs and emit a simulator-ready
+configuration mapping.
+
+Examples
+--------
+Build a scenario and serialize it for the simulator:
+
+>>> from simulacat.scenario import Repository, ScenarioConfig, User
+>>> scenario = ScenarioConfig(
+...     users=(User(login="alice"),),
+...     repositories=(Repository(owner="alice", name="demo"),),
+... )
+>>> config = scenario.to_simulator_config()
+"""
+
+from __future__ import annotations
+
+import dataclasses as dc
+import typing as typ
+
+from .scenario_models import (
+    Branch,
+    DefaultBranch,
+    Issue,
+    Organization,
+    PullRequest,
+    Repository,
+    User,
+)
+
+if typ.TYPE_CHECKING:
+    from .types import GitHubSimConfig
+
+
+class ConfigValidationError(ValueError):
+    """Raised when a ScenarioConfig fails validation."""
+
+
+type RepositoryKey = tuple[str, str]
+
+
+@dc.dataclass(frozen=True, slots=True)
+class _ScenarioIndexes:
+    """Internal validated indexes for scenario configuration."""
+
+    org_logins: set[str]
+    user_logins: set[str]
+    repo_index: dict[RepositoryKey, Repository]
+    branch_index: dict[RepositoryKey, dict[str, Branch]]
+
+
+def _require_text(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        msg = f"{label} must be a non-empty string"
+        raise ConfigValidationError(msg)
+    return value
+
+
+def _require_positive_int(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        msg = f"{label} must be a positive integer"
+        raise ConfigValidationError(msg)
+    return value
+
+
+def _ensure_unique(values: list[str], label: str) -> set[str]:
+    seen: set[str] = set()
+    for value in values:
+        if value in seen:
+            msg = f"Duplicate {label}: {value!r}"
+            raise ConfigValidationError(msg)
+        seen.add(value)
+    return seen
+
+
+@dc.dataclass(frozen=True, slots=True)
+class ScenarioConfig:
+    """Container for scenario configuration.
+
+    Use this class to build and validate simulator configuration without
+    depending on the simulator's internal JSON schema.
+    """
+
+    users: tuple[User, ...] = dc.field(default_factory=tuple)
+    organizations: tuple[Organization, ...] = dc.field(default_factory=tuple)
+    repositories: tuple[Repository, ...] = dc.field(default_factory=tuple)
+    branches: tuple[Branch, ...] = dc.field(default_factory=tuple)
+    issues: tuple[Issue, ...] = dc.field(default_factory=tuple)
+    pull_requests: tuple[PullRequest, ...] = dc.field(default_factory=tuple)
+    _indexes: _ScenarioIndexes | None = dc.field(
+        init=False,
+        default=None,
+        repr=False,
+        compare=False,
+    )
+
+    def __post_init__(self) -> None:
+        """Normalise scenario collections into tuples for immutability."""
+        object.__setattr__(self, "users", tuple(self.users))
+        object.__setattr__(self, "organizations", tuple(self.organizations))
+        object.__setattr__(self, "repositories", tuple(self.repositories))
+        object.__setattr__(self, "branches", tuple(self.branches))
+        object.__setattr__(self, "issues", tuple(self.issues))
+        object.__setattr__(self, "pull_requests", tuple(self.pull_requests))
+
+    def validate(self, *, include_unsupported: bool = True) -> None:
+        """Validate the scenario configuration.
+
+        Parameters
+        ----------
+        include_unsupported
+            When True, also validate issues and pull requests. This is enabled
+            by default to keep `validate()` strict.
+
+        Raises
+        ------
+        ConfigValidationError
+            If the configuration is inconsistent or incomplete.
+
+        """
+        indexes = self._ensure_indexes()
+        if include_unsupported:
+            self._validate_issues(indexes.repo_index)
+            self._validate_pull_requests(indexes.repo_index, indexes.branch_index)
+
+    def to_simulator_config(
+        self, *, include_unsupported: bool = False
+    ) -> GitHubSimConfig:
+        """Serialize the scenario into the simulator configuration format.
+
+        Parameters
+        ----------
+        include_unsupported
+            Include issues and pull requests in the serialized configuration.
+            These are retained in the scenario even if the simulator ignores
+            them, so they are opt-in by default.
+
+        Returns
+        -------
+        GitHubSimConfig
+            A JSON-serializable simulator configuration.
+
+        """
+        indexes = self._ensure_indexes()
+        if include_unsupported:
+            self._validate_issues(indexes.repo_index)
+            self._validate_pull_requests(indexes.repo_index, indexes.branch_index)
+
+        branches: list[Branch] = []
+        for repo_branches in indexes.branch_index.values():
+            branches.extend(repo_branches.values())
+
+        config: GitHubSimConfig = {
+            "users": [user.to_dict() for user in self.users],
+            "organizations": [org.to_dict() for org in self.organizations],
+            "repositories": [repo.to_dict() for repo in self.repositories],
+            "branches": [branch.to_dict() for branch in branches],
+            "blobs": [],
+        }
+
+        if include_unsupported:
+            config["issues"] = [issue.to_dict() for issue in self.issues]
+            config["pull_requests"] = [pr.to_dict() for pr in self.pull_requests]
+
+        return config
+
+    def _ensure_indexes(self) -> _ScenarioIndexes:
+        indexes = self._indexes
+        if indexes is None:
+            indexes = self._build_indexes()
+            object.__setattr__(self, "_indexes", indexes)
+        return indexes
+
+    def _build_indexes(self) -> _ScenarioIndexes:
+        org_logins = self._validate_organizations()
+        user_logins = self._validate_users(org_logins)
+        repo_index = self._validate_repositories(user_logins, org_logins)
+        branch_index = self._validate_branches(repo_index)
+        return _ScenarioIndexes(org_logins, user_logins, repo_index, branch_index)
+
+    def _validate_organizations(self) -> set[str]:
+        logins = [
+            _require_text(org.login, "Organization login") for org in self.organizations
+        ]
+        return _ensure_unique(logins, "organization login")
+
+    def _validate_users(self, org_logins: set[str]) -> set[str]:
+        logins: list[str] = []
+        for user in self.users:
+            logins.append(_require_text(user.login, "User login"))
+            for org in user.organizations:
+                _require_text(org, "User organization")
+                if org not in org_logins:
+                    msg = (
+                        "User organization must refer to a defined organization "
+                        f"(missing {org!r} for user {user.login!r})"
+                    )
+                    raise ConfigValidationError(msg)
+        return _ensure_unique(logins, "user login")
+
+    def _validate_repositories(
+        self,
+        user_logins: set[str],
+        org_logins: set[str],
+    ) -> dict[RepositoryKey, Repository]:
+        repo_index: dict[RepositoryKey, Repository] = {}
+        for repo in self.repositories:
+            owner = _require_text(repo.owner, "Repository owner")
+            name = _require_text(repo.name, "Repository name")
+            if owner not in user_logins and owner not in org_logins:
+                msg = (
+                    "Repository owner must be a defined user or organization "
+                    f"(got {owner!r} for {owner}/{name})"
+                )
+                raise ConfigValidationError(msg)
+            key = (owner, name)
+            if key in repo_index:
+                msg = f"Duplicate repository definition: {owner}/{name}"
+                raise ConfigValidationError(msg)
+            if repo.default_branch is not None:
+                _require_text(repo.default_branch.name, "Default branch name")
+                if repo.default_branch.sha is not None:
+                    _require_text(repo.default_branch.sha, "Default branch sha")
+            repo_index[key] = repo
+        return repo_index
+
+    def _validate_branches(
+        self, repo_index: dict[RepositoryKey, Repository]
+    ) -> dict[RepositoryKey, dict[str, Branch]]:
+        branch_index = self._validate_explicit_branches(repo_index)
+        self._attach_default_branches(repo_index, branch_index)
+        return branch_index
+
+    def _validate_explicit_branches(
+        self, repo_index: dict[RepositoryKey, Repository]
+    ) -> dict[RepositoryKey, dict[str, Branch]]:
+        branch_index: dict[RepositoryKey, dict[str, Branch]] = {}
+        for branch in self.branches:
+            key = self._validate_branch_core(branch, repo_index)
+            repo_branches = branch_index.setdefault(key, {})
+            existing = repo_branches.get(branch.name)
+            if existing is not None:
+                self._validate_branch_overlap(existing, branch, key)
+            repo_branches[branch.name] = branch
+        return branch_index
+
+    @staticmethod
+    def _validate_branch_core(
+        branch: Branch,
+        repo_index: dict[RepositoryKey, Repository],
+    ) -> RepositoryKey:
+        owner = _require_text(branch.owner, "Branch owner")
+        repo = _require_text(branch.repository, "Branch repository")
+        _require_text(branch.name, "Branch name")
+        if branch.sha is not None:
+            _require_text(branch.sha, "Branch sha")
+        key = (owner, repo)
+        if key not in repo_index:
+            msg = f"Branch refers to unknown repository {owner}/{repo}"
+            raise ConfigValidationError(msg)
+        return key
+
+    def _attach_default_branches(
+        self,
+        repo_index: dict[RepositoryKey, Repository],
+        branch_index: dict[RepositoryKey, dict[str, Branch]],
+    ) -> None:
+        for key, repo in repo_index.items():
+            if repo.default_branch is None:
+                continue
+            self._merge_default_branch(key, repo.default_branch, branch_index)
+
+    def _merge_default_branch(
+        self,
+        key: RepositoryKey,
+        default_branch: DefaultBranch,
+        branch_index: dict[RepositoryKey, dict[str, Branch]],
+    ) -> None:
+        repo_branches = branch_index.setdefault(key, {})
+        default_as_branch = default_branch.to_branch(*key)
+        existing = repo_branches.get(default_as_branch.name)
+        if existing is None:
+            repo_branches[default_as_branch.name] = default_as_branch
+            return
+        self._validate_branch_overlap(
+            existing,
+            default_as_branch,
+            key,
+            is_default=True,
+        )
+        repo_branches[default_as_branch.name] = Branch(
+            owner=existing.owner,
+            repository=existing.repository,
+            name=existing.name,
+            sha=existing.sha or default_as_branch.sha,
+            is_protected=(
+                existing.is_protected
+                if existing.is_protected is not None
+                else default_as_branch.is_protected
+            ),
+        )
+
+    @staticmethod
+    def _validate_branch_overlap(
+        existing: Branch,
+        incoming: Branch,
+        key: RepositoryKey,
+        *,
+        is_default: bool = False,
+    ) -> None:
+        mismatch: list[str] = []
+        if existing.sha and incoming.sha and existing.sha != incoming.sha:
+            mismatch.append("sha")
+        if (
+            existing.is_protected is not None
+            and incoming.is_protected is not None
+            and existing.is_protected != incoming.is_protected
+        ):
+            mismatch.append("protected")
+        if mismatch:
+            kind = "default branch" if is_default else "branch"
+            owner, repo = key
+            msg = (
+                f"Conflicting {kind} metadata for {owner}/{repo}:{existing.name} "
+                f"({', '.join(mismatch)} differs)"
+            )
+            raise ConfigValidationError(msg)
+
+    def _validate_issues(self, repo_index: dict[RepositoryKey, Repository]) -> None:
+        issue_numbers: dict[RepositoryKey, set[int]] = {}
+        for issue in self.issues:
+            owner = _require_text(issue.owner, "Issue owner")
+            repo = _require_text(issue.repository, "Issue repository")
+            number = _require_positive_int(issue.number, "Issue number")
+            _require_text(issue.title, "Issue title")
+            self._require_state(issue.state, "Issue state")
+            if issue.author is not None:
+                _require_text(issue.author, "Issue author")
+            key = (owner, repo)
+            if key not in repo_index:
+                msg = f"Issue refers to unknown repository {owner}/{repo}"
+                raise ConfigValidationError(msg)
+            numbers = issue_numbers.setdefault(key, set())
+            if number in numbers:
+                msg = f"Duplicate issue number {number} for {owner}/{repo}"
+                raise ConfigValidationError(msg)
+            numbers.add(number)
+
+    def _validate_pull_requests(
+        self,
+        repo_index: dict[RepositoryKey, Repository],
+        branch_index: dict[RepositoryKey, dict[str, Branch]],
+    ) -> None:
+        pr_numbers: dict[RepositoryKey, set[int]] = {}
+        for pr in self.pull_requests:
+            owner = _require_text(pr.owner, "Pull request owner")
+            repo = _require_text(pr.repository, "Pull request repository")
+            number = _require_positive_int(pr.number, "Pull request number")
+            _require_text(pr.title, "Pull request title")
+            self._require_state(pr.state, "Pull request state")
+            if pr.author is not None:
+                _require_text(pr.author, "Pull request author")
+            key = (owner, repo)
+            if key not in repo_index:
+                msg = f"Pull request refers to unknown repository {owner}/{repo}"
+                raise ConfigValidationError(msg)
+            numbers = pr_numbers.setdefault(key, set())
+            if number in numbers:
+                msg = f"Duplicate pull request number {number} for {owner}/{repo}"
+                raise ConfigValidationError(msg)
+            numbers.add(number)
+            self._validate_pull_request_branches(pr, key, branch_index)
+
+    @staticmethod
+    def _validate_pull_request_branches(
+        pr: PullRequest,
+        key: RepositoryKey,
+        branch_index: dict[RepositoryKey, dict[str, Branch]],
+    ) -> None:
+        repo_branches = branch_index.get(key, {})
+        for label, name in ("base", pr.base_branch), ("head", pr.head_branch):
+            if name is None:
+                continue
+            _require_text(name, f"Pull request {label} branch")
+            if name not in repo_branches:
+                owner, repo = key
+                msg = (
+                    "Pull request branch must reference a configured branch "
+                    f"(missing {name!r} for {owner}/{repo})"
+                )
+                raise ConfigValidationError(msg)
+
+    @staticmethod
+    def _require_state(state: str, label: str) -> None:
+        allowed = {"open", "closed"}
+        if state not in allowed:
+            msg = f"{label} must be one of {sorted(allowed)}"
+            raise ConfigValidationError(msg)
+
+
+__all__ = [
+    "ConfigValidationError",
+    "ScenarioConfig",
+]

@@ -3,8 +3,21 @@ name = "simulacat"
 version = "0.1.0"
 description = "simulacat package"
 readme = "README.md"
-requires-python = ">=3.10"
-license = { text = "MIT" }
+requires-python = ">=3.12"
+license = { text = "ISC" }
+authors = [{ name = "Payton McIntosh", email = "pmcintosh@df12.net" }]
+keywords = ["github", "simulator", "testing", "pytest", "api"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: ISC License (ISCL)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: Pytest",
+    "Topic :: Software Development :: Testing",
+]
 dependencies = ["github3.py>=4.0.0,<5.0.0"]
 
 [project.entry-points.pytest11]
@@ -23,6 +36,7 @@ dev = [
 [tool.ruff]
 line-length = 88
 preview = true
+target-version = "py312"
 
 [tool.ruff.lint]
 select = [
