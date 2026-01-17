@@ -1,8 +1,9 @@
 # Step 2.2 named scenario factories and fixtures
 
-This ExecPlan is a living document. The sections "Constraints", "Tolerances",
-"Risks", "Progress", "Surprises & Discoveries", "Decision Log", and "Outcomes &
-Retrospective" must be kept up to date as work proceeds.
+This Execution Plan (ExecPlan) is a living document. The sections
+"Constraints", "Tolerances", "Risks", "Progress", "Surprises & Discoveries",
+"Decision Log", and "Outcomes & Retrospective" must be kept up to date as work
+proceeds.
 
 Status: COMPLETE
 
@@ -92,10 +93,9 @@ Success is observable when:
   `GitHubSimConfig` mappings derived from scenario factories, and expose them
   through `simulacat/fixtures.py`. Rationale: aligns with existing fixture
   expectations and simplifies usage. Date/Author: 2026-01-17, Codex.
-- Decision: relocate optional Rust extension loading to `simulacat/compat.py`
-  and re-export `hello` from `simulacat/__init__.py` to satisfy linting rules
-  about `__init__` purity. Rationale: keeps `__init__` limited to re-exports
-  while preserving existing behaviour. Date/Author: 2026-01-17, Codex.
+- Decision: remove the placeholder `hello` compatibility export and its helper
+  modules because it is not required by the library. Rationale: keep the public
+  API focused and avoid dead code. Date/Author: 2026-01-17, Codex.
 
 ## Outcomes & retrospective
 
@@ -104,7 +104,8 @@ fixtures with unit and behavioural coverage. Updated the users' guide, design
 notes, and roadmap, and ran all quality gates successfully. One gap: the
 pre-implementation failing-test check could not be demonstrated because
 `pytest` was not on PATH before the virtual environment was created; the full
-suite was executed via `make test` after implementation.
+suite was executed via `make test` after implementation. Removed the
+placeholder `hello` compatibility export in a follow-up cleanup.
 
 ## Context and orientation
 
@@ -327,3 +328,5 @@ that in `docs/users-guide.md` and `docs/simulacat-design.md`.
 - 2026-01-17: marked plan as in progress after approval to implement.
 - 2026-01-17: marked plan complete, updated outcomes, and refreshed interfaces
   to match delivered signatures.
+- 2026-01-17: removed placeholder `hello` compatibility export and helper
+  module references.

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from .compat import hello
 from .config import (
     default_github_sim_config,
     is_json_serializable,
@@ -38,7 +37,6 @@ __all__ = [
     "User",
     "default_github_sim_config",
     "empty_org_scenario",
-    "hello",
     "is_json_serializable",
     "merge_configs",
     "merge_scenarios",

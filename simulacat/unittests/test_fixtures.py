@@ -250,3 +250,47 @@ class TestFixtureRegistration:
         from simulacat.fixtures import simulacat_empty_org
 
         assert callable(simulacat_empty_org)
+
+
+def test_simulacat_single_repo_fixture_returns_expected_config(
+    request: pytest.FixtureRequest,
+) -> None:
+    """simulacat_single_repo returns a config with a demo repository."""
+    config = request.getfixturevalue("simulacat_single_repo")
+
+    assert isinstance(config, dict)
+    repos = typ.cast("list[dict[str, typ.Any]]", config.get("repositories", []))
+    assert len(repos) == 1
+    repo = repos[0]
+    assert repo.get("owner") == "octocat"
+    assert repo.get("name") == "demo-repo"
+    assert repo.get("default_branch") == "main"
+
+    users = typ.cast("list[dict[str, typ.Any]]", config.get("users", []))
+    assert len(users) == 1
+    assert users[0].get("login") == "octocat"
+
+    orgs = typ.cast("list[dict[str, typ.Any]]", config.get("organizations", []))
+    assert orgs == []
+
+    branches = typ.cast("list[dict[str, typ.Any]]", config.get("branches", []))
+    assert any(
+        branch.get("owner") == "octocat"
+        and branch.get("repository") == "demo-repo"
+        and branch.get("name") == "main"
+        for branch in branches
+    )
+
+
+def test_simulacat_empty_org_fixture_returns_expected_config(
+    request: pytest.FixtureRequest,
+) -> None:
+    """simulacat_empty_org returns a config with an empty organisation."""
+    config = request.getfixturevalue("simulacat_empty_org")
+
+    assert isinstance(config, dict)
+    orgs = typ.cast("list[dict[str, typ.Any]]", config.get("organizations", []))
+    assert len(orgs) == 1
+    assert orgs[0].get("login") == "octo-org"
+    assert config.get("repositories", []) == []
+    assert config.get("users", []) == []

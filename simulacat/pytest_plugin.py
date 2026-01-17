@@ -126,7 +126,7 @@ def _is_bun_available() -> bool:
 def github_simulator(
     github_sim_config: GitHubSimConfig,
     tmp_path: Path,
-) -> typ.Generator[typ.Any, None, None]:
+) -> cabc.Generator[typ.Any, None, None]:
     """Provide a github3.py client connected to a running simulator."""
     if not _is_bun_available():
         pytest.skip("Bun is required for github_simulator fixture")

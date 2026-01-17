@@ -13,6 +13,9 @@ import typing as typ
 from .scenario_config import ConfigValidationError, ScenarioConfig
 from .scenario_models import Branch, DefaultBranch, Organization, Repository, User
 
+if typ.TYPE_CHECKING:
+    import collections.abc as cabc
+
 
 def _require_text(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
@@ -21,7 +24,7 @@ def _require_text(value: object, label: str) -> str:
     return value
 
 
-def _require_unique(values: typ.Iterable[str], label: str) -> tuple[str, ...]:
+def _require_unique(values: cabc.Iterable[str], label: str) -> tuple[str, ...]:
     items = tuple(values)
     seen: set[str] = set()
     for value in items:
@@ -35,13 +38,13 @@ def _require_unique(values: typ.Iterable[str], label: str) -> tuple[str, ...]:
 @dc.dataclass(frozen=True, slots=True)
 class _MergeSpec[T, Key]:
     label: str
-    key: typ.Callable[[T], Key]
-    format_key: typ.Callable[[Key], str]
-    getter: typ.Callable[[ScenarioConfig], typ.Iterable[T]]
+    key: cabc.Callable[[T], Key]
+    format_key: cabc.Callable[[Key], str]
+    getter: cabc.Callable[[ScenarioConfig], cabc.Iterable[T]]
 
 
 def _merge_entries[T, Key](
-    scenarios: typ.Iterable[ScenarioConfig],
+    scenarios: cabc.Iterable[ScenarioConfig],
     spec: _MergeSpec[T, Key],
 ) -> tuple[T, ...]:
     merged: dict[Key, T] = {}
