@@ -226,6 +226,8 @@ class TestFixtureRegistration:
         from simulacat import fixtures
 
         assert hasattr(fixtures, "github_sim_config")
+        assert hasattr(fixtures, "simulacat_single_repo")
+        assert hasattr(fixtures, "simulacat_empty_org")
 
     @staticmethod
     def test_github_sim_config_is_callable() -> None:
@@ -234,3 +236,17 @@ class TestFixtureRegistration:
 
         # The fixture function should be callable
         assert callable(github_sim_config)
+
+    @staticmethod
+    def test_simulacat_single_repo_fixture_is_callable() -> None:
+        """The simulacat_single_repo fixture function is callable."""
+        from simulacat.fixtures import simulacat_single_repo
+
+        assert callable(simulacat_single_repo)
+
+    @staticmethod
+    def test_simulacat_empty_org_fixture_is_callable() -> None:
+        """The simulacat_empty_org fixture function is callable."""
+        from simulacat.fixtures import simulacat_empty_org
+
+        assert callable(simulacat_empty_org)

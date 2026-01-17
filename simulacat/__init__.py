@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .compat import hello
 from .config import (
     default_github_sim_config,
     is_json_serializable,
@@ -17,16 +18,12 @@ from .scenario import (
     Repository,
     ScenarioConfig,
     User,
+    empty_org_scenario,
+    merge_scenarios,
+    monorepo_with_apps_scenario,
+    single_repo_scenario,
 )
 from .types import GitHubSimConfig
-
-PACKAGE_NAME = "simulacat"
-
-try:  # pragma: no cover - Rust optional
-    rust = __import__(f"_{PACKAGE_NAME}_rs")
-    hello = rust.hello  # type: ignore[attr-defined]
-except ModuleNotFoundError:  # pragma: no cover - Python fallback
-    from .pure import hello
 
 __all__ = [
     "Branch",
@@ -40,7 +37,11 @@ __all__ = [
     "ScenarioConfig",
     "User",
     "default_github_sim_config",
+    "empty_org_scenario",
     "hello",
     "is_json_serializable",
     "merge_configs",
+    "merge_scenarios",
+    "monorepo_with_apps_scenario",
+    "single_repo_scenario",
 ]

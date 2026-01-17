@@ -1,10 +1,10 @@
 # Step 2.2 named scenario factories and fixtures
 
-This ExecPlan is a living document. The sections "Constraints",
-"Tolerances", "Risks", "Progress", "Surprises & Discoveries", "Decision
-Log", and "Outcomes & Retrospective" must be kept up to date as work proceeds.
+This ExecPlan is a living document. The sections "Constraints", "Tolerances",
+"Risks", "Progress", "Surprises & Discoveries", "Decision Log", and "Outcomes &
+Retrospective" must be kept up to date as work proceeds.
 
-Status: DRAFT
+Status: COMPLETE
 
 PLANS.md: not present in this repository.
 
@@ -50,53 +50,61 @@ Success is observable when:
 ## Risks
 
 - Risk: "monorepo with apps" may not map cleanly to the simulator state.
-  Severity: medium
-  Likelihood: medium
-  Mitigation: inspect simulator expectations, define a minimal representation
-  (for example, branches per app), and document limitations in the users' guide.
+  Severity: medium Likelihood: medium Mitigation: inspect simulator
+  expectations, define a minimal representation (for example, branches per
+  app), and document limitations in the users' guide.
 - Risk: composing scenarios with shared users or organisations could lead to
-  false conflict errors.
-  Severity: medium
-  Likelihood: medium
-  Mitigation: merge by identity keys and deduplicate identical entities while
-  raising on true conflicts; cover with unit tests.
+  false conflict errors. Severity: medium Likelihood: medium Mitigation: merge
+  by identity keys and deduplicate identical entities while raising on true
+  conflicts; cover with unit tests.
 - Risk: fixtures may be confusing to consumers if they do not integrate with
-  `github_simulator` as expected.
-  Severity: low
-  Likelihood: medium
-  Mitigation: document recommended fixture usage and add behavioural tests.
+  `github_simulator` as expected. Severity: low Likelihood: medium Mitigation:
+  document recommended fixture usage and add behavioural tests.
 
 ## Progress
 
 - [x] (2026-01-17 06:00Z) Drafted ExecPlan for Step 2.2.
-- [ ] Add unit and behavioural tests for scenario factories and merging.
-- [ ] Implement scenario factories, merge helper, and fixtures.
-- [ ] Update documentation and roadmap; run quality gates.
+- [x] (2026-01-17 06:20Z) Received approval to proceed with implementation.
+- [x] (2026-01-17 06:45Z) Added unit and behavioural tests for scenario
+  factories and merging.
+- [x] (2026-01-17 07:05Z) Implemented scenario factories, merge helper, and
+  fixtures, plus a compat module for optional extensions.
+- [x] (2026-01-17 07:30Z) Updated documentation and roadmap; ran quality gates.
 
 ## Surprises & discoveries
 
-None yet.
+- Observation: linting flagged non-reexport logic inside
+  `simulacat/__init__.py`. Evidence: `make lint` reported RUF067 in
+  `simulacat/__init__.py`. Impact: moved optional Rust extension loading into
+  `simulacat/compat.py`.
 
 ## Decision log
 
 - Decision: implement named scenario factories in a new module
   `simulacat/scenario_factories.py`, re-exported via `simulacat/scenario` and
-  `simulacat/__init__.py`.
-  Rationale: keeps public API stable while isolating factory logic.
-  Date/Author: 2026-01-17, Codex.
+  `simulacat/__init__.py`. Rationale: keeps public API stable while isolating
+  factory logic. Date/Author: 2026-01-17, Codex.
 - Decision: provide a `merge_scenarios(*scenarios)` helper that deduplicates
   identical entities by key and raises `ConfigValidationError` on conflicts.
   Rationale: enables composition while still catching conflicting definitions.
   Date/Author: 2026-01-17, Codex.
 - Decision: add pytest fixtures in `simulacat/pytest_plugin.py` that return
   `GitHubSimConfig` mappings derived from scenario factories, and expose them
-  through `simulacat/fixtures.py`.
-  Rationale: aligns with existing fixture expectations and simplifies usage.
-  Date/Author: 2026-01-17, Codex.
+  through `simulacat/fixtures.py`. Rationale: aligns with existing fixture
+  expectations and simplifies usage. Date/Author: 2026-01-17, Codex.
+- Decision: relocate optional Rust extension loading to `simulacat/compat.py`
+  and re-export `hello` from `simulacat/__init__.py` to satisfy linting rules
+  about `__init__` purity. Rationale: keeps `__init__` limited to re-exports
+  while preserving existing behaviour. Date/Author: 2026-01-17, Codex.
 
 ## Outcomes & retrospective
 
-Pending. To be completed after implementation and validation.
+Delivered reusable scenario factories, composition helpers, and higher-level
+fixtures with unit and behavioural coverage. Updated the users' guide, design
+notes, and roadmap, and ran all quality gates successfully. One gap: the
+pre-implementation failing-test check could not be demonstrated because
+`pytest` was not on PATH before the virtual environment was created; the full
+suite was executed via `make test` after implementation.
 
 ## Context and orientation
 
@@ -164,8 +172,8 @@ Stage C: implementation (minimal change to satisfy tests).
   `simulacat/fixtures.py`.
 - Ensure `merge_scenarios` performs key-based deduplication for users,
   organisations, repositories, branches, issues, and pull requests. For each
-  key, keep one entry if identical; otherwise raise `ConfigValidationError` with
-  a clear conflict message.
+  key, keep one entry if identical; otherwise raise `ConfigValidationError`
+  with a clear conflict message.
 
 Validation: re-run the new unit and behavioural tests; they should now pass.
 
@@ -224,8 +232,8 @@ Stage D: hardening, documentation, cleanup.
     make typecheck | tee /tmp/simulacat-typecheck.log
     make lint | tee /tmp/simulacat-lint.log
     make test | tee /tmp/simulacat-test.log
-    MDLINT=/root/.bun/bin/markdownlint-cli2 make markdownlint \
-      | tee /tmp/simulacat-markdownlint.log
+    MDLINT=/root/.bun/bin/markdownlint-cli2 \
+      make markdownlint | tee /tmp/simulacat-markdownlint.log
     make nixie | tee /tmp/simulacat-nixie.log
 
    Expected result: each command exits 0 and logs report success.
@@ -281,14 +289,22 @@ Fixture override example:
 
 New module `simulacat/scenario_factories.py` should define:
 
-    def single_repo_scenario(owner: str, name: str = "repo") -> ScenarioConfig
+    def single_repo_scenario(
+        owner: str,
+        name: str = "repo",
+        *,
+        owner_is_org: bool = False,
+        default_branch: str = "main",
+    ) -> ScenarioConfig
 
     def empty_org_scenario(login: str) -> ScenarioConfig
 
     def monorepo_with_apps_scenario(
         owner: str,
         repo: str = "monorepo",
-        apps: tuple[str, ...] = ("app",),
+        apps: tuple[str, …] = ("app",),
+        *,
+        owner_is_org: bool = False,
     ) -> ScenarioConfig
 
     def merge_scenarios(*scenarios: ScenarioConfig) -> ScenarioConfig
@@ -308,4 +324,6 @@ that in `docs/users-guide.md` and `docs/simulacat-design.md`.
 
 ## Revision note
 
-Initial draft created on 2026-01-17 to cover Step 2.2 tasks.
+- 2026-01-17: marked plan as in progress after approval to implement.
+- 2026-01-17: marked plan complete, updated outcomes, and refreshed interfaces
+  to match delivered signatures.

@@ -66,7 +66,7 @@ def test_repository_listing_returns_configured_org_repositories(
 ) -> None:
     """github3 Organization repositories can be listed against the simulator."""
     org = github_simulator.organization("acme")  # type: ignore[attr-defined]
-    repos = list(org.repositories())  # type: ignore[attr-defined]
+    repos = list(org.repositories())
     full_names = {getattr(repo, "full_name", "") for repo in repos}
     assert "acme/orgrepo" in full_names
     for repo in repos:
