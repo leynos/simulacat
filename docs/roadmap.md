@@ -105,17 +105,17 @@ Enable reuse of common GitHub layouts across tests without duplication.
 
 #### Tasks (Step 2.2)
 
-- [ ] Introduce named “scenario” factories, for example:
+- [x] Introduce named “scenario” factories, for example:
 
   - `single_repo_scenario(owner, name=...)`,
   - `monorepo_with_apps_scenario(...)` (subject to simulator support).
 
-- [ ] Provide higher-level fixtures that build on `github_sim_config`, such as:
+- [x] Provide higher-level fixtures that build on `github_sim_config`, such as:
 
   - `simulacat_single_repo`,
   - `simulacat_empty_org`.
 
-- [ ] Ensure scenarios are composable:
+- [x] Ensure scenarios are composable:
 
   - merging multiple scenario fragments into a single configuration,
   - detecting and reporting conflicting definitions (for example, duplicate

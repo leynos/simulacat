@@ -1,8 +1,10 @@
 """Pytest fixtures for simulacat GitHub API simulation.
 
 This module provides pytest fixtures for configuring and running a local GitHub
-API simulator. The primary fixture `github_sim_config` returns a JSON-serializable
-mapping that can be overridden at function, module, or package scopes.
+API simulator. The primary fixture `github_sim_config` returns a
+JSON-serializable mapping that can be overridden at function, module, or
+package scopes. Higher-level fixtures such as `simulacat_single_repo` and
+`simulacat_empty_org` provide ready-to-use scenario configurations.
 
 Note
 ----
@@ -57,6 +59,14 @@ def __getattr__(name: str) -> typ.Any:  # noqa: ANN401 - module __getattr__ retu
         from .pytest_plugin import github_simulator
 
         return github_simulator
+    if name == "simulacat_single_repo":
+        from .pytest_plugin import simulacat_single_repo
+
+        return simulacat_single_repo
+    if name == "simulacat_empty_org":
+        from .pytest_plugin import simulacat_empty_org
+
+        return simulacat_empty_org
 
     msg = f"module {__name__!r} has no attribute {name!r}"
     raise AttributeError(msg)
@@ -64,10 +74,17 @@ def __getattr__(name: str) -> typ.Any:  # noqa: ANN401 - module __getattr__ retu
 
 def __dir__() -> list[str]:
     """List available attributes including lazily-imported fixtures."""
-    return ["github_sim_config", "github_simulator"]
+    return [
+        "github_sim_config",
+        "github_simulator",
+        "simulacat_empty_org",
+        "simulacat_single_repo",
+    ]
 
 
 __all__ = [
     "github_sim_config",  # noqa: F822 - dynamically available via __getattr__
     "github_simulator",  # noqa: F822 - dynamically available via __getattr__
+    "simulacat_empty_org",  # noqa: F822 - dynamically available via __getattr__
+    "simulacat_single_repo",  # noqa: F822 - dynamically available via __getattr__
 ]

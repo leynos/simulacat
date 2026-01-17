@@ -267,6 +267,35 @@ scenario = ScenarioConfig(
 config = scenario.to_simulator_config(include_unsupported=True)
 ```
 
+### Named scenario factories
+
+simulacat provides named scenario factories for common layouts. These live in
+`simulacat.scenario` alongside the data classes:
+
+- `single_repo_scenario(owner, name="repo", owner_is_org=False,
+  default_branch="main")`
+- `monorepo_with_apps_scenario(owner, repo="monorepo",
+  apps=("app",), owner_is_org=False)`
+- `empty_org_scenario(login)`
+- `merge_scenarios(*scenarios)`
+
+The monorepo factory represents apps as branches under `apps/<name>` because
+the simulator does not model directories. The default branch is `main`.
+
+```python
+from simulacat import merge_scenarios, single_repo_scenario
+
+base = single_repo_scenario("alice", name="alpha")
+extra = single_repo_scenario("alice", name="beta")
+
+scenario = merge_scenarios(base, extra)
+config = scenario.to_simulator_config()
+```
+
+`merge_scenarios` deduplicates identical entities and raises
+`ConfigValidationError` when definitions conflict (for example, two repository
+definitions with the same owner and name but different visibility).
+
 ## Configuration Schema
 
 The simulator requires a specific initial state structure. The following
@@ -335,6 +364,25 @@ including the other keys.
 simulacat registers a pytest plugin that provides fixtures for configuring and
 running the GitHub API simulator. The lowest-level fixture is
 `github_sim_config`.
+
+### Scenario fixtures
+
+simulacat also provides higher-level fixtures that return ready-to-use
+configuration mappings derived from the scenario factories:
+
+- `simulacat_single_repo` (single repository owned by `octocat`)
+- `simulacat_empty_org` (empty organisation named `octo-org`)
+
+Use these fixtures to override `github_sim_config` or to compose additional
+configuration layers:
+
+```python
+import pytest
+
+@pytest.fixture
+def github_sim_config(simulacat_single_repo):
+    return simulacat_single_repo
+```
 
 ### github_sim_config
 
