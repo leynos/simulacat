@@ -75,7 +75,29 @@ def single_repo_scenario(
     owner_is_org: bool = False,
     default_branch: str = "main",
 ) -> ScenarioConfig:
-    """Return a scenario for a single repository owned by a user or organization."""
+    """Return a scenario for a single repository owned by a user or organization.
+
+    Parameters
+    ----------
+    owner : str
+        Login for the user or organization that owns the repository.
+    name : str, optional
+        Repository name.
+    owner_is_org : bool, optional
+        Whether the owner should be treated as an organization.
+    default_branch : str, optional
+        Default branch name for the repository.
+
+    Returns
+    -------
+    ScenarioConfig
+        Scenario configuration with a single repository and owner.
+
+    Raises
+    ------
+    ConfigValidationError
+        If any provided text values are blank.
+    """
     owner = _require_text(owner, "Owner")
     name = _require_text(name, "Repository name")
     default_branch = _require_text(default_branch, "Default branch")
@@ -100,7 +122,23 @@ def single_repo_scenario(
 
 
 def empty_org_scenario(login: str) -> ScenarioConfig:
-    """Return a scenario with a single empty organization."""
+    """Return a scenario with a single empty organization.
+
+    Parameters
+    ----------
+    login : str
+        Organization login name.
+
+    Returns
+    -------
+    ScenarioConfig
+        Scenario configuration with the organization and no repositories.
+
+    Raises
+    ------
+    ConfigValidationError
+        If the login is blank.
+    """
     login = _require_text(login, "Organization login")
     return ScenarioConfig(organizations=(Organization(login=login),))
 
@@ -112,7 +150,30 @@ def monorepo_with_apps_scenario(
     *,
     owner_is_org: bool = False,
 ) -> ScenarioConfig:
-    """Return a monorepo scenario with app branches under ``apps/<name>``."""
+    """Return a monorepo scenario with app branches under ``apps/<name>``.
+
+    Parameters
+    ----------
+    owner : str
+        Login for the user or organization that owns the repository.
+    repo : str, optional
+        Monorepo name.
+    apps : tuple[str, ...], optional
+        App names to map to ``apps/<name>`` branches.
+    owner_is_org : bool, optional
+        Whether the owner should be treated as an organization.
+
+    Returns
+    -------
+    ScenarioConfig
+        Scenario configuration with a monorepo and app branches.
+
+    Raises
+    ------
+    ConfigValidationError
+        If any text inputs are blank, the apps list is empty, or app names are
+        duplicated.
+    """
     owner = _require_text(owner, "Owner")
     repo = _require_text(repo, "Repository name")
     if not apps:
@@ -157,6 +218,21 @@ def merge_scenarios(*scenarios: ScenarioConfig) -> ScenarioConfig:
     Scenarios are merged left to right. Entities with the same identity key are
     deduplicated if identical, and raise ``ConfigValidationError`` when their
     definitions differ.
+
+    Parameters
+    ----------
+    *scenarios : ScenarioConfig
+        Scenario fragments to merge.
+
+    Returns
+    -------
+    ScenarioConfig
+        Combined scenario configuration.
+
+    Raises
+    ------
+    ConfigValidationError
+        If any entity definitions conflict across the scenarios.
     """
     scenario_list = tuple(scenarios)
     if not scenario_list:

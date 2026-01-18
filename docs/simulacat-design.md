@@ -203,7 +203,7 @@ factories and fixtures.
    `simulacat.scenario` to keep the public API consistent.
 
 2. **Monorepo representation**: `monorepo_with_apps_scenario` models apps as
-   branches under `apps/<name>` and sets the default branch to `main`, because
+   branches under `apps/<name>` and sets the default branch to `main` because
    the simulator does not model directory structure.
 
 3. **Scenario composition**: `merge_scenarios` merges fragments left to right,

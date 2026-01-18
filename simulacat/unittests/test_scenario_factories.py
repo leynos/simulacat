@@ -31,30 +31,41 @@ class TestScenarioFactories:
         """Single repo factory creates a user-owned repository."""
         scenario = single_repo_scenario("alice", name="rocket")
 
-        assert scenario.users == (User(login="alice"),)
-        assert scenario.organizations == ()
+        assert scenario.users == (User(login="alice"),), (
+            f"Expected users to contain alice, got {scenario.users!r}"
+        )
+        assert scenario.organizations == (), (
+            f"Expected no organizations, got {scenario.organizations!r}"
+        )
         assert scenario.repositories == (
             Repository(
                 owner="alice",
                 name="rocket",
                 default_branch=DefaultBranch(name="main"),
             ),
+        ), f"Expected rocket repository with main branch, got {scenario.repositories!r}"
+        assert scenario.branches == (), (
+            f"Expected no branches, got {scenario.branches!r}"
         )
-        assert scenario.branches == ()
 
     @staticmethod
     def test_single_repo_scenario_org_owner() -> None:
         """Single repo factory can create organization-owned repositories."""
         scenario = single_repo_scenario("acme", name="platform", owner_is_org=True)
 
-        assert scenario.users == ()
-        assert scenario.organizations == (Organization(login="acme"),)
+        assert scenario.users == (), f"Expected no users, got {scenario.users!r}"
+        assert scenario.organizations == (Organization(login="acme"),), (
+            f"Expected organization acme, got {scenario.organizations!r}"
+        )
         assert scenario.repositories == (
             Repository(
                 owner="acme",
                 name="platform",
                 default_branch=DefaultBranch(name="main"),
             ),
+        ), (
+            "Expected platform repository with main branch, got "
+            f"{scenario.repositories!r}"
         )
 
     @staticmethod
@@ -62,9 +73,13 @@ class TestScenarioFactories:
         """Empty org factory provides only an organization entry."""
         scenario = empty_org_scenario("octo-org")
 
-        assert scenario.organizations == (Organization(login="octo-org"),)
-        assert scenario.repositories == ()
-        assert scenario.users == ()
+        assert scenario.organizations == (Organization(login="octo-org"),), (
+            f"Expected octo-org organization, got {scenario.organizations!r}"
+        )
+        assert scenario.repositories == (), (
+            f"Expected no repositories, got {scenario.repositories!r}"
+        )
+        assert scenario.users == (), f"Expected no users, got {scenario.users!r}"
 
     @staticmethod
     def test_empty_org_scenario_rejects_blank_login() -> None:
@@ -100,15 +115,22 @@ class TestScenarioFactories:
         )
 
         branch_names = {branch.name for branch in scenario.branches}
-        assert branch_names == {"apps/api", "apps/web"}
+        assert branch_names == {"apps/api", "apps/web"}, (
+            f"Expected app branches, got {branch_names!r}"
+        )
         assert scenario.repositories == (
             Repository(
                 owner="alice",
                 name="platform",
                 default_branch=DefaultBranch(name="main"),
             ),
+        ), (
+            "Expected platform repository with main branch, got "
+            f"{scenario.repositories!r}"
         )
-        assert scenario.users == (User(login="alice"),)
+        assert scenario.users == (User(login="alice"),), (
+            f"Expected user alice, got {scenario.users!r}"
+        )
 
 
 class TestScenarioMerging:
@@ -122,9 +144,13 @@ class TestScenarioMerging:
 
         merged = merge_scenarios(left, right)
 
-        assert merged.users == (User(login="alice"),)
+        assert merged.users == (User(login="alice"),), (
+            f"Expected merged users to contain alice, got {merged.users!r}"
+        )
         repo_names = {repo.name for repo in merged.repositories}
-        assert repo_names == {"alpha", "beta"}
+        assert repo_names == {"alpha", "beta"}, (
+            f"Expected repositories alpha and beta, got {repo_names!r}"
+        )
 
     @staticmethod
     def test_merge_scenarios_preserves_branch_sets() -> None:
@@ -143,7 +169,9 @@ class TestScenarioMerging:
         merged = merge_scenarios(left, right)
 
         branch_names = {branch.name for branch in merged.branches}
-        assert branch_names == {"main", "feature"}
+        assert branch_names == {"main", "feature"}, (
+            f"Expected branches main and feature, got {branch_names!r}"
+        )
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -301,5 +329,9 @@ class TestScenarioMerging:
 
         merged = merge_scenarios(left, right)
 
-        assert merged.issues == (issue,)
-        assert merged.pull_requests == (pull_request,)
+        assert merged.issues == (issue,), (
+            f"Expected issues to be deduplicated, got {merged.issues!r}"
+        )
+        assert merged.pull_requests == (pull_request,), (
+            f"Expected pull requests to be deduplicated, got {merged.pull_requests!r}"
+        )
