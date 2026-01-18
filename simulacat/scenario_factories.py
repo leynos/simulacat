@@ -18,6 +18,7 @@ if typ.TYPE_CHECKING:
 
 
 def _require_text(value: object, label: str) -> str:
+    """Validate a non-empty string input."""
     if not isinstance(value, str) or not value.strip():
         msg = f"{label} must be a non-empty string"
         raise ConfigValidationError(msg)
@@ -25,6 +26,7 @@ def _require_text(value: object, label: str) -> str:
 
 
 def _require_unique(values: cabc.Iterable[str], label: str) -> tuple[str, ...]:
+    """Ensure all values are unique."""
     items = tuple(values)
     seen: set[str] = set()
     for value in items:
@@ -37,6 +39,8 @@ def _require_unique(values: cabc.Iterable[str], label: str) -> tuple[str, ...]:
 
 @dc.dataclass(frozen=True, slots=True)
 class _MergeSpec[T, Key]:
+    """Describe how to merge a scenario collection."""
+
     label: str
     key: cabc.Callable[[T], Key]
     format_key: cabc.Callable[[Key], str]
@@ -47,6 +51,7 @@ def _merge_entries[T, Key](
     scenarios: cabc.Iterable[ScenarioConfig],
     spec: _MergeSpec[T, Key],
 ) -> tuple[T, ...]:
+    """Merge scenario entries with conflict detection."""
     merged: dict[Key, T] = {}
     for scenario in scenarios:
         for item in spec.getter(scenario):

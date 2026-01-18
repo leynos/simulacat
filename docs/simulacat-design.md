@@ -196,7 +196,7 @@ configuration schema:
 ### Step 2.2 – Reusable scenarios and fixtures
 
 The following decisions were made during implementation of reusable scenario
-factories and fixtures:
+factories and fixtures.
 
 1. **Named scenario factories**: Common layouts live in
    `simulacat/scenario_factories.py` and are re-exported from

@@ -1,4 +1,5 @@
 Feature: Scenario factory helpers
+  Scenario factories describe reusable GitHub layouts for simulator tests.
   Scenario: Single repository factory scenario
     Given a single repository scenario factory
     When the scenario is serialized for the simulator

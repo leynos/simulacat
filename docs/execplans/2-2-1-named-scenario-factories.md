@@ -54,7 +54,7 @@ Success is observable when:
   Severity: medium Likelihood: medium Mitigation: inspect simulator
   expectations, define a minimal representation (for example, branches per
   app), and document limitations in the users' guide.
-- Risk: composing scenarios with shared users or organisations could lead to
+- Risk: composing scenarios with shared users or organizations could lead to
   false conflict errors. Severity: medium Likelihood: medium Mitigation: merge
   by identity keys and deduplicate identical entities while raising on true
   conflicts; cover with unit tests.
@@ -112,7 +112,7 @@ placeholder `hello` compatibility export in a follow-up cleanup.
 Relevant modules and tests:
 
 - `simulacat/scenario_models.py` defines scenario dataclasses.
-- `simulacat/scenario_config.py` validates `ScenarioConfig` and serialises to
+- `simulacat/scenario_config.py` validates `ScenarioConfig` and serializes to
   simulator configuration.
 - `simulacat/scenario.py` is the public scenario API re-export.
 - `simulacat/config.py` hosts config helpers like `merge_configs`.
@@ -153,7 +153,7 @@ Write unit tests before implementation for:
 
 Write behavioural tests (pytest-bdd) that:
 
-- build a scenario using a named factory and verify serialised config output;
+- build a scenario using a named factory and verify serialized config output;
 - merge multiple factory scenarios and assert no duplicates for shared owners;
 - demonstrate a conflict (duplicate repo name under the same owner) and assert
   the error message.
@@ -172,7 +172,7 @@ Stage C: implementation (minimal change to satisfy tests).
   factories (use `ScenarioConfig.to_simulator_config()`), and expose them via
   `simulacat/fixtures.py`.
 - Ensure `merge_scenarios` performs key-based deduplication for users,
-  organisations, repositories, branches, issues, and pull requests. For each
+  organizations, repositories, branches, issues, and pull requests. For each
   key, keep one entry if identical; otherwise raise `ConfigValidationError`
   with a clear conflict message.
 
@@ -246,7 +246,7 @@ Acceptance is achieved when:
 - `single_repo_scenario`, `monorepo_with_apps_scenario`, and
   `empty_org_scenario` return a valid `ScenarioConfig` with the documented
   defaults.
-- `merge_scenarios` combines fragments with shared owners and organisations
+- `merge_scenarios` combines fragments with shared owners and organizations
   without duplication and raises `ConfigValidationError` for conflicts.
 - `simulacat_single_repo` and `simulacat_empty_org` fixtures return
   `GitHubSimConfig` mappings suitable for `github_sim_config` overrides.

@@ -146,106 +146,134 @@ class TestScenarioMerging:
         assert branch_names == {"main", "feature"}
 
     @staticmethod
-    def test_merge_scenarios_conflict_raises() -> None:
-        """Conflicting repository definitions raise a validation error."""
-        left = ScenarioConfig(
-            users=(User(login="alice"),),
-            repositories=(Repository(owner="alice", name="repo"),),
-        )
-        right = ScenarioConfig(
-            users=(User(login="alice"),),
-            repositories=(Repository(owner="alice", name="repo", is_private=True),),
-        )
-
-        with pytest.raises(
-            ConfigValidationError,
-            match="Conflicting repository definition",
-        ):
-            merge_scenarios(left, right)
-
-    @staticmethod
-    def test_merge_scenarios_user_conflict_raises() -> None:
-        """Conflicting user definitions raise a validation error."""
-        left = ScenarioConfig(users=(User(login="alice", organizations=("org",)),))
-        right = ScenarioConfig(users=(User(login="alice"),))
-
-        with pytest.raises(ConfigValidationError, match="Conflicting user"):
-            merge_scenarios(left, right)
-
-    @staticmethod
-    def test_merge_scenarios_org_conflict_raises() -> None:
-        """Conflicting organisation definitions raise a validation error."""
-        left = ScenarioConfig(organizations=(Organization(login="acme", name="Acme"),))
-        right = ScenarioConfig(
-            organizations=(Organization(login="acme", name="Different"),),
-        )
-
-        with pytest.raises(ConfigValidationError, match="Conflicting organization"):
-            merge_scenarios(left, right)
-
-    @staticmethod
-    def test_merge_scenarios_branch_conflict_raises() -> None:
-        """Conflicting branch definitions raise a validation error."""
-        left = ScenarioConfig(
-            users=(User(login="alice"),),
-            repositories=(Repository(owner="alice", name="repo"),),
-            branches=(Branch(owner="alice", repository="repo", name="main", sha="a"),),
-        )
-        right = ScenarioConfig(
-            users=(User(login="alice"),),
-            repositories=(Repository(owner="alice", name="repo"),),
-            branches=(Branch(owner="alice", repository="repo", name="main", sha="b"),),
-        )
-
-        with pytest.raises(ConfigValidationError, match="Conflicting branch"):
-            merge_scenarios(left, right)
-
-    @staticmethod
-    def test_merge_scenarios_issue_conflict_raises() -> None:
-        """Conflicting issue definitions raise a validation error."""
-        left = ScenarioConfig(
-            users=(User(login="alice"),),
-            repositories=(Repository(owner="alice", name="repo"),),
-            issues=(Issue(owner="alice", repository="repo", number=1, title="Bug"),),
-        )
-        right = ScenarioConfig(
-            users=(User(login="alice"),),
-            repositories=(Repository(owner="alice", name="repo"),),
-            issues=(Issue(owner="alice", repository="repo", number=1, title="Other"),),
-        )
-
-        with pytest.raises(ConfigValidationError, match="Conflicting issue"):
-            merge_scenarios(left, right)
-
-    @staticmethod
-    def test_merge_scenarios_pull_request_conflict_raises() -> None:
-        """Conflicting pull request definitions raise a validation error."""
-        left = ScenarioConfig(
-            users=(User(login="alice"),),
-            repositories=(Repository(owner="alice", name="repo"),),
-            pull_requests=(
-                PullRequest(
-                    owner="alice",
-                    repository="repo",
-                    number=2,
-                    title="Feature",
+    @pytest.mark.parametrize(
+        ("left", "right", "pattern"),
+        [
+            (
+                ScenarioConfig(
+                    users=(User(login="alice"),),
+                    repositories=(Repository(owner="alice", name="repo"),),
                 ),
-            ),
-        )
-        right = ScenarioConfig(
-            users=(User(login="alice"),),
-            repositories=(Repository(owner="alice", name="repo"),),
-            pull_requests=(
-                PullRequest(
-                    owner="alice",
-                    repository="repo",
-                    number=2,
-                    title="Different",
+                ScenarioConfig(
+                    users=(User(login="alice"),),
+                    repositories=(
+                        Repository(owner="alice", name="repo", is_private=True),
+                    ),
                 ),
+                "Conflicting repository definition",
             ),
-        )
-
-        with pytest.raises(ConfigValidationError, match="Conflicting pull request"):
+            (
+                ScenarioConfig(users=(User(login="alice", organizations=("org",)),)),
+                ScenarioConfig(users=(User(login="alice"),)),
+                "Conflicting user definition",
+            ),
+            (
+                ScenarioConfig(
+                    organizations=(Organization(login="acme", name="Acme"),),
+                ),
+                ScenarioConfig(
+                    organizations=(Organization(login="acme", name="Different"),),
+                ),
+                "Conflicting organization definition",
+            ),
+            (
+                ScenarioConfig(
+                    users=(User(login="alice"),),
+                    repositories=(Repository(owner="alice", name="repo"),),
+                    branches=(
+                        Branch(
+                            owner="alice",
+                            repository="repo",
+                            name="main",
+                            sha="a",
+                        ),
+                    ),
+                ),
+                ScenarioConfig(
+                    users=(User(login="alice"),),
+                    repositories=(Repository(owner="alice", name="repo"),),
+                    branches=(
+                        Branch(
+                            owner="alice",
+                            repository="repo",
+                            name="main",
+                            sha="b",
+                        ),
+                    ),
+                ),
+                "Conflicting branch definition",
+            ),
+            (
+                ScenarioConfig(
+                    users=(User(login="alice"),),
+                    repositories=(Repository(owner="alice", name="repo"),),
+                    issues=(
+                        Issue(
+                            owner="alice",
+                            repository="repo",
+                            number=1,
+                            title="Bug",
+                        ),
+                    ),
+                ),
+                ScenarioConfig(
+                    users=(User(login="alice"),),
+                    repositories=(Repository(owner="alice", name="repo"),),
+                    issues=(
+                        Issue(
+                            owner="alice",
+                            repository="repo",
+                            number=1,
+                            title="Other",
+                        ),
+                    ),
+                ),
+                "Conflicting issue definition",
+            ),
+            (
+                ScenarioConfig(
+                    users=(User(login="alice"),),
+                    repositories=(Repository(owner="alice", name="repo"),),
+                    pull_requests=(
+                        PullRequest(
+                            owner="alice",
+                            repository="repo",
+                            number=2,
+                            title="Feature",
+                        ),
+                    ),
+                ),
+                ScenarioConfig(
+                    users=(User(login="alice"),),
+                    repositories=(Repository(owner="alice", name="repo"),),
+                    pull_requests=(
+                        PullRequest(
+                            owner="alice",
+                            repository="repo",
+                            number=2,
+                            title="Different",
+                        ),
+                    ),
+                ),
+                "Conflicting pull request definition",
+            ),
+        ],
+        ids=(
+            "repo-conflict",
+            "user-conflict",
+            "org-conflict",
+            "branch-conflict",
+            "issue-conflict",
+            "pull-request-conflict",
+        ),
+    )
+    def test_merge_scenarios_conflicts_raise(
+        left: ScenarioConfig,
+        right: ScenarioConfig,
+        pattern: str,
+    ) -> None:
+        """Conflicting definitions raise a validation error."""
+        with pytest.raises(ConfigValidationError, match=pattern):
             merge_scenarios(left, right)
 
     @staticmethod

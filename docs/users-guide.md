@@ -371,7 +371,7 @@ simulacat also provides higher-level fixtures that return ready-to-use
 configuration mappings derived from the scenario factories:
 
 - `simulacat_single_repo` (single repository owned by `octocat`)
-- `simulacat_empty_org` (empty organisation named `octo-org`)
+- `simulacat_empty_org` (empty organization named `octo-org`)
 
 Use these fixtures to override `github_sim_config` or to compose additional
 configuration layers:

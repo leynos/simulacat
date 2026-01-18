@@ -49,8 +49,8 @@ def scenario_factory_context() -> ScenarioFactoryContext:
     }
 
 
-def _find_repo(config: GitHubSimConfig, full_name: str) -> dict[str, typ.Any]:
-    repos = typ.cast("list[dict[str, typ.Any]]", config.get("repositories", []))
+def _find_repo(config: GitHubSimConfig, full_name: str) -> dict[str, object]:
+    repos = typ.cast("list[dict[str, object]]", config.get("repositories", []))
     for repo in repos:
         owner = repo.get("owner")
         name = repo.get("name")
@@ -61,7 +61,7 @@ def _find_repo(config: GitHubSimConfig, full_name: str) -> dict[str, typ.Any]:
 
 
 def _find_branch_names(config: GitHubSimConfig, full_name: str) -> set[str]:
-    branches = typ.cast("list[dict[str, typ.Any]]", config.get("branches", []))
+    branches = typ.cast("list[dict[str, object]]", config.get("branches", []))
     names: set[str] = set()
     for entry in branches:
         owner = entry.get("owner")
