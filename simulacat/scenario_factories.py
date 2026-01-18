@@ -75,7 +75,7 @@ def single_repo_scenario(
     owner_is_org: bool = False,
     default_branch: str = "main",
 ) -> ScenarioConfig:
-    """Return a scenario for a single repository owned by a user or organisation."""
+    """Return a scenario for a single repository owned by a user or organization."""
     owner = _require_text(owner, "Owner")
     name = _require_text(name, "Repository name")
     default_branch = _require_text(default_branch, "Default branch")
@@ -100,7 +100,7 @@ def single_repo_scenario(
 
 
 def empty_org_scenario(login: str) -> ScenarioConfig:
-    """Return a scenario with a single empty organisation."""
+    """Return a scenario with a single empty organization."""
     login = _require_text(login, "Organization login")
     return ScenarioConfig(organizations=(Organization(login=login),))
 

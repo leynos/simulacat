@@ -44,7 +44,7 @@ class TestScenarioFactories:
 
     @staticmethod
     def test_single_repo_scenario_org_owner() -> None:
-        """Single repo factory can create organisation-owned repositories."""
+        """Single repo factory can create organization-owned repositories."""
         scenario = single_repo_scenario("acme", name="platform", owner_is_org=True)
 
         assert scenario.users == ()
@@ -59,7 +59,7 @@ class TestScenarioFactories:
 
     @staticmethod
     def test_empty_org_scenario() -> None:
-        """Empty org factory provides only an organisation entry."""
+        """Empty org factory provides only an organization entry."""
         scenario = empty_org_scenario("octo-org")
 
         assert scenario.organizations == (Organization(login="octo-org"),)
@@ -68,7 +68,7 @@ class TestScenarioFactories:
 
     @staticmethod
     def test_empty_org_scenario_rejects_blank_login() -> None:
-        """Empty org factory rejects blank organisation logins."""
+        """Empty org factory rejects blank organization logins."""
         with pytest.raises(ConfigValidationError, match="Organization login"):
             empty_org_scenario(" ")
 

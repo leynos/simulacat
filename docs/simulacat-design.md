@@ -211,7 +211,7 @@ factories and fixtures.
    `ConfigValidationError` when conflicting definitions are encountered.
 
 4. **Higher-level fixtures**: `simulacat_single_repo` and `simulacat_empty_org`
-   return simulator-ready mappings derived from the factories so consumers can
+   return simulator-ready mappings derived from the factories, so consumers can
    override `github_sim_config` without manual serialization.
 
 ## Bun entrypoint

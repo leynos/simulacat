@@ -189,7 +189,11 @@ def then_configuration_includes_app_branches(
     config = scenario_factory_context["config"]
     assert config is not None, "Expected serialized config to be set"
     branch_names = _find_branch_names(config, "alice/platform")
-    assert {"apps/api", "apps/web"}.issubset(branch_names)
+    expected = {"apps/api", "apps/web"}
+    assert expected.issubset(branch_names), (
+        f"Expected branch names to include {sorted(expected)!r}; "
+        f"got {sorted(branch_names)!r}"
+    )
 
 
 @then("the merged scenario contains 2 repositories")
@@ -198,8 +202,12 @@ def then_merged_scenario_contains_repos(
 ) -> None:
     """Verify merged scenario includes two repositories."""
     merged = scenario_factory_context["merged"]
-    assert merged is not None, "Expected merged scenario to be set"
-    assert len(merged.repositories) == 2
+    assert merged is not None, (
+        "Expected merged scenario to be set in scenario_factory_context"
+    )
+    assert len(merged.repositories) == 2, (
+        "Expected merged.repositories to contain 2 repositories"
+    )
 
 
 @then("a scenario conflict error is reported")
