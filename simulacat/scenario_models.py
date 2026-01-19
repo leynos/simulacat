@@ -88,7 +88,23 @@ class Organization:
 
 @dc.dataclass(frozen=True, slots=True)
 class AccessToken:
-    """Represent an access token for scenario configuration."""
+    """Represent an access token for scenario configuration.
+
+    Parameters
+    ----------
+    value
+        Token string used for Authorization headers.
+    owner
+        User or organization login that owns the token.
+    permissions
+        Permission labels associated with the token.
+    repositories
+        Repository references in ``owner/name`` form scoped to the token.
+    repository_visibility
+        Visibility scope for repository access (``public``, ``private``,
+        or ``all``).
+
+    """
 
     value: str
     owner: str

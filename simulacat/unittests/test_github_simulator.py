@@ -248,23 +248,34 @@ def test_github_simulator_sets_auth_header_from_scenario(
                 indirect=True,
             )
             def test_applies_auth_token(github_simulator, tmp_path):
-                assert github_simulator is not None
+                assert github_simulator is not None, (
+                    "expected github_simulator fixture to be provided"
+                )
 
                 config = json.loads(
                     (tmp_path / "seen-config.json").read_text(encoding="utf-8")
                 )
-                assert "__simulacat__" not in config
+                assert "__simulacat__" not in config, (
+                    "unexpected __simulacat__ metadata in simulator config"
+                )
 
                 header = (Path(__file__).with_name("auth-header.txt")).read_text(
                     encoding="utf-8"
                 )
-                assert header == "token ghs_123"
+                assert header == "token ghs_123", (
+                    f"expected auth header to be set, got {header!r}"
+                )
             """
         )
     )
     result = pytester.runpytest_subprocess("-q")
-    result.assert_outcomes(passed=1)
-    assert (pytester.path / "stopped.txt").is_file()
+    outcomes = result.parseoutcomes()
+    assert outcomes.get("passed") == 1, (
+        f"expected auth token test to pass, got outcomes {outcomes}"
+    )
+    assert (pytester.path / "stopped.txt").is_file(), (
+        "expected github_simulator teardown to write stopped.txt"
+    )
 
 
 def test_teardown_runs_even_when_fixture_setup_fails(

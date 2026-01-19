@@ -210,37 +210,45 @@ Stage D: hardening, documentation, cleanup.
 
 1. Inspect simulator authentication support.
 
-    rg -n "token|auth|permission|visibility" \\
-      node_modules/@simulacrum/github-api-simulator
-    rg -n "auth|token" src/github-sim-server.ts simulacat
+```shell
+rg -n "token|auth|permission|visibility" \
+  node_modules/@simulacrum/github-api-simulator
+rg -n "auth|token" src/github-sim-server.ts simulacat
+```
 
    Capture findings in the Decision Log (what fields are supported, expected
    shapes, and any limitations).
 
-2. Add unit tests first.
+1. Add unit tests first.
 
-    touch simulacat/unittests/test_github_auth_tokens.py
+```shell
+touch simulacat/unittests/test_github_auth_tokens.py
+```
 
    Populate tests for scenario validation and token selection for
    `github_simulator`. Run targeted tests and confirm failure before
    implementation:
 
-    pytest simulacat/unittests/test_github_auth_tokens.py -v
+```shell
+pytest simulacat/unittests/test_github_auth_tokens.py -v
+```
 
-3. Add behavioural tests first.
+1. Add behavioural tests first.
 
-    touch tests/features/github_auth_tokens.feature
-    touch tests/steps/test_github_auth_tokens.py
-    pytest tests/steps/test_github_auth_tokens.py -v
+```shell
+touch tests/features/github_auth_tokens.feature
+touch tests/steps/test_github_auth_tokens.py
+pytest tests/steps/test_github_auth_tokens.py -v
+```
 
    Confirm these fail before implementation.
 
-4. Implement token-aware scenario configuration and client construction.
+1. Implement token-aware scenario configuration and client construction.
 
    Update scenario models, validation, serialization, and `github_simulator`
    logic. Re-run targeted tests until they pass.
 
-5. Update documentation and roadmap.
+2. Update documentation and roadmap.
 
    Edit:
 
@@ -248,16 +256,18 @@ Stage D: hardening, documentation, cleanup.
    - `docs/simulacat-design.md`
    - `docs/roadmap.md`
 
-6. Run quality gates (capture logs to avoid truncation).
+3. Run quality gates (capture logs to avoid truncation).
 
-    set -o pipefail
-    make check-fmt | tee /tmp/simulacat-check-fmt.log
-    make typecheck | tee /tmp/simulacat-typecheck.log
-    make lint | tee /tmp/simulacat-lint.log
-    make test | tee /tmp/simulacat-test.log
-    MDLINT=/root/.bun/bin/markdownlint-cli2 \
-      make markdownlint | tee /tmp/simulacat-markdownlint.log
-    make nixie | tee /tmp/simulacat-nixie.log
+```shell
+set -o pipefail
+make check-fmt | tee /tmp/simulacat-check-fmt.log
+make typecheck | tee /tmp/simulacat-typecheck.log
+make lint | tee /tmp/simulacat-lint.log
+make test | tee /tmp/simulacat-test.log
+MDLINT=/root/.bun/bin/markdownlint-cli2 \
+  make markdownlint | tee /tmp/simulacat-markdownlint.log
+make nixie | tee /tmp/simulacat-nixie.log
+```
 
    Expected result: each command exits 0 and logs report success.
 
@@ -287,29 +297,33 @@ The changes are additive and can be re-run safely. If a step fails, fix the
 issue and re-run the same command. If documentation linting fails due to a
 missing `markdownlint-cli2`, set `MDLINT=/root/.bun/bin/markdownlint-cli2` or
 add `/root/.bun/bin` to `PATH`. Use `git status` to inspect and revert local
-changes if you need to restart.
+changes if a restart is required.
 
 ## Artifacts and notes
 
 Example (expected to work after implementation):
 
-    from simulacat import AccessToken, ScenarioConfig, User
+```python
+from simulacat import AccessToken, ScenarioConfig, User
 
-    scenario = ScenarioConfig(
-        users=(User(login="octocat"),),
-        tokens=(AccessToken(value="ghs_123", owner="octocat"),),
-    )
+scenario = ScenarioConfig(
+    users=(User(login="octocat"),),
+    tokens=(AccessToken(value="ghs_123", owner="octocat"),),
+)
 
-    config = scenario.to_simulator_config()
+config = scenario.to_simulator_config()
+```
 
 Example fixture override with token selection:
 
-    import pytest
+```python
+import pytest
 
 
-    @pytest.fixture
-    def github_sim_config(simulacat_single_repo, simulacat_token_config):
-        return simulacat_token_config
+@pytest.fixture
+def github_sim_config(simulacat_single_repo, simulacat_token_config):
+    return simulacat_token_config
+```
 
 ## Interfaces and dependencies
 
@@ -317,14 +331,16 @@ If the simulator supports tokens, define an access token dataclass in
 `simulacat/scenario_models.py` and add it to `ScenarioConfig` with a tuple
 field. A tentative interface (subject to simulator capabilities):
 
-    class AccessToken(dc.dataclass(frozen=True)):
-        value: str
-        owner: str
-        permissions: tuple[str, …] = ()
-        repo_visibility: str | None = None
+```python
+class AccessToken(dc.dataclass(frozen=True)):
+    value: str
+    owner: str
+    permissions: tuple[str, ...] = ()
+    repo_visibility: str | None = None
 
-    class ScenarioConfig:
-        tokens: tuple[AccessToken, …] = ()
+class ScenarioConfig:
+    tokens: tuple[AccessToken, ...] = ()
+```
 
 Update `ScenarioConfig.to_simulator_config()` to serialise tokens into the
 simulator config only when supported. If the simulator does not accept tokens,

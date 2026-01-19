@@ -138,6 +138,10 @@ simulator supports them.
 
   - configure `Authorization` headers based on the current scenario,
   - model per-token permissions and visibility where available.
+  - acceptance: `make check-fmt`, `make typecheck`, `make lint`, and
+    `make test` succeed, including the new unit tests in
+    `simulacat/unittests/test_auth_tokens.py` and behavioural scenarios in
+    `tests/features/github_simulator_auth.feature`.
 
 - [ ] Provide configuration helpers for GitHub Apps or OAuth applications if
       the simulator exposes these:

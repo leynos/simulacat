@@ -43,6 +43,8 @@ class ConfigValidationError(ValueError):
 
 type RepositoryKey = tuple[str, str]
 
+_ALLOWED_REPOSITORY_VISIBILITIES = frozenset({"all", "private", "public"})
+
 
 @dc.dataclass(frozen=True, slots=True)
 class _ScenarioIndexes:
@@ -86,6 +88,30 @@ def _parse_repo_reference(value: str) -> RepositoryKey:
     owner = _require_text(owner, "Token repository owner")
     repo = _require_text(repo, "Token repository name")
     return owner, repo
+
+
+def _select_auth_token_value(
+    token_values: list[str],
+    default_token: str | None,
+) -> str | None:
+    if not token_values:
+        if default_token is not None:
+            msg = "Default token must match one of the configured tokens"
+            raise ConfigValidationError(msg)
+        return None
+
+    if default_token is not None:
+        selected = _require_text(default_token, "Default token")
+        if selected not in token_values:
+            msg = "Default token must match one of the configured tokens"
+            raise ConfigValidationError(msg)
+        return selected
+
+    if len(token_values) == 1:
+        return token_values[0]
+
+    msg = "Multiple tokens configured but no default_token set"
+    raise ConfigValidationError(msg)
 
 
 @dc.dataclass(frozen=True, slots=True)
@@ -201,15 +227,11 @@ class ScenarioConfig:
         if not self.tokens:
             return None
 
-        token_values = [token.value for token in self.tokens]
         if self.default_token is not None:
-            if self.default_token not in token_values:
-                msg = "Default token must match one of the configured tokens"
-                raise ConfigValidationError(msg)
             return self.default_token
 
-        if len(token_values) == 1:
-            return token_values[0]
+        if len(self.tokens) == 1:
+            return self.tokens[0].value
 
         msg = "Multiple tokens configured but no default_token set"
         raise ConfigValidationError(msg)
@@ -315,18 +337,15 @@ class ScenarioConfig:
             if token.repository_visibility is None:
                 continue
 
-            allowed = {"all", "private", "public"}
-            if token.repository_visibility not in allowed:
-                msg = f"Token repository visibility must be one of {sorted(allowed)}"
+            if token.repository_visibility not in _ALLOWED_REPOSITORY_VISIBILITIES:
+                msg = (
+                    "Token repository visibility must be one of "
+                    f"{sorted(_ALLOWED_REPOSITORY_VISIBILITIES)}"
+                )
                 raise ConfigValidationError(msg)
 
         _ensure_unique(token_values, "token value")
-
-        if self.default_token is not None:
-            default_token = _require_text(self.default_token, "Default token")
-            if default_token not in token_values:
-                msg = "Default token must match one of the configured tokens"
-                raise ConfigValidationError(msg)
+        _select_auth_token_value(token_values, self.default_token)
 
     def _validate_branches(
         self, repo_index: dict[RepositoryKey, Repository]

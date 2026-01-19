@@ -74,6 +74,20 @@ def given_config_without_auth_token() -> GitHubSimConfig:
     return typ.cast("GitHubSimConfig", {})
 
 
+@given(
+    "a github_sim_config fixture with malformed auth metadata",
+    target_fixture="github_sim_config",
+)
+def given_config_with_malformed_auth_metadata() -> GitHubSimConfig:
+    """Return configuration with malformed simulacat auth metadata."""
+    return typ.cast(
+        "GitHubSimConfig",
+        {
+            "__simulacat__": "not-a-mapping",
+        },
+    )
+
+
 @when("the github_simulator fixture is requested")
 def when_github_simulator_requested(
     github_simulator: object,
@@ -99,7 +113,9 @@ def then_authorization_header_present(client_context: ClientContext) -> None:
     """Assert that the Authorization header is set."""
     client = client_context["client"]
     assert client is not None, "Expected github3 client to be stored in context"
-    assert _resolve_authorization_header(client) == "token test-token"
+    assert _resolve_authorization_header(client) == "token test-token", (
+        "Expected Authorization header to be set to test-token"
+    )
 
 
 @then("the github3 client Authorization header is absent")
@@ -107,4 +123,15 @@ def then_authorization_header_absent(client_context: ClientContext) -> None:
     """Assert that the Authorization header is not set."""
     client = client_context["client"]
     assert client is not None, "Expected github3 client to be stored in context"
-    assert _resolve_authorization_header(client) is None
+    assert _resolve_authorization_header(client) is None, (
+        "Expected Authorization header to be absent"
+    )
+
+
+@then("requesting the github_simulator fixture raises a TypeError")
+def then_github_simulator_raises_type_error(
+    request: pytest.FixtureRequest,
+) -> None:
+    """Assert that constructing github_simulator fails with a TypeError."""
+    with pytest.raises(TypeError):
+        request.getfixturevalue("github_simulator")

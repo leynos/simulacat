@@ -31,13 +31,13 @@ _REQUIRED_SIMULATOR_KEYS: tuple[str, ...] = (
     "blobs",
 )
 _SIMULACAT_METADATA_KEY = "__simulacat__"
-_SIMULACAT_AUTH_TOKEN_KEY = "auth_token"  # noqa: S105
+_SIMULACAT_AUTH_TOKEN_KEY = "auth_token"  # noqa: S105 # TODO(simulacat#123): metadata key is not a credential
 
 
 def _split_simulacat_config(
     config: cabc.Mapping[str, typ.Any],
 ) -> tuple[GitHubSimConfig, str | None]:
-    """Return simulator config and optional auth token from metadata."""
+    """Split simulator config from optional simulacat metadata."""
     mutable_config: dict[str, typ.Any] = dict(config)
     auth_token: str | None = None
     raw_metadata = mutable_config.pop(_SIMULACAT_METADATA_KEY, None)
@@ -60,9 +60,10 @@ def _split_simulacat_config(
     return typ.cast("GitHubSimConfig", mutable_config), auth_token
 
 
-def _coerce_github_sim_config(
+def _normalize_github_sim_mapping(
     raw_config: object,
 ) -> cabc.Mapping[str, typ.Any]:
+    """Normalise raw fixture input into a config mapping."""
     if raw_config is None:
         return {}
 
@@ -88,6 +89,7 @@ def _coerce_github_sim_config(
 
 
 def _validate_sim_config(config: cabc.Mapping[str, typ.Any]) -> GitHubSimConfig:
+    """Validate and materialise simulator config values."""
     materialized: dict[str, typ.Any] = dict(config)
 
     if materialized:
@@ -144,8 +146,8 @@ def github_sim_config(request: pytest.FixtureRequest) -> GitHubSimConfig:
 
     """
     raw_config: object = getattr(request, "param", {})
-    coerced = _coerce_github_sim_config(raw_config)
-    return _validate_sim_config(coerced)
+    normalized = _normalize_github_sim_mapping(raw_config)
+    return _validate_sim_config(normalized)
 
 
 @pytest.fixture
@@ -196,11 +198,9 @@ def github_simulator(
 
     proc: subprocess.Popen[str] | None = None
     try:
-        if isinstance(github_sim_config, ScenarioConfig):
-            auth_token = github_sim_config.resolve_auth_token()
-            sim_config: GitHubSimConfig = github_sim_config.to_simulator_config()
-        else:
-            sim_config, auth_token = _split_simulacat_config(github_sim_config)
+        normalized = _normalize_github_sim_mapping(github_sim_config)
+        sim_config, auth_token = _split_simulacat_config(normalized)
+        sim_config = _validate_sim_config(sim_config)
 
         proc, port = start_sim_process(sim_config, tmp_path)
         base_url = f"http://127.0.0.1:{port}"

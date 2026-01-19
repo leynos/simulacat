@@ -301,12 +301,13 @@ definitions with the same owner and name but different visibility).
 simulacat can attach an `Authorization` header when a scenario defines access
 tokens. Tokens are metadata only: the simulator does not validate token values
 or enforce permissions, but the `github_simulator` fixture uses the selected
-token to set the header so clients behave as if authenticated.
+token to set the header, so clients behave as if authenticated.
 
 Tokens are represented by `AccessToken` and stored on `ScenarioConfig` via the
-`tokens` field. If more than one token is defined, set `default_token` to the
-token value you want applied automatically. `repository_visibility` accepts
-`public`, `private`, or `all` to describe intended repository visibility.
+`tokens` field. When more than one token is defined, `default_token` selects
+the token value that should be applied automatically. `repository_visibility`
+accepts `public`, `private`, or `all` to describe intended repository
+visibility.
 
 ```python
 import pytest
@@ -335,8 +336,8 @@ def github_sim_config():
 When the `github_simulator` fixture is requested, it sets
 `Authorization: token ghs_test` on the underlying session.
 
-If you need to select a token without a `ScenarioConfig`, include metadata
-under `__simulacat__` in your config mapping:
+Selecting a token without a `ScenarioConfig` requires metadata under
+`__simulacat__` in the config mapping:
 
 ```python
 @pytest.fixture
