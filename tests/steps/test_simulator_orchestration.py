@@ -39,6 +39,7 @@ from tests import conftest as test_conftest
 pytestmark = test_conftest.bun_required
 
 if typ.TYPE_CHECKING:
+    import collections.abc as cabc
     import subprocess  # noqa: S404  # simulacat#123: typing-only reference; no runtime process creation
     from pathlib import Path
 
@@ -55,7 +56,7 @@ class SimulatorContext(typ.TypedDict):
 
 
 @pytest.fixture
-def simulator_context(tmp_path: Path) -> typ.Generator[SimulatorContext, None, None]:
+def simulator_context(tmp_path: Path) -> cabc.Generator[SimulatorContext, None, None]:
     """Provide a context for simulator scenarios with cleanup."""
     ctx: SimulatorContext = {
         "config": {},

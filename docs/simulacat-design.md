@@ -193,6 +193,27 @@ configuration schema:
    simulator configuration when `include_unsupported=True`, acknowledging that
    simulator support can vary by version.
 
+### Step 2.2 – Reusable scenarios and fixtures
+
+The following decisions were made during implementation of reusable scenario
+factories and fixtures.
+
+1. **Named scenario factories**: Common layouts live in
+   `simulacat/scenario_factories.py` and are re-exported from
+   `simulacat.scenario` to keep the public API consistent.
+
+2. **Monorepo representation**: `monorepo_with_apps_scenario` models apps as
+   branches under `apps/<name>` and sets the default branch to `main` because
+   the simulator does not model directory structure.
+
+3. **Scenario composition**: `merge_scenarios` merges fragments left to right,
+   deduplicates identical entities by identity key, and raises
+   `ConfigValidationError` when conflicting definitions are encountered.
+
+4. **Higher-level fixtures**: `simulacat_single_repo` and `simulacat_empty_org`
+   return simulator-ready mappings derived from the factories, so consumers can
+   override `github_sim_config` without manual serialization.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:

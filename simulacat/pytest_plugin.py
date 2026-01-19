@@ -93,6 +93,24 @@ def github_sim_config(request: pytest.FixtureRequest) -> GitHubSimConfig:
     return typ.cast("GitHubSimConfig", config)
 
 
+@pytest.fixture
+def simulacat_single_repo() -> GitHubSimConfig:
+    """Return a single-repository scenario configuration."""
+    from simulacat.scenario_factories import single_repo_scenario
+
+    scenario = single_repo_scenario("octocat", name="demo-repo")
+    return scenario.to_simulator_config()
+
+
+@pytest.fixture
+def simulacat_empty_org() -> GitHubSimConfig:
+    """Return an empty-organisation scenario configuration."""
+    from simulacat.scenario_factories import empty_org_scenario
+
+    scenario = empty_org_scenario("octo-org")
+    return scenario.to_simulator_config()
+
+
 def _is_bun_available() -> bool:
     """Return True if the configured Bun executable is available.
 
@@ -108,7 +126,7 @@ def _is_bun_available() -> bool:
 def github_simulator(
     github_sim_config: GitHubSimConfig,
     tmp_path: Path,
-) -> typ.Generator[typ.Any, None, None]:
+) -> cabc.Generator[typ.Any, None, None]:
     """Provide a github3.py client connected to a running simulator."""
     if not _is_bun_available():
         pytest.skip("Bun is required for github_simulator fixture")

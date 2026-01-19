@@ -34,6 +34,8 @@ from tests import conftest as test_conftest
 pytestmark = test_conftest.bun_required
 
 if typ.TYPE_CHECKING:
+    import collections.abc as cabc
+
     from simulacat.types import GitHubSimConfig
 
 
@@ -62,7 +64,7 @@ class GitHubClient(typ.Protocol):
     def rate_limit(self) -> dict[str, object]:
         """Return the rate limit payload."""
 
-    def repositories_by(self, username: str) -> typ.Iterable[object]:
+    def repositories_by(self, username: str) -> cabc.Iterable[object]:
         """Iterate over repositories owned by a user/org."""
 
     def repository(self, owner: str, repository: str) -> object:
@@ -72,7 +74,7 @@ class GitHubClient(typ.Protocol):
 class OrganizationClient(typ.Protocol):
     """Protocol for the subset of github3 Organization used in behavioural tests."""
 
-    def repositories(self) -> typ.Iterable[object]:
+    def repositories(self) -> cabc.Iterable[object]:
         """Iterate over repositories in this organization."""
 
 
