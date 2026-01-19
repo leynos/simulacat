@@ -5,7 +5,7 @@ This Execution Plan (ExecPlan) is a living document. The sections
 "Decision Log", and "Outcomes & Retrospective" must be kept up to date as work
 proceeds.
 
-Status: DRAFT
+Status: COMPLETE
 
 PLANS.md: not present in this repository.
 
@@ -14,8 +14,8 @@ PLANS.md: not present in this repository.
 Enable tests to model authenticated GitHub API access when the simulator
 supports it. After this change, consumers can define access tokens and their
 permissions in the scenario configuration, and the `github_simulator` fixture
-will send the appropriate `Authorization` header based on the selected
-scenario token. Success is observable when:
+will send the appropriate `Authorization` header based on the selected scenario
+token. Success is observable when:
 
 - a scenario that declares a token can be used to construct a client with an
   `Authorization` header set;
@@ -56,8 +56,8 @@ scenario token. Success is observable when:
 ## Risks
 
 - Risk: the simulator may not support token-aware visibility checks.
-  Severity: medium Likelihood: medium Mitigation: inspect the simulator
-  schema and runtime behaviour, wire client headers only, and document limits
+  Severity: medium Likelihood: medium Mitigation: inspect the simulator schema
+  and runtime behaviour, wire client headers only, and document limits
   explicitly in `docs/users-guide.md` and `docs/simulacat-design.md`.
 - Risk: adding token metadata to `ScenarioConfig` may complicate validation.
   Severity: medium Likelihood: low Mitigation: keep token definitions minimal,
@@ -69,29 +69,49 @@ scenario token. Success is observable when:
 
 ## Progress
 
-- [ ] (2026-01-19 00:00Z) Draft ExecPlan for Step 3.1.1 optional token
+- [x] (2026-01-19 01:10Z) Draft ExecPlan for Step 3.1.1 optional token
   support.
-- [ ] Inspect simulator auth capabilities and document findings.
-- [ ] Add unit and behavioural tests that fail before implementation.
-- [ ] Implement token-aware scenario configuration and client construction.
-- [ ] Update documentation, design notes, and roadmap entry.
-- [ ] Run required quality gates and record results.
+- [x] (2026-01-19 01:20Z) Inspected simulator auth support and captured
+  findings.
+- [x] (2026-01-19 01:40Z) Added unit and behavioural tests; confirmed
+  pre-implementation failures.
+- [x] (2026-01-19 02:10Z) Implemented access token modelling and client header
+  configuration.
+- [x] (2026-01-19 02:30Z) Updated documentation, design notes, and roadmap.
+- [x] (2026-01-19 02:45Z) Ran required quality gates and recorded results.
 
 ## Surprises & discoveries
 
-- Observation: none yet.
-  Evidence: n/a
-  Impact: n/a
+- Observation: the simulator explicitly does not validate tokens or
+  permissions. Evidence:
+  `node_modules/@simulacrum/github-api-simulator/README.md` states tokens are
+  accepted but not verified. Impact: token handling is client-side only;
+  documentation calls out the limitation.
 
 ## Decision log
 
-- Decision: pending until simulator authentication support is confirmed.
-  Rationale: need to align client behaviour with simulator capabilities.
-  Date/Author: 2026-01-19, Codex.
+- Decision: model access tokens as `AccessToken` dataclasses on
+  `ScenarioConfig`, with optional permissions and visibility metadata.
+  Rationale: keeps token intent close to scenarios without coupling to the
+  simulator schema. Date/Author: 2026-01-19, Codex.
+- Decision: apply tokens by setting `Authorization: token <value>` on the
+  `github3.py` session, and omit token data from simulator initial state.
+  Rationale: the simulator does not enforce auth, so the header is sufficient
+  for client behaviour while avoiding unsupported server config. Date/Author:
+  2026-01-19, Codex.
+- Decision: use `__simulacat__` metadata to carry auth tokens through
+  `github_sim_config` mappings and strip it before launching the simulator.
+  Rationale: preserves backwards compatibility while enabling optional
+  authentication without server changes. Date/Author: 2026-01-19, Codex.
 
 ## Outcomes & retrospective
 
-Not started yet.
+Delivered optional token support via scenario models and fixture headers,
+backed by unit and behavioural tests. Documentation and design notes now
+describe token metadata, selection rules, and the simulator's lack of token
+enforcement. All required quality gates passed. If future simulator releases
+add auth enforcement, the metadata model should be revisited to align with the
+server schema.
 
 ## Context and orientation
 
@@ -122,10 +142,9 @@ Inspect the simulator package to determine whether it supports tokens, per
 -token permissions, or visibility filters. Read any schema, types, or README
 files in the installed `node_modules/@simulacrum/github-api-simulator` folder,
 then inspect how it expects authentication data in `initialState`. Confirm how
-`github3.py` expects token authentication to be configured on a
-`GitHubSession` (for example, header format or helper methods). Summarise the
-findings in the plan and decide the exact configuration shape to model in
-Python.
+`github3.py` expects token authentication to be configured on a `GitHubSession`
+(for example, header format or helper methods). Summarise the findings in the
+plan and decide the exact configuration shape to model in Python.
 
 Validation: no code changes; produce a short summary of simulator support and
 proposed token schema in `Decision Log`.
@@ -301,11 +320,11 @@ field. A tentative interface (subject to simulator capabilities):
     class AccessToken(dc.dataclass(frozen=True)):
         value: str
         owner: str
-        permissions: tuple[str, ...] = ()
+        permissions: tuple[str, …] = ()
         repo_visibility: str | None = None
 
     class ScenarioConfig:
-        tokens: tuple[AccessToken, ...] = ()
+        tokens: tuple[AccessToken, …] = ()
 
 Update `ScenarioConfig.to_simulator_config()` to serialise tokens into the
 simulator config only when supported. If the simulator does not accept tokens,
@@ -315,3 +334,5 @@ client headers, documenting the limitation.
 ## Revision note
 
 - 2026-01-19: initial ExecPlan draft for Step 3.1.1 optional token support.
+- 2026-01-19: marked plan complete after implementation, documentation, and
+  quality gates.

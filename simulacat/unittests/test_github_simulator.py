@@ -160,6 +160,113 @@ def test_github_simulator_constructs_client_and_passes_config(
     ) == "http://127.0.0.1:4242"
 
 
+def test_github_simulator_sets_auth_header_from_scenario(
+    pytester: Pytester,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The fixture applies an auth token when provided via ScenarioConfig."""
+    monkeypatch.setenv("BUN", sys.executable)
+
+    pytester.makeconftest(
+        textwrap.dedent(
+            """\
+            from __future__ import annotations
+
+            import json
+            import sys
+            from pathlib import Path
+
+            import github3
+            import github3.session as github3_session
+
+            from simulacat import orchestration, pytest_plugin
+
+            pytest_plugin.shutil.which = lambda *_: sys.executable
+
+
+            def start_sim_process(config, tmpdir, **_):
+                Path(tmpdir, "seen-config.json").write_text(
+                    json.dumps(config),
+                    encoding="utf-8",
+                )
+                return object(), 4242
+
+
+            def stop_sim_process(proc, **_):
+                Path(__file__).with_name("stopped.txt").write_text(
+                    "stopped",
+                    encoding="utf-8",
+                )
+
+
+            orchestration.start_sim_process = start_sim_process
+            orchestration.stop_sim_process = stop_sim_process
+
+
+            class FakeSession:
+                def __init__(self):
+                    self.base_url = ""
+                    self.headers = {}
+
+
+            def GitHubSession():
+                return FakeSession()
+
+
+            def GitHub(*, session=None, **_):
+                Path(__file__).with_name("auth-header.txt").write_text(
+                    session.headers.get("Authorization", ""),
+                    encoding="utf-8",
+                )
+                return object()
+
+
+            github3_session.GitHubSession = GitHubSession
+            github3.GitHub = GitHub
+            """
+        )
+    )
+    pytester.makepyfile(
+        textwrap.dedent(
+            """\
+            import json
+            from pathlib import Path
+
+            import pytest
+
+            from simulacat import AccessToken, ScenarioConfig, User
+
+
+            @pytest.mark.parametrize(
+                "github_sim_config",
+                [
+                    ScenarioConfig(
+                        users=(User(login="alice"),),
+                        tokens=(AccessToken(value="ghs_123", owner="alice"),),
+                    )
+                ],
+                indirect=True,
+            )
+            def test_applies_auth_token(github_simulator, tmp_path):
+                assert github_simulator is not None
+
+                config = json.loads(
+                    (tmp_path / "seen-config.json").read_text(encoding="utf-8")
+                )
+                assert "__simulacat__" not in config
+
+                header = (Path(__file__).with_name("auth-header.txt")).read_text(
+                    encoding="utf-8"
+                )
+                assert header == "token ghs_123"
+            """
+        )
+    )
+    result = pytester.runpytest_subprocess("-q")
+    result.assert_outcomes(passed=1)
+    assert (pytester.path / "stopped.txt").is_file()
+
+
 def test_teardown_runs_even_when_fixture_setup_fails(
     pytester: Pytester,
     monkeypatch: pytest.MonkeyPatch,

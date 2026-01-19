@@ -87,6 +87,22 @@ class Organization:
 
 
 @dc.dataclass(frozen=True, slots=True)
+class AccessToken:
+    """Represent an access token for scenario configuration."""
+
+    value: str
+    owner: str
+    permissions: tuple[str, ...] = dc.field(default_factory=tuple)
+    repositories: tuple[str, ...] = dc.field(default_factory=tuple)
+    repository_visibility: str | None = None
+
+    def __post_init__(self) -> None:
+        """Normalise collections into tuples for immutability."""
+        object.__setattr__(self, "permissions", tuple(self.permissions))
+        object.__setattr__(self, "repositories", tuple(self.repositories))
+
+
+@dc.dataclass(frozen=True, slots=True)
 class DefaultBranch:
     """Describe default branch metadata for a repository."""
 
@@ -226,6 +242,7 @@ class PullRequest:
 
 
 __all__ = [
+    "AccessToken",
     "Branch",
     "DefaultBranch",
     "Issue",

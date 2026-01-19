@@ -296,6 +296,54 @@ config = scenario.to_simulator_config()
 `ConfigValidationError` when definitions conflict (for example, two repository
 definitions with the same owner and name but different visibility).
 
+### Authentication tokens
+
+simulacat can attach an `Authorization` header when a scenario defines access
+tokens. Tokens are metadata only: the simulator does not validate token values
+or enforce permissions, but the `github_simulator` fixture uses the selected
+token to set the header so clients behave as if authenticated.
+
+Tokens are represented by `AccessToken` and stored on `ScenarioConfig` via the
+`tokens` field. If more than one token is defined, set `default_token` to the
+token value you want applied automatically. `repository_visibility` accepts
+`public`, `private`, or `all` to describe intended repository visibility.
+
+```python
+import pytest
+
+from simulacat import AccessToken, Repository, ScenarioConfig, User
+
+scenario = ScenarioConfig(
+    users=(User(login="octocat"),),
+    repositories=(Repository(owner="octocat", name="demo"),),
+    tokens=(
+        AccessToken(
+            value="ghs_test",
+            owner="octocat",
+            permissions=("repo",),
+            repository_visibility="private",
+            repositories=("octocat/demo",),
+        ),
+    ),
+)
+
+@pytest.fixture
+def github_sim_config():
+    return scenario
+```
+
+When the `github_simulator` fixture is requested, it sets
+`Authorization: token ghs_test` on the underlying session.
+
+If you need to select a token without a `ScenarioConfig`, include metadata
+under `__simulacat__` in your config mapping:
+
+```python
+@pytest.fixture
+def github_sim_config():
+    return {"__simulacat__": {"auth_token": "ghs_test"}}
+```
+
 ## Configuration Schema
 
 The simulator requires a specific initial state structure. The following

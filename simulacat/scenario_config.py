@@ -23,6 +23,7 @@ import dataclasses as dc
 import typing as typ
 
 from .scenario_models import (
+    AccessToken,
     Branch,
     DefaultBranch,
     Issue,
@@ -77,6 +78,16 @@ def _ensure_unique(values: list[str], label: str) -> set[str]:
     return seen
 
 
+def _parse_repo_reference(value: str) -> RepositoryKey:
+    if "/" not in value:
+        msg = "Token repository must be in the form 'owner/repo'"
+        raise ConfigValidationError(msg)
+    owner, repo = value.split("/", 1)
+    owner = _require_text(owner, "Token repository owner")
+    repo = _require_text(repo, "Token repository name")
+    return owner, repo
+
+
 @dc.dataclass(frozen=True, slots=True)
 class ScenarioConfig:
     """Container for scenario configuration.
@@ -91,6 +102,8 @@ class ScenarioConfig:
     branches: tuple[Branch, ...] = dc.field(default_factory=tuple)
     issues: tuple[Issue, ...] = dc.field(default_factory=tuple)
     pull_requests: tuple[PullRequest, ...] = dc.field(default_factory=tuple)
+    tokens: tuple[AccessToken, ...] = dc.field(default_factory=tuple)
+    default_token: str | None = None
     _indexes: _ScenarioIndexes | None = dc.field(
         init=False,
         default=None,
@@ -106,6 +119,7 @@ class ScenarioConfig:
         object.__setattr__(self, "branches", tuple(self.branches))
         object.__setattr__(self, "issues", tuple(self.issues))
         object.__setattr__(self, "pull_requests", tuple(self.pull_requests))
+        object.__setattr__(self, "tokens", tuple(self.tokens))
 
     def validate(self, *, include_unsupported: bool = True) -> None:
         """Validate the scenario configuration.
@@ -168,6 +182,38 @@ class ScenarioConfig:
 
         return config
 
+    def resolve_auth_token(self) -> str | None:
+        """Return the configured default auth token value, if any.
+
+        Returns
+        -------
+        str | None
+            The token value to use for Authorization headers, or None when no
+            tokens are configured.
+
+        Raises
+        ------
+        ConfigValidationError
+            If multiple tokens exist without a default selection.
+
+        """
+        self._ensure_indexes()
+        if not self.tokens:
+            return None
+
+        token_values = [token.value for token in self.tokens]
+        if self.default_token is not None:
+            if self.default_token not in token_values:
+                msg = "Default token must match one of the configured tokens"
+                raise ConfigValidationError(msg)
+            return self.default_token
+
+        if len(token_values) == 1:
+            return token_values[0]
+
+        msg = "Multiple tokens configured but no default_token set"
+        raise ConfigValidationError(msg)
+
     def _ensure_indexes(self) -> _ScenarioIndexes:
         indexes = self._indexes
         if indexes is None:
@@ -179,6 +225,7 @@ class ScenarioConfig:
         org_logins = self._validate_organizations()
         user_logins = self._validate_users(org_logins)
         repo_index = self._validate_repositories(user_logins, org_logins)
+        self._validate_tokens(user_logins, org_logins, repo_index)
         branch_index = self._validate_branches(repo_index)
         return _ScenarioIndexes(org_logins, user_logins, repo_index, branch_index)
 
@@ -227,6 +274,59 @@ class ScenarioConfig:
                     _require_text(repo.default_branch.sha, "Default branch sha")
             repo_index[key] = repo
         return repo_index
+
+    def _validate_tokens(
+        self,
+        user_logins: set[str],
+        org_logins: set[str],
+        repo_index: dict[RepositoryKey, Repository],
+    ) -> None:
+        token_values: list[str] = []
+        for token in self.tokens:
+            value = _require_text(token.value, "Token value")
+            owner = _require_text(token.owner, "Token owner")
+            if owner not in user_logins and owner not in org_logins:
+                msg = (
+                    "Token owner must be a defined user or organization "
+                    f"(got {owner!r} for token {value!r})"
+                )
+                raise ConfigValidationError(msg)
+            token_values.append(value)
+
+            permissions = [
+                _require_text(permission, "Token permission")
+                for permission in token.permissions
+            ]
+            _ensure_unique(permissions, f"token permission for {value!r}")
+
+            repositories = [
+                _require_text(repo, "Token repository") for repo in token.repositories
+            ]
+            _ensure_unique(repositories, f"token repository reference for {value!r}")
+            for repo in repositories:
+                key = _parse_repo_reference(repo)
+                if key not in repo_index:
+                    msg = (
+                        "Token repository must reference a configured repository "
+                        f"(missing {repo!r} for token {value!r})"
+                    )
+                    raise ConfigValidationError(msg)
+
+            if token.repository_visibility is None:
+                continue
+
+            allowed = {"all", "private", "public"}
+            if token.repository_visibility not in allowed:
+                msg = f"Token repository visibility must be one of {sorted(allowed)}"
+                raise ConfigValidationError(msg)
+
+        _ensure_unique(token_values, "token value")
+
+        if self.default_token is not None:
+            default_token = _require_text(self.default_token, "Default token")
+            if default_token not in token_values:
+                msg = "Default token must match one of the configured tokens"
+                raise ConfigValidationError(msg)
 
     def _validate_branches(
         self, repo_index: dict[RepositoryKey, Repository]

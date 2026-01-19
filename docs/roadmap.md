@@ -134,7 +134,7 @@ simulator supports them.
 
 #### Tasks (Step 3.1)
 
-- [ ] Add optional token support in client construction:
+- [x] Add optional token support in client construction:
 
   - configure `Authorization` headers based on the current scenario,
   - model per-token permissions and visibility where available.
