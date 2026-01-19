@@ -143,7 +143,7 @@ Inspect the simulator package to determine whether it supports tokens, per
 files in the installed `node_modules/@simulacrum/github-api-simulator` folder,
 then inspect how it expects authentication data in `initialState`. Confirm how
 `github3.py` expects token authentication to be configured on a `GitHubSession`
-(for example, header format or helper methods). Summarise the findings in the
+(for example, header format or helper methods). Summarize the findings in the
 plan and decide the exact configuration shape to model in Python.
 
 Validation: no code changes; produce a short summary of simulator support and
@@ -189,7 +189,7 @@ Stage C: implementation (minimal change to satisfy tests).
 - Update `simulacat/pytest_plugin.py` to configure the `github3.GitHub`
   session or headers with the selected token, based on the scenario or
   `github_sim_config` input, without breaking the unauthenticated default.
-- If needed, add a small helper function to centralise token selection and
+- If needed, add a small helper function to centralize token selection and
   header formatting (keep it internal and unit tested).
 
 Validation: re-run the new unit and behavioural tests; they should now pass.
@@ -332,17 +332,19 @@ If the simulator supports tokens, define an access token dataclass in
 field. A tentative interface (subject to simulator capabilities):
 
 ```python
-class AccessToken(dc.dataclass(frozen=True)):
+@dc.dataclass(frozen=True, slots=True)
+class AccessToken:
     value: str
     owner: str
     permissions: tuple[str, ...] = ()
-    repo_visibility: str | None = None
+    repository_visibility: str | None = None
 
+@dc.dataclass(frozen=True, slots=True)
 class ScenarioConfig:
     tokens: tuple[AccessToken, ...] = ()
 ```
 
-Update `ScenarioConfig.to_simulator_config()` to serialise tokens into the
+Update `ScenarioConfig.to_simulator_config()` to serialize tokens into the
 simulator config only when supported. If the simulator does not accept tokens,
 keep the token data in the scenario model and use it only to configure the
 client headers, documenting the limitation.

@@ -92,15 +92,15 @@ class AccessToken:
 
     Parameters
     ----------
-    value
+    value : str
         Token string used for Authorization headers.
-    owner
+    owner : str
         User or organization login that owns the token.
-    permissions
+    permissions : tuple[str, ...]
         Permission labels associated with the token.
-    repositories
+    repositories : tuple[str, ...]
         Repository references in ``owner/name`` form scoped to the token.
-    repository_visibility
+    repository_visibility : str | None
         Visibility scope for repository access (``public``, ``private``,
         or ``all``).
 

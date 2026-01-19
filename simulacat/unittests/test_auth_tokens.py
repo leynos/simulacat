@@ -117,146 +117,140 @@ class TestAuthTokens:
         ):
             scenario.resolve_auth_token()
 
-
-def test_token_values_must_be_unique() -> None:
-    """Duplicate token values must be rejected."""
-    scenario = ScenarioConfig(
-        users=(User(login="alice"), User(login="bob")),
-        tokens=(
-            AccessToken(value="ghs_dup", owner="alice"),
-            AccessToken(value="ghs_dup", owner="bob"),
-        ),
-    )
-
-    with pytest.raises(ConfigValidationError, match="Duplicate token value"):
-        scenario.validate()
-
-
-def test_token_permissions_must_be_unique_per_token() -> None:
-    """Duplicate permissions on a single token must be rejected."""
-    scenario = ScenarioConfig(
-        users=(User(login="alice"),),
-        tokens=(
-            AccessToken(
-                value="ghs_perm",
-                owner="alice",
-                permissions=("repo", "repo"),
+    @staticmethod
+    def test_token_values_must_be_unique() -> None:
+        """Duplicate token values must be rejected."""
+        scenario = ScenarioConfig(
+            users=(User(login="alice"), User(login="bob")),
+            tokens=(
+                AccessToken(value="ghs_dup", owner="alice"),
+                AccessToken(value="ghs_dup", owner="bob"),
             ),
-        ),
-    )
+        )
 
-    with pytest.raises(ConfigValidationError, match="Duplicate token permission"):
-        scenario.validate()
+        with pytest.raises(ConfigValidationError, match="Duplicate token value"):
+            scenario.validate()
 
-
-def test_token_repositories_must_be_unique_per_token() -> None:
-    """Duplicate repository references on a single token must be rejected."""
-    scenario = ScenarioConfig(
-        users=(User(login="alice"),),
-        repositories=(Repository(owner="alice", name="repo1"),),
-        tokens=(
-            AccessToken(
-                value="ghs_repos",
-                owner="alice",
-                repositories=("alice/repo1", "alice/repo1"),
+    @staticmethod
+    def test_token_permissions_must_be_unique_per_token() -> None:
+        """Duplicate permissions on a single token must be rejected."""
+        scenario = ScenarioConfig(
+            users=(User(login="alice"),),
+            tokens=(
+                AccessToken(
+                    value="ghs_perm",
+                    owner="alice",
+                    permissions=("repo", "repo"),
+                ),
             ),
-        ),
-    )
+        )
 
-    with pytest.raises(
-        ConfigValidationError,
-        match="Duplicate token repository reference",
-    ):
-        scenario.validate()
+        with pytest.raises(ConfigValidationError, match="Duplicate token permission"):
+            scenario.validate()
 
-
-def test_token_repository_reference_requires_owner_and_name() -> None:
-    """Repository references must include owner and name."""
-    scenario = ScenarioConfig(
-        users=(User(login="alice"),),
-        repositories=(Repository(owner="alice", name="repo1"),),
-        tokens=(
-            AccessToken(
-                value="ghs_bad_repo",
-                owner="alice",
-                repositories=("alice/repo1", "owneronly"),
+    @staticmethod
+    def test_token_repositories_must_be_unique_per_token() -> None:
+        """Duplicate repository references on a single token must be rejected."""
+        scenario = ScenarioConfig(
+            users=(User(login="alice"),),
+            repositories=(Repository(owner="alice", name="repo1"),),
+            tokens=(
+                AccessToken(
+                    value="ghs_repos",
+                    owner="alice",
+                    repositories=("alice/repo1", "alice/repo1"),
+                ),
             ),
-        ),
-    )
+        )
 
-    with pytest.raises(
-        ConfigValidationError,
-        match="Token repository must be in the form",
-    ):
-        scenario.validate()
+        with pytest.raises(
+            ConfigValidationError,
+            match="Duplicate token repository reference",
+        ):
+            scenario.validate()
 
-
-def test_access_token_normalises_collections() -> None:
-    """AccessToken should normalise permissions and repositories to tuples."""
-    token = AccessToken(
-        value="ghs_norm",
-        owner="alice",
-        permissions=typ.cast("tuple[str, ...]", ["repo"]),
-        repositories=typ.cast("tuple[str, ...]", ["alice/repo1"]),
-    )
-
-    assert token.permissions == ("repo",)
-    assert token.repositories == ("alice/repo1",)
-
-
-def test_resolve_auth_token_returns_none_without_tokens() -> None:
-    """No tokens configured should return None."""
-    scenario = ScenarioConfig(users=(User(login="alice"),))
-
-    assert scenario.resolve_auth_token() is None
-
-
-def test_resolve_auth_token_uses_single_token() -> None:
-    """Single token without a default should be selected."""
-    scenario = ScenarioConfig(
-        users=(User(login="alice"),),
-        tokens=(AccessToken(value="ghs_one", owner="alice"),),
-    )
-
-    assert scenario.resolve_auth_token() == "ghs_one"
-
-
-def test_default_token_must_match_configured_tokens() -> None:
-    """Default tokens must reference a configured value."""
-    scenario = ScenarioConfig(
-        users=(User(login="alice"),),
-        tokens=(AccessToken(value="ghs_one", owner="alice"),),
-        default_token="ghs_missing",  # noqa: S106
-    )
-
-    with pytest.raises(
-        ConfigValidationError,
-        match="Default token must match one of the configured tokens",
-    ):
-        scenario.validate()
-
-    with pytest.raises(
-        ConfigValidationError,
-        match="Default token must match one of the configured tokens",
-    ):
-        scenario.resolve_auth_token()
-
-
-def test_token_validation_happy_path() -> None:
-    """A valid token configuration should pass validation and resolve."""
-    scenario = ScenarioConfig(
-        users=(User(login="alice"),),
-        repositories=(Repository(owner="alice", name="demo-repo"),),
-        tokens=(
-            AccessToken(
-                value="ghs_123",
-                owner="alice",
-                permissions=("repo",),
-                repositories=("alice/demo-repo",),
-                repository_visibility="private",
+    def test_token_repository_reference_requires_owner_and_name(self) -> None:  # noqa: PLR6301
+        """Repository references must include owner and name."""
+        scenario = ScenarioConfig(
+            users=(User(login="alice"),),
+            repositories=(Repository(owner="alice", name="repo1"),),
+            tokens=(
+                AccessToken(
+                    value="ghs_bad_repo",
+                    owner="alice",
+                    repositories=("alice/repo1", "owneronly"),
+                ),
             ),
-        ),
-    )
+        )
 
-    scenario.validate()
-    assert scenario.resolve_auth_token() == "ghs_123"
+        with pytest.raises(
+            ConfigValidationError,
+            match="Token repository must be in the form",
+        ):
+            scenario.validate()
+
+    def test_access_token_normalises_collections(self) -> None:  # noqa: PLR6301
+        """AccessToken should normalise permissions and repositories to tuples."""
+        token = AccessToken(
+            value="ghs_norm",
+            owner="alice",
+            permissions=typ.cast("tuple[str, ...]", ["repo"]),
+            repositories=typ.cast("tuple[str, ...]", ["alice/repo1"]),
+        )
+
+        assert token.permissions == ("repo",)
+        assert token.repositories == ("alice/repo1",)
+
+    def test_resolve_auth_token_returns_none_without_tokens(self) -> None:  # noqa: PLR6301
+        """No tokens configured should return None."""
+        scenario = ScenarioConfig(users=(User(login="alice"),))
+
+        assert scenario.resolve_auth_token() is None
+
+    def test_resolve_auth_token_uses_single_token(self) -> None:  # noqa: PLR6301
+        """Single token without a default should be selected."""
+        scenario = ScenarioConfig(
+            users=(User(login="alice"),),
+            tokens=(AccessToken(value="ghs_one", owner="alice"),),
+        )
+
+        assert scenario.resolve_auth_token() == "ghs_one"
+
+    def test_default_token_must_match_configured_tokens(self) -> None:  # noqa: PLR6301
+        """Default tokens must reference a configured value."""
+        scenario = ScenarioConfig(
+            users=(User(login="alice"),),
+            tokens=(AccessToken(value="ghs_one", owner="alice"),),
+            default_token="ghs_missing",  # noqa: S106 # TODO(simulacat#123): add secure token value
+        )
+
+        with pytest.raises(
+            ConfigValidationError,
+            match="Default token must match one of the configured tokens",
+        ):
+            scenario.validate()
+
+        with pytest.raises(
+            ConfigValidationError,
+            match="Default token must match one of the configured tokens",
+        ):
+            scenario.resolve_auth_token()
+
+    def test_token_validation_happy_path(self) -> None:  # noqa: PLR6301
+        """A valid token configuration should pass validation and resolve."""
+        scenario = ScenarioConfig(
+            users=(User(login="alice"),),
+            repositories=(Repository(owner="alice", name="demo-repo"),),
+            tokens=(
+                AccessToken(
+                    value="ghs_123",
+                    owner="alice",
+                    permissions=("repo",),
+                    repositories=("alice/demo-repo",),
+                    repository_visibility="private",
+                ),
+            ),
+        )
+
+        scenario.validate()
+        assert scenario.resolve_auth_token() == "ghs_123"

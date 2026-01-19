@@ -224,17 +224,8 @@ class ScenarioConfig:
 
         """
         self._ensure_indexes()
-        if not self.tokens:
-            return None
-
-        if self.default_token is not None:
-            return self.default_token
-
-        if len(self.tokens) == 1:
-            return self.tokens[0].value
-
-        msg = "Multiple tokens configured but no default_token set"
-        raise ConfigValidationError(msg)
+        token_values = [token.value for token in self.tokens]
+        return _select_auth_token_value(token_values, self.default_token)
 
     def _ensure_indexes(self) -> _ScenarioIndexes:
         indexes = self._indexes

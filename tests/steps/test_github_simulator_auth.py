@@ -133,5 +133,5 @@ def then_github_simulator_raises_type_error(
     request: pytest.FixtureRequest,
 ) -> None:
     """Assert that constructing github_simulator fails with a TypeError."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="must be a mapping"):
         request.getfixturevalue("github_simulator")
