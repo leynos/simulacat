@@ -192,7 +192,7 @@ class TestAuthTokens:
 
     @staticmethod
     def test_access_token_normalises_collections() -> None:
-        """AccessToken should normalise permissions and repositories to tuples."""
+        """AccessToken should normalize permissions and repositories to tuples."""
         token = AccessToken(
             value="ghs_norm",
             owner="alice",
@@ -206,6 +206,29 @@ class TestAuthTokens:
         assert token.repositories == ("alice/repo1",), (
             "Expected repositories to be normalized to a tuple"
         )
+
+    @staticmethod
+    def test_access_token_rejects_string_collections() -> None:
+        """AccessToken should reject string values for collection fields."""
+        with pytest.raises(
+            TypeError,
+            match="Token permissions must be an iterable of strings",
+        ):
+            AccessToken(
+                value="ghs_perm",
+                owner="alice",
+                permissions=typ.cast("tuple[str, ...]", "repo"),
+            )
+
+        with pytest.raises(
+            TypeError,
+            match="Token repositories must be an iterable of strings",
+        ):
+            AccessToken(
+                value="ghs_repo",
+                owner="alice",
+                repositories=typ.cast("tuple[str, ...]", "alice/repo"),
+            )
 
     @staticmethod
     def test_resolve_auth_token_returns_none_without_tokens() -> None:

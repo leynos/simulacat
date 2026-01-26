@@ -114,6 +114,12 @@ class AccessToken:
 
     def __post_init__(self) -> None:
         """Normalize collections into tuples for immutability."""
+        if isinstance(self.permissions, str):
+            msg = "Token permissions must be an iterable of strings"
+            raise TypeError(msg)
+        if isinstance(self.repositories, str):
+            msg = "Token repositories must be an iterable of strings"
+            raise TypeError(msg)
         object.__setattr__(self, "permissions", tuple(self.permissions))
         object.__setattr__(self, "repositories", tuple(self.repositories))
 
