@@ -113,7 +113,7 @@ class AccessToken:
     repository_visibility: str | None = None
 
     def __post_init__(self) -> None:
-        """Normalise collections into tuples for immutability."""
+        """Normalize collections into tuples for immutability."""
         object.__setattr__(self, "permissions", tuple(self.permissions))
         object.__setattr__(self, "repositories", tuple(self.repositories))
 

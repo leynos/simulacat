@@ -169,7 +169,8 @@ class TestAuthTokens:
         ):
             scenario.validate()
 
-    def test_token_repository_reference_requires_owner_and_name(self) -> None:  # noqa: PLR6301
+    @staticmethod
+    def test_token_repository_reference_requires_owner_and_name() -> None:
         """Repository references must include owner and name."""
         scenario = ScenarioConfig(
             users=(User(login="alice"),),
@@ -189,7 +190,8 @@ class TestAuthTokens:
         ):
             scenario.validate()
 
-    def test_access_token_normalises_collections(self) -> None:  # noqa: PLR6301
+    @staticmethod
+    def test_access_token_normalises_collections() -> None:
         """AccessToken should normalise permissions and repositories to tuples."""
         token = AccessToken(
             value="ghs_norm",
@@ -198,25 +200,36 @@ class TestAuthTokens:
             repositories=typ.cast("tuple[str, ...]", ["alice/repo1"]),
         )
 
-        assert token.permissions == ("repo",)
-        assert token.repositories == ("alice/repo1",)
+        assert token.permissions == ("repo",), (
+            "Expected permissions to be normalized to a tuple"
+        )
+        assert token.repositories == ("alice/repo1",), (
+            "Expected repositories to be normalized to a tuple"
+        )
 
-    def test_resolve_auth_token_returns_none_without_tokens(self) -> None:  # noqa: PLR6301
+    @staticmethod
+    def test_resolve_auth_token_returns_none_without_tokens() -> None:
         """No tokens configured should return None."""
         scenario = ScenarioConfig(users=(User(login="alice"),))
 
-        assert scenario.resolve_auth_token() is None
+        assert scenario.resolve_auth_token() is None, (
+            "Expected no token to resolve when none are configured"
+        )
 
-    def test_resolve_auth_token_uses_single_token(self) -> None:  # noqa: PLR6301
+    @staticmethod
+    def test_resolve_auth_token_uses_single_token() -> None:
         """Single token without a default should be selected."""
         scenario = ScenarioConfig(
             users=(User(login="alice"),),
             tokens=(AccessToken(value="ghs_one", owner="alice"),),
         )
 
-        assert scenario.resolve_auth_token() == "ghs_one"
+        assert scenario.resolve_auth_token() == "ghs_one", (
+            "Expected single token to be selected"
+        )
 
-    def test_default_token_must_match_configured_tokens(self) -> None:  # noqa: PLR6301
+    @staticmethod
+    def test_default_token_must_match_configured_tokens() -> None:
         """Default tokens must reference a configured value."""
         scenario = ScenarioConfig(
             users=(User(login="alice"),),
@@ -236,7 +249,8 @@ class TestAuthTokens:
         ):
             scenario.resolve_auth_token()
 
-    def test_token_validation_happy_path(self) -> None:  # noqa: PLR6301
+    @staticmethod
+    def test_token_validation_happy_path() -> None:
         """A valid token configuration should pass validation and resolve."""
         scenario = ScenarioConfig(
             users=(User(login="alice"),),
@@ -253,4 +267,6 @@ class TestAuthTokens:
         )
 
         scenario.validate()
-        assert scenario.resolve_auth_token() == "ghs_123"
+        assert scenario.resolve_auth_token() == "ghs_123", (
+            "Expected configured token to resolve"
+        )
