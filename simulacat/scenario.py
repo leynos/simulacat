@@ -24,6 +24,7 @@ from .scenario_factories import (
     single_repo_scenario,
 )
 from .scenario_models import (
+    AccessToken,
     Branch,
     DefaultBranch,
     Issue,
@@ -34,6 +35,7 @@ from .scenario_models import (
 )
 
 __all__ = [
+    "AccessToken",
     "Branch",
     "ConfigValidationError",
     "DefaultBranch",

@@ -87,6 +87,44 @@ class Organization:
 
 
 @dc.dataclass(frozen=True, slots=True)
+class AccessToken:
+    """Represent an access token for scenario configuration.
+
+    Parameters
+    ----------
+    value : str
+        Token string used for Authorization headers.
+    owner : str
+        User or organization login that owns the token.
+    permissions : tuple[str, ...]
+        Permission labels associated with the token.
+    repositories : tuple[str, ...]
+        Repository references in ``owner/name`` form scoped to the token.
+    repository_visibility : str | None
+        Visibility scope for repository access (``public``, ``private``,
+        or ``all``).
+
+    """
+
+    value: str
+    owner: str
+    permissions: tuple[str, ...] = dc.field(default_factory=tuple)
+    repositories: tuple[str, ...] = dc.field(default_factory=tuple)
+    repository_visibility: str | None = None
+
+    def __post_init__(self) -> None:
+        """Normalize collections into tuples for immutability."""
+        if isinstance(self.permissions, str):
+            msg = "Token permissions must be an iterable of strings"
+            raise TypeError(msg)
+        if isinstance(self.repositories, str):
+            msg = "Token repositories must be an iterable of strings"
+            raise TypeError(msg)
+        object.__setattr__(self, "permissions", tuple(self.permissions))
+        object.__setattr__(self, "repositories", tuple(self.repositories))
+
+
+@dc.dataclass(frozen=True, slots=True)
 class DefaultBranch:
     """Describe default branch metadata for a repository."""
 
@@ -226,6 +264,7 @@ class PullRequest:
 
 
 __all__ = [
+    "AccessToken",
     "Branch",
     "DefaultBranch",
     "Issue",

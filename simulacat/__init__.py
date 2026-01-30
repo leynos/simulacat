@@ -8,6 +8,7 @@ from .config import (
     merge_configs,
 )
 from .scenario import (
+    AccessToken,
     Branch,
     ConfigValidationError,
     DefaultBranch,
@@ -25,6 +26,7 @@ from .scenario import (
 from .types import GitHubSimConfig
 
 __all__ = [
+    "AccessToken",
     "Branch",
     "ConfigValidationError",
     "DefaultBranch",

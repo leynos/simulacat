@@ -214,6 +214,27 @@ factories and fixtures.
    return simulator-ready mappings derived from the factories, so consumers can
    override `github_sim_config` without manual serialization.
 
+### Step 3.1 – Authentication and GitHub App workflows
+
+The following decisions were made during implementation of optional token
+support.
+
+1. **Access token modelling**: Access tokens are represented by the
+   `AccessToken` dataclass on `ScenarioConfig`. Tokens capture the owner, token
+   value, and optional metadata for permissions, repository visibility, and
+   repository scoping.
+
+2. **Header-only enforcement**: The simulator does not validate tokens or
+   permissions, so tokens are not serialized into the simulator initial state.
+   Instead, `github_simulator` reads token metadata and sets the
+   `Authorization` header on the `github3.py` session to mimic authenticated
+   requests.
+
+3. **Explicit token selection**: When multiple tokens are configured,
+   `ScenarioConfig.default_token` selects which token is applied for the client
+   header. Attempting to resolve a token without a default selection raises
+   `ConfigValidationError` to avoid ambiguous authentication.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:
