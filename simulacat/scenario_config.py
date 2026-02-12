@@ -24,8 +24,10 @@ import typing as typ
 
 from .scenario_models import (
     AccessToken,
+    AppInstallation,
     Branch,
     DefaultBranch,
+    GitHubApp,
     Issue,
     Organization,
     PullRequest,
@@ -54,6 +56,7 @@ class _ScenarioIndexes:
     user_logins: set[str]
     repo_index: dict[RepositoryKey, Repository]
     branch_index: dict[RepositoryKey, dict[str, Branch]]
+    app_slugs: set[str] = dc.field(default_factory=set)
 
 
 def _require_text(value: object, label: str) -> str:
@@ -129,6 +132,8 @@ class ScenarioConfig:
     issues: tuple[Issue, ...] = dc.field(default_factory=tuple)
     pull_requests: tuple[PullRequest, ...] = dc.field(default_factory=tuple)
     tokens: tuple[AccessToken, ...] = dc.field(default_factory=tuple)
+    apps: tuple[GitHubApp, ...] = dc.field(default_factory=tuple)
+    app_installations: tuple[AppInstallation, ...] = dc.field(default_factory=tuple)
     default_token: str | None = None
     _indexes: _ScenarioIndexes | None = dc.field(
         init=False,
@@ -146,6 +151,8 @@ class ScenarioConfig:
         object.__setattr__(self, "issues", tuple(self.issues))
         object.__setattr__(self, "pull_requests", tuple(self.pull_requests))
         object.__setattr__(self, "tokens", tuple(self.tokens))
+        object.__setattr__(self, "apps", tuple(self.apps))
+        object.__setattr__(self, "app_installations", tuple(self.app_installations))
 
     def validate(self, *, include_unsupported: bool = True) -> None:
         """Validate the scenario configuration.
@@ -211,6 +218,11 @@ class ScenarioConfig:
     def resolve_auth_token(self) -> str | None:
         """Return the configured default auth token value, if any.
 
+        Installation access tokens are included in the candidate pool
+        alongside standalone ``AccessToken`` values. The existing selection
+        rules apply: a single token auto-selects; multiple tokens require
+        ``default_token``.
+
         Returns
         -------
         str | None
@@ -225,6 +237,11 @@ class ScenarioConfig:
         """
         self._ensure_indexes()
         token_values = [token.value for token in self.tokens]
+        token_values.extend(
+            inst.access_token
+            for inst in self.app_installations
+            if inst.access_token is not None
+        )
         return _select_auth_token_value(token_values, self.default_token)
 
     def _ensure_indexes(self) -> _ScenarioIndexes:
@@ -239,8 +256,13 @@ class ScenarioConfig:
         user_logins = self._validate_users(org_logins)
         repo_index = self._validate_repositories(user_logins, org_logins)
         self._validate_tokens(user_logins, org_logins, repo_index)
+        app_slugs = self._validate_apps(user_logins, org_logins)
+        self._validate_app_installations(app_slugs, user_logins, org_logins, repo_index)
+        self._validate_default_token()
         branch_index = self._validate_branches(repo_index)
-        return _ScenarioIndexes(org_logins, user_logins, repo_index, branch_index)
+        return _ScenarioIndexes(
+            org_logins, user_logins, repo_index, branch_index, app_slugs
+        )
 
     def _validate_organizations(self) -> set[str]:
         logins = [
@@ -336,6 +358,108 @@ class ScenarioConfig:
                 raise ConfigValidationError(msg)
 
         _ensure_unique(token_values, "token value")
+
+    def _validate_apps(
+        self,
+        user_logins: set[str],
+        org_logins: set[str],
+    ) -> set[str]:
+        slugs: list[str] = []
+        for app in self.apps:
+            _require_text(app.app_slug, "App slug")
+            _require_text(app.name, "App name")
+            if app.app_id is not None:
+                _require_positive_int(app.app_id, "App ID")
+            if app.owner is not None:
+                owner = _require_text(app.owner, "App owner")
+                if owner not in user_logins and owner not in org_logins:
+                    msg = (
+                        "App owner must be a defined user or organization "
+                        f"(got {owner!r} for app {app.app_slug!r})"
+                    )
+                    raise ConfigValidationError(msg)
+            slugs.append(app.app_slug)
+        return _ensure_unique(slugs, "app slug")
+
+    def _validate_app_installations(
+        self,
+        app_slugs: set[str],
+        user_logins: set[str],
+        org_logins: set[str],
+        repo_index: dict[RepositoryKey, Repository],
+    ) -> None:
+        installation_ids: list[str] = []
+        token_values = [token.value for token in self.tokens]
+        for installation in self.app_installations:
+            _require_positive_int(installation.installation_id, "Installation ID")
+            installation_ids.append(str(installation.installation_id))
+
+            slug = _require_text(installation.app_slug, "Installation app slug")
+            if slug not in app_slugs:
+                msg = (
+                    "Installation app must reference a defined GitHub App "
+                    f"(got {slug!r} for installation "
+                    f"{installation.installation_id})"
+                )
+                raise ConfigValidationError(msg)
+
+            account = _require_text(installation.account, "Installation account")
+            if account not in user_logins and account not in org_logins:
+                msg = (
+                    "Installation account must be a defined user or "
+                    f"organization (got {account!r} for installation "
+                    f"{installation.installation_id})"
+                )
+                raise ConfigValidationError(msg)
+
+            for repo_ref in installation.repositories:
+                _require_text(repo_ref, "Installation repository")
+                key = _parse_repo_reference(repo_ref)
+                if key not in repo_index:
+                    msg = (
+                        "Installation repository must reference a configured "
+                        f"repository (missing {repo_ref!r} for installation "
+                        f"{installation.installation_id})"
+                    )
+                    raise ConfigValidationError(msg)
+
+            permissions = [
+                _require_text(perm, "Installation permission")
+                for perm in installation.permissions
+            ]
+            _ensure_unique(
+                permissions,
+                f"installation permission for installation "
+                f"{installation.installation_id}",
+            )
+
+            if installation.access_token is not None:
+                value = _require_text(
+                    installation.access_token, "Installation access token"
+                )
+                if value in token_values:
+                    msg = (
+                        f"Duplicate token value: installation "
+                        f"{installation.installation_id} access_token "
+                        f"duplicates a standalone token"
+                    )
+                    raise ConfigValidationError(msg)
+                token_values.append(value)
+
+        _ensure_unique(installation_ids, "installation ID")
+
+    def _validate_default_token(self) -> None:
+        """Validate default_token against all token sources.
+
+        This must be called after both ``_validate_tokens`` and
+        ``_validate_app_installations`` so the full token pool is available.
+        """
+        token_values = [token.value for token in self.tokens]
+        token_values.extend(
+            inst.access_token
+            for inst in self.app_installations
+            if inst.access_token is not None
+        )
         _select_auth_token_value(token_values, self.default_token)
 
     def _validate_branches(

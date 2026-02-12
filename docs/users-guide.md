@@ -345,6 +345,82 @@ def github_sim_config():
     return {"__simulacat__": {"auth_token": "ghs_test"}}
 ```
 
+### GitHub App installation metadata
+
+simulacat can model GitHub App and installation metadata in scenarios. These
+are client-side metadata only: the simulator does not expose GitHub App
+endpoints or enforce installation-scoped permissions. The metadata documents
+test intent and integrates with the token resolution flow.
+
+Apps are represented by `GitHubApp` and installations by `AppInstallation`.
+When an installation declares an `access_token`, it is folded into the
+token resolution pool alongside standalone `AccessToken` values. The existing
+`default_token` selection logic applies: a single token auto-selects; multiple
+tokens require an explicit `default_token`.
+
+```python
+import pytest
+
+from simulacat import (
+    AppInstallation,
+    GitHubApp,
+    Repository,
+    ScenarioConfig,
+    User,
+)
+
+scenario = ScenarioConfig(
+    users=(User(login="octocat"),),
+    repositories=(Repository(owner="octocat", name="hello-world"),),
+    apps=(
+        GitHubApp(
+            app_slug="my-bot",
+            name="My Bot",
+            app_id=12345,
+            owner="octocat",
+        ),
+    ),
+    app_installations=(
+        AppInstallation(
+            installation_id=1,
+            app_slug="my-bot",
+            account="octocat",
+            repositories=("octocat/hello-world",),
+            permissions=("contents", "pull_requests"),
+            access_token="ghs_installation_token",
+        ),
+    ),
+)
+
+@pytest.fixture
+def github_sim_config():
+    return scenario
+```
+
+The `github_app_scenario` factory creates a scenario with a single app and
+installation:
+
+```python
+from simulacat import github_app_scenario, merge_scenarios, single_repo_scenario
+
+app = github_app_scenario(
+    "deploy-bot",
+    "Deploy Bot",
+    account="octocat",
+    access_token="ghs_deploy",
+)
+
+repo = single_repo_scenario("octocat", name="hello-world")
+combined = merge_scenarios(repo, app)
+config = combined.to_simulator_config()
+```
+
+**Limitations:** The `@simulacrum/github-api-simulator` (v0.6.2) does not
+support GitHub App endpoints. The `repositories` and `permissions` fields on
+`AppInstallation` document test intent only; the simulator does not enforce
+installation-scoped access. This design should be revisited if a future
+simulator release adds GitHub App support.
+
 ## Configuration Schema
 
 The simulator requires a specific initial state structure. The following
