@@ -12,11 +12,11 @@ PLANS.md: not present in this repository.
 ## Purpose / big picture
 
 Enable tests to model GitHub App installation metadata and per-installation
-repository and organisation access when working with the simulacat GitHub API
+repository and organization access when working with the simulacat GitHub API
 simulator. After this change, consumers can:
 
 - declare a `GitHubApp` with an app ID, slug, and optional owner;
-- attach `AppInstallation` objects that describe which user or organisation
+- attach `AppInstallation` objects that describe which user or organization
   account an app is installed on, which repositories are accessible, and what
   permissions are granted;
 - optionally link an installation to an access token value so the
@@ -93,7 +93,7 @@ GitHub App endpoints or installation token exchange. These models are therefore
 - Risk: validation ordering may need adjustment because app installation
   validation depends on both app definitions and user/org/repo indexes.
   Severity: low Likelihood: low Mitigation: insert app validation in
-  `_build_indexes()` after users, organisations, and repositories are
+  `_build_indexes()` after users, organizations, and repositories are
   validated but before branches (mirroring the position of token validation).
 
 ## Progress
@@ -152,7 +152,7 @@ GitHub App endpoints or installation token exchange. These models are therefore
 
 Implementation complete. All acceptance criteria met:
 
-- 24 unit tests and 4 BDD scenarios pass.
+- 24 unit tests and 4 behaviour-driven development (BDD) scenarios pass.
 - All quality gates pass: `make check-fmt`, `make typecheck`, `make lint`,
   `make test`, `make markdownlint`, `make nixie`.
 - 11 files modified, within the 15-file tolerance.
@@ -233,7 +233,7 @@ Write failing tests before implementation:
 - `ScenarioConfig` validation: installation `app_slug` must reference a
   defined `GitHubApp`.
 - `ScenarioConfig` validation: installation `account` must reference a defined
-  user or organisation.
+  user or organization.
 - `ScenarioConfig` validation: installation `repositories` must reference
   defined repositories (in `owner/repo` format).
 - `ScenarioConfig` validation: installation `installation_id` must be a
@@ -300,11 +300,11 @@ Add `_validate_apps()` and `_validate_app_installations()` methods:
 
 - `_validate_apps()`: validate `app_slug` is non-empty text, `name` is
   non-empty text, `app_id` (if set) is a positive integer, `owner` (if set)
-  references a defined user or organisation. Ensure `app_slug` is unique
+  references a defined user or organization. Ensure `app_slug` is unique
   across all apps.
 - `_validate_app_installations()`: validate `installation_id` is a positive
   integer and unique, `app_slug` references a defined `GitHubApp`,
-  `account` references a defined user or organisation, `repositories` entries
+  `account` references a defined user or organization, `repositories` entries
   are in `owner/repo` format and reference defined repositories,
   `permissions` are unique per installation, `access_token` (if set) is
   non-empty text.

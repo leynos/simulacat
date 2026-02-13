@@ -39,10 +39,10 @@ class TestGitHubAppModel:
         """GitHubApp can be constructed with required fields."""
         app = GitHubApp(app_slug="my-bot", name="My Bot")
 
-        assert app.app_slug == "my-bot"
-        assert app.name == "My Bot"
-        assert app.app_id is None
-        assert app.owner is None
+        assert app.app_slug == "my-bot", "Expected app_slug to match"
+        assert app.name == "My Bot", "Expected name to match"
+        assert app.app_id is None, "Expected app_id to default to None"
+        assert app.owner is None, "Expected owner to default to None"
 
     @staticmethod
     def test_github_app_with_all_fields() -> None:
@@ -54,10 +54,10 @@ class TestGitHubAppModel:
             owner="octocat",
         )
 
-        assert app.app_slug == "deploy-bot"
-        assert app.name == "Deploy Bot"
-        assert app.app_id == 12345
-        assert app.owner == "octocat"
+        assert app.app_slug == "deploy-bot", "Expected app_slug to match"
+        assert app.name == "Deploy Bot", "Expected name to match"
+        assert app.app_id == 12345, "Expected app_id to match"
+        assert app.owner == "octocat", "Expected owner to match"
 
 
 class TestAppInstallationModel:
@@ -72,12 +72,14 @@ class TestAppInstallationModel:
             account="octocat",
         )
 
-        assert installation.installation_id == 1
-        assert installation.app_slug == "my-bot"
-        assert installation.account == "octocat"
-        assert installation.repositories == ()
-        assert installation.permissions == ()
-        assert installation.access_token is None
+        assert installation.installation_id == 1, "Expected installation_id to match"
+        assert installation.app_slug == "my-bot", "Expected app_slug to match"
+        assert installation.account == "octocat", "Expected account to match"
+        assert installation.repositories == (), "Expected empty repositories tuple"
+        assert installation.permissions == (), "Expected empty permissions tuple"
+        assert installation.access_token is None, (
+            "Expected access_token to default to None"
+        )
 
     @staticmethod
     def test_app_installation_with_all_fields() -> None:
@@ -88,13 +90,19 @@ class TestAppInstallationModel:
             account="octocat",
             repositories=("octocat/hello-world",),
             permissions=("contents", "pull_requests"),
-            access_token="ghs_install_token",  # noqa: S106 # test token value
+            access_token="ghs_install_token",  # noqa: S106 — FIXME: use env or fixture for test tokens
         )
 
-        assert installation.installation_id == 42
-        assert installation.repositories == ("octocat/hello-world",)
-        assert installation.permissions == ("contents", "pull_requests")
-        assert installation.access_token == "ghs_install_token"  # noqa: S105 # test token value
+        assert installation.installation_id == 42, "Expected installation_id to match"
+        assert installation.repositories == ("octocat/hello-world",), (
+            "Expected repositories to match"
+        )
+        assert installation.permissions == ("contents", "pull_requests"), (
+            "Expected permissions to match"
+        )
+        assert installation.access_token == "ghs_install_token", (  # noqa: S105 — FIXME: use env or fixture for test tokens
+            "Expected access_token to match"
+        )
 
     @staticmethod
     def test_app_installation_normalises_collections() -> None:
@@ -107,8 +115,12 @@ class TestAppInstallationModel:
             permissions=typ.cast("tuple[str, ...]", ["contents"]),
         )
 
-        assert installation.repositories == ("octocat/repo",)
-        assert installation.permissions == ("contents",)
+        assert installation.repositories == ("octocat/repo",), (
+            "Expected list to be normalised to tuple"
+        )
+        assert installation.permissions == ("contents",), (
+            "Expected list to be normalised to tuple"
+        )
 
     @staticmethod
     def test_app_installation_rejects_string_repositories() -> None:
@@ -158,7 +170,7 @@ class TestGitHubAppValidation:
 
     @staticmethod
     def test_app_owner_must_exist_when_set() -> None:
-        """App owner must reference a defined user or organisation."""
+        """App owner must reference a defined user or organization."""
         scenario = ScenarioConfig(
             users=(User(login="alice"),),
             apps=(GitHubApp(app_slug="my-bot", name="Bot", owner="missing"),),
@@ -210,7 +222,7 @@ class TestAppInstallationValidation:
 
     @staticmethod
     def test_installation_account_must_exist() -> None:
-        """Installation account must reference a defined user or organisation."""
+        """Installation account must reference a defined user or organization."""
         scenario = ScenarioConfig(
             users=(User(login="alice"),),
             apps=(GitHubApp(app_slug="my-bot", name="Bot"),),
@@ -336,7 +348,7 @@ class TestInstallationTokenIntegration:
                     installation_id=1,
                     app_slug="my-bot",
                     account="alice",
-                    access_token="ghs_install",  # noqa: S106 # test token value
+                    access_token="ghs_install",  # noqa: S106 — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -359,7 +371,7 @@ class TestInstallationTokenIntegration:
                     installation_id=1,
                     app_slug="my-bot",
                     account="alice",
-                    access_token="ghs_install",  # noqa: S106 # test token value
+                    access_token="ghs_install",  # noqa: S106 — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -384,10 +396,10 @@ class TestInstallationTokenIntegration:
                     installation_id=1,
                     app_slug="my-bot",
                     account="alice",
-                    access_token="ghs_install",  # noqa: S106 # test token value
+                    access_token="ghs_install",  # noqa: S106 — FIXME: use env or fixture for test tokens
                 ),
             ),
-            default_token="ghs_install",  # noqa: S106 # test token value
+            default_token="ghs_install",  # noqa: S106 — FIXME: use env or fixture for test tokens
         )
 
         assert scenario.resolve_auth_token() == "ghs_install", (
@@ -408,7 +420,7 @@ class TestInstallationTokenIntegration:
                     installation_id=1,
                     app_slug="my-bot",
                     account="alice",
-                    access_token="ghs_same",  # noqa: S106 # test token value
+                    access_token="ghs_same",  # noqa: S106 — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -463,7 +475,7 @@ class TestGitHubAppHappyPath:
                     account="octocat",
                     repositories=("octocat/hello-world",),
                     permissions=("contents", "pull_requests"),
-                    access_token="ghs_installation_token",  # noqa: S106 # test token value
+                    access_token="ghs_installation_token",  # noqa: S106 — FIXME: use env or fixture for test tokens
                 ),
             ),
         )

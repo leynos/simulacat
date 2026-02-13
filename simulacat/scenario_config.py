@@ -56,7 +56,6 @@ class _ScenarioIndexes:
     user_logins: set[str]
     repo_index: dict[RepositoryKey, Repository]
     branch_index: dict[RepositoryKey, dict[str, Branch]]
-    app_slugs: set[str] = dc.field(default_factory=set)
 
 
 def _require_text(value: object, label: str) -> str:
@@ -236,13 +235,19 @@ class ScenarioConfig:
 
         """
         self._ensure_indexes()
+        return _select_auth_token_value(
+            self._collect_all_token_values(), self.default_token
+        )
+
+    def _collect_all_token_values(self) -> list[str]:
+        """Return all token values from standalone and installation sources."""
         token_values = [token.value for token in self.tokens]
         token_values.extend(
             inst.access_token
             for inst in self.app_installations
             if inst.access_token is not None
         )
-        return _select_auth_token_value(token_values, self.default_token)
+        return token_values
 
     def _ensure_indexes(self) -> _ScenarioIndexes:
         indexes = self._indexes
@@ -260,9 +265,7 @@ class ScenarioConfig:
         self._validate_app_installations(app_slugs, user_logins, org_logins, repo_index)
         self._validate_default_token()
         branch_index = self._validate_branches(repo_index)
-        return _ScenarioIndexes(
-            org_logins, user_logins, repo_index, branch_index, app_slugs
-        )
+        return _ScenarioIndexes(org_logins, user_logins, repo_index, branch_index)
 
     def _validate_organizations(self) -> set[str]:
         logins = [
@@ -454,13 +457,7 @@ class ScenarioConfig:
         This must be called after both ``_validate_tokens`` and
         ``_validate_app_installations`` so the full token pool is available.
         """
-        token_values = [token.value for token in self.tokens]
-        token_values.extend(
-            inst.access_token
-            for inst in self.app_installations
-            if inst.access_token is not None
-        )
-        _select_auth_token_value(token_values, self.default_token)
+        _select_auth_token_value(self._collect_all_token_values(), self.default_token)
 
     def _validate_branches(
         self, repo_index: dict[RepositoryKey, Repository]

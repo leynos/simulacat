@@ -76,6 +76,28 @@ def _merge_entries[T, Key](
     return tuple(merged.values())
 
 
+def _merge_default_token(
+    scenarios: tuple[ScenarioConfig, ...],
+) -> str | None:
+    """Return the merged default_token across scenarios.
+
+    Raises ``ConfigValidationError`` when multiple scenarios specify
+    conflicting non-None ``default_token`` values.
+    """
+    result: str | None = None
+    for scenario in scenarios:
+        if scenario.default_token is None:
+            continue
+        if result is not None and result != scenario.default_token:
+            msg = (
+                "Conflicting default_token values across merged scenarios: "
+                f"{result!r} vs {scenario.default_token!r}"
+            )
+            raise ConfigValidationError(msg)
+        result = scenario.default_token
+    return result
+
+
 def single_repo_scenario(
     owner: str,
     name: str = "repo",
@@ -220,11 +242,12 @@ def monorepo_with_apps_scenario(
     )
 
 
-def github_app_scenario(  # noqa: PLR0913
+def github_app_scenario(  # noqa: PLR0913 — FIXME: consider a config object to reduce arity
     app_slug: str,
     name: str,
     *,
     account: str,
+    installation_id: int = 1,
     account_is_org: bool = False,
     repositories: tuple[str, ...] = (),
     permissions: tuple[str, ...] = (),
@@ -241,6 +264,9 @@ def github_app_scenario(  # noqa: PLR0913
         Human-readable display name for the app.
     account : str
         User or organization login where the app is installed.
+    installation_id : int, optional
+        Unique numeric identifier for this installation. Must be unique
+        across all installations when merging multiple app scenarios.
     account_is_org : bool, optional
         Whether the account should be treated as an organization.
     repositories : tuple[str, ...], optional
@@ -277,7 +303,7 @@ def github_app_scenario(  # noqa: PLR0913
 
     app = GitHubApp(app_slug=app_slug, name=name, app_id=app_id)
     installation = AppInstallation(
-        installation_id=1,
+        installation_id=installation_id,
         app_slug=app_slug,
         account=account,
         repositories=repositories,
@@ -293,6 +319,8 @@ def github_app_scenario(  # noqa: PLR0913
             )
             raise ConfigValidationError(msg)
         owner, repo_name = repo_ref.split("/", 1)
+        _require_text(owner, "Repository owner")
+        _require_text(repo_name, "Repository name")
         repo_objects.append(Repository(owner=owner, name=repo_name))
 
     return ScenarioConfig(
@@ -403,6 +431,8 @@ def merge_scenarios(*scenarios: ScenarioConfig) -> ScenarioConfig:
         ),
     )
 
+    default_token = _merge_default_token(scenario_list)
+
     return ScenarioConfig(
         users=users,
         organizations=organizations,
@@ -412,6 +442,7 @@ def merge_scenarios(*scenarios: ScenarioConfig) -> ScenarioConfig:
         pull_requests=pull_requests,
         apps=apps,
         app_installations=app_installations,
+        default_token=default_token,
     )
 
 

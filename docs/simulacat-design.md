@@ -261,7 +261,7 @@ helpers for GitHub Apps.
 
 4. **Validation ordering**: App and installation validation runs after token
    validation and before branch validation. Installation validation depends
-   on the app slug index, user/organisation logins, and the repository
+   on the app slug index, user/organization logins, and the repository
    index. The `default_token` validation is deferred to after installation
    validation so that installation access tokens are included in the
    candidate pool.
@@ -272,7 +272,7 @@ helpers for GitHub Apps.
 
 6. **Factory helper**: `github_app_scenario()` creates a scenario with a
    single `GitHubApp`, one `AppInstallation`, and the account user or
-   organisation. It returns a `ScenarioConfig` that can be merged with other
+   organization. It returns a `ScenarioConfig` that can be merged with other
    scenarios.
 
 ## Bun entrypoint

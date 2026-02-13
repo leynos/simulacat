@@ -121,7 +121,7 @@ def given_installation_with_token(github_app_context: GitHubAppContext) -> None:
                 installation_id=1,
                 app_slug="auth-bot",
                 account="octocat",
-                access_token="ghs_bdd_token",  # noqa: S106 # test token value
+                access_token="ghs_bdd_token",  # noqa: S106 — FIXME: use env or fixture for test tokens
             ),
         ),
     )
@@ -138,7 +138,7 @@ def when_token_resolved(github_app_context: GitHubAppContext) -> None:
 @then("the resolved token matches the installation access token")
 def then_token_matches(github_app_context: GitHubAppContext) -> None:
     """Verify the resolved token matches the installation access token."""
-    assert github_app_context["token"] == "ghs_bdd_token", (  # noqa: S105 # test token value
+    assert github_app_context["token"] == "ghs_bdd_token", (  # noqa: S105 — FIXME: use env or fixture for test tokens
         "Expected resolved token to match installation access_token"
     )
 
