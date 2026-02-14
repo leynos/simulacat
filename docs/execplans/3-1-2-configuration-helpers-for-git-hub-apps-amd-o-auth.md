@@ -228,7 +228,7 @@ Write failing tests before implementation:
 - `GitHubApp` rejects blank `app_slug` and `name`.
 - `AppInstallation` construction with `installation_id`, `app_slug`,
   `account`, and optional `repositories`, `permissions`, `access_token`.
-- `AppInstallation` normalises collection fields to tuples and rejects string
+- `AppInstallation` normalizes collection fields to tuples and rejects string
   arguments (following `AccessToken.__post_init__` pattern).
 - `ScenarioConfig` validation: installation `app_slug` must reference a
   defined `GitHubApp`.
@@ -278,7 +278,7 @@ Add two new frozen dataclasses after `AccessToken`:
         permissions: tuple[str, ...] = dc.field(default_factory=tuple)
         access_token: str | None = None
 
-`AppInstallation.__post_init__` normalises `repositories` and `permissions`
+`AppInstallation.__post_init__` normalizes `repositories` and `permissions`
 to tuples and rejects bare string arguments, following the `AccessToken`
 pattern. Update `__all__` to include both new classes.
 
@@ -594,7 +594,7 @@ New dataclasses in `simulacat/scenario_models.py`:
         access_token: str | None = None
 
         def __post_init__(self) -> None:
-            # Normalise collections; reject bare strings.
+            # Normalize collections; reject bare strings.
             ...
 
 New fields on `ScenarioConfig`:

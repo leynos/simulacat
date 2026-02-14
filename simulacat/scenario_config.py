@@ -22,6 +22,21 @@ from __future__ import annotations
 import dataclasses as dc
 import typing as typ
 
+from ._validation_helpers import (
+    ConfigValidationError,
+    RepositoryKey,
+    _ensure_unique,
+    _require_text,
+    _select_auth_token_value,
+)
+from .app_validation import (
+    collect_all_token_values,
+    validate_app_installations,
+    validate_apps,
+    validate_default_token,
+    validate_tokens,
+)
+from .issue_validation import validate_issues, validate_pull_requests
 from .scenario_models import (
     AccessToken,
     AppInstallation,
@@ -39,15 +54,6 @@ if typ.TYPE_CHECKING:
     from .types import GitHubSimConfig
 
 
-class ConfigValidationError(ValueError):
-    """Raised when a ScenarioConfig fails validation."""
-
-
-type RepositoryKey = tuple[str, str]
-
-_ALLOWED_REPOSITORY_VISIBILITIES = frozenset({"all", "private", "public"})
-
-
 @dc.dataclass(frozen=True, slots=True)
 class _ScenarioIndexes:
     """Internal validated indexes for scenario configuration."""
@@ -56,64 +62,6 @@ class _ScenarioIndexes:
     user_logins: set[str]
     repo_index: dict[RepositoryKey, Repository]
     branch_index: dict[RepositoryKey, dict[str, Branch]]
-
-
-def _require_text(value: object, label: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        msg = f"{label} must be a non-empty string"
-        raise ConfigValidationError(msg)
-    return value
-
-
-def _require_positive_int(value: object, label: str) -> int:
-    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-        msg = f"{label} must be a positive integer"
-        raise ConfigValidationError(msg)
-    return value
-
-
-def _ensure_unique(values: list[str], label: str) -> set[str]:
-    seen: set[str] = set()
-    for value in values:
-        if value in seen:
-            msg = f"Duplicate {label}: {value!r}"
-            raise ConfigValidationError(msg)
-        seen.add(value)
-    return seen
-
-
-def _parse_repo_reference(value: str) -> RepositoryKey:
-    if "/" not in value:
-        msg = "Token repository must be in the form 'owner/repo'"
-        raise ConfigValidationError(msg)
-    owner, repo = value.split("/", 1)
-    owner = _require_text(owner, "Token repository owner")
-    repo = _require_text(repo, "Token repository name")
-    return owner, repo
-
-
-def _select_auth_token_value(
-    token_values: list[str],
-    default_token: str | None,
-) -> str | None:
-    if not token_values:
-        if default_token is not None:
-            msg = "Default token must match one of the configured tokens"
-            raise ConfigValidationError(msg)
-        return None
-
-    if default_token is not None:
-        selected = _require_text(default_token, "Default token")
-        if selected not in token_values:
-            msg = "Default token must match one of the configured tokens"
-            raise ConfigValidationError(msg)
-        return selected
-
-    if len(token_values) == 1:
-        return token_values[0]
-
-    msg = "Multiple tokens configured but no default_token set"
-    raise ConfigValidationError(msg)
 
 
 @dc.dataclass(frozen=True, slots=True)
@@ -170,8 +118,10 @@ class ScenarioConfig:
         """
         indexes = self._ensure_indexes()
         if include_unsupported:
-            self._validate_issues(indexes.repo_index)
-            self._validate_pull_requests(indexes.repo_index, indexes.branch_index)
+            validate_issues(self.issues, indexes.repo_index)
+            validate_pull_requests(
+                self.pull_requests, indexes.repo_index, indexes.branch_index
+            )
 
     def to_simulator_config(
         self, *, include_unsupported: bool = False
@@ -193,8 +143,10 @@ class ScenarioConfig:
         """
         indexes = self._ensure_indexes()
         if include_unsupported:
-            self._validate_issues(indexes.repo_index)
-            self._validate_pull_requests(indexes.repo_index, indexes.branch_index)
+            validate_issues(self.issues, indexes.repo_index)
+            validate_pull_requests(
+                self.pull_requests, indexes.repo_index, indexes.branch_index
+            )
 
         branches: list[Branch] = []
         for repo_branches in indexes.branch_index.values():
@@ -236,18 +188,9 @@ class ScenarioConfig:
         """
         self._ensure_indexes()
         return _select_auth_token_value(
-            self._collect_all_token_values(), self.default_token
+            collect_all_token_values(self.tokens, self.app_installations),
+            self.default_token,
         )
-
-    def _collect_all_token_values(self) -> list[str]:
-        """Return all token values from standalone and installation sources."""
-        token_values = [token.value for token in self.tokens]
-        token_values.extend(
-            inst.access_token
-            for inst in self.app_installations
-            if inst.access_token is not None
-        )
-        return token_values
 
     def _ensure_indexes(self) -> _ScenarioIndexes:
         indexes = self._indexes
@@ -260,10 +203,17 @@ class ScenarioConfig:
         org_logins = self._validate_organizations()
         user_logins = self._validate_users(org_logins)
         repo_index = self._validate_repositories(user_logins, org_logins)
-        self._validate_tokens(user_logins, org_logins, repo_index)
-        app_slugs = self._validate_apps(user_logins, org_logins)
-        self._validate_app_installations(app_slugs, user_logins, org_logins, repo_index)
-        self._validate_default_token()
+        token_values = validate_tokens(self.tokens, user_logins, org_logins, repo_index)
+        app_slugs = validate_apps(self.apps, user_logins, org_logins)
+        validate_app_installations(
+            self.app_installations,
+            app_slugs,
+            user_logins,
+            org_logins,
+            repo_index,
+            token_values,
+        )
+        validate_default_token(self.tokens, self.app_installations, self.default_token)
         branch_index = self._validate_branches(repo_index)
         return _ScenarioIndexes(org_logins, user_logins, repo_index, branch_index)
 
@@ -312,152 +262,6 @@ class ScenarioConfig:
                     _require_text(repo.default_branch.sha, "Default branch sha")
             repo_index[key] = repo
         return repo_index
-
-    def _validate_tokens(
-        self,
-        user_logins: set[str],
-        org_logins: set[str],
-        repo_index: dict[RepositoryKey, Repository],
-    ) -> None:
-        token_values: list[str] = []
-        for token in self.tokens:
-            value = _require_text(token.value, "Token value")
-            owner = _require_text(token.owner, "Token owner")
-            if owner not in user_logins and owner not in org_logins:
-                msg = (
-                    "Token owner must be a defined user or organization "
-                    f"(got {owner!r} for token {value!r})"
-                )
-                raise ConfigValidationError(msg)
-            token_values.append(value)
-
-            permissions = [
-                _require_text(permission, "Token permission")
-                for permission in token.permissions
-            ]
-            _ensure_unique(permissions, f"token permission for {value!r}")
-
-            repositories = [
-                _require_text(repo, "Token repository") for repo in token.repositories
-            ]
-            _ensure_unique(repositories, f"token repository reference for {value!r}")
-            for repo in repositories:
-                key = _parse_repo_reference(repo)
-                if key not in repo_index:
-                    msg = (
-                        "Token repository must reference a configured repository "
-                        f"(missing {repo!r} for token {value!r})"
-                    )
-                    raise ConfigValidationError(msg)
-
-            if token.repository_visibility is None:
-                continue
-
-            if token.repository_visibility not in _ALLOWED_REPOSITORY_VISIBILITIES:
-                msg = (
-                    "Token repository visibility must be one of "
-                    f"{sorted(_ALLOWED_REPOSITORY_VISIBILITIES)}"
-                )
-                raise ConfigValidationError(msg)
-
-        _ensure_unique(token_values, "token value")
-
-    def _validate_apps(
-        self,
-        user_logins: set[str],
-        org_logins: set[str],
-    ) -> set[str]:
-        slugs: list[str] = []
-        for app in self.apps:
-            _require_text(app.app_slug, "App slug")
-            _require_text(app.name, "App name")
-            if app.app_id is not None:
-                _require_positive_int(app.app_id, "App ID")
-            if app.owner is not None:
-                owner = _require_text(app.owner, "App owner")
-                if owner not in user_logins and owner not in org_logins:
-                    msg = (
-                        "App owner must be a defined user or organization "
-                        f"(got {owner!r} for app {app.app_slug!r})"
-                    )
-                    raise ConfigValidationError(msg)
-            slugs.append(app.app_slug)
-        return _ensure_unique(slugs, "app slug")
-
-    def _validate_app_installations(
-        self,
-        app_slugs: set[str],
-        user_logins: set[str],
-        org_logins: set[str],
-        repo_index: dict[RepositoryKey, Repository],
-    ) -> None:
-        installation_ids: list[str] = []
-        token_values = [token.value for token in self.tokens]
-        for installation in self.app_installations:
-            _require_positive_int(installation.installation_id, "Installation ID")
-            installation_ids.append(str(installation.installation_id))
-
-            slug = _require_text(installation.app_slug, "Installation app slug")
-            if slug not in app_slugs:
-                msg = (
-                    "Installation app must reference a defined GitHub App "
-                    f"(got {slug!r} for installation "
-                    f"{installation.installation_id})"
-                )
-                raise ConfigValidationError(msg)
-
-            account = _require_text(installation.account, "Installation account")
-            if account not in user_logins and account not in org_logins:
-                msg = (
-                    "Installation account must be a defined user or "
-                    f"organization (got {account!r} for installation "
-                    f"{installation.installation_id})"
-                )
-                raise ConfigValidationError(msg)
-
-            for repo_ref in installation.repositories:
-                _require_text(repo_ref, "Installation repository")
-                key = _parse_repo_reference(repo_ref)
-                if key not in repo_index:
-                    msg = (
-                        "Installation repository must reference a configured "
-                        f"repository (missing {repo_ref!r} for installation "
-                        f"{installation.installation_id})"
-                    )
-                    raise ConfigValidationError(msg)
-
-            permissions = [
-                _require_text(perm, "Installation permission")
-                for perm in installation.permissions
-            ]
-            _ensure_unique(
-                permissions,
-                f"installation permission for installation "
-                f"{installation.installation_id}",
-            )
-
-            if installation.access_token is not None:
-                value = _require_text(
-                    installation.access_token, "Installation access token"
-                )
-                if value in token_values:
-                    msg = (
-                        f"Duplicate token value: installation "
-                        f"{installation.installation_id} access_token "
-                        f"duplicates a standalone token"
-                    )
-                    raise ConfigValidationError(msg)
-                token_values.append(value)
-
-        _ensure_unique(installation_ids, "installation ID")
-
-    def _validate_default_token(self) -> None:
-        """Validate default_token against all token sources.
-
-        This must be called after both ``_validate_tokens`` and
-        ``_validate_app_installations`` so the full token pool is available.
-        """
-        _select_auth_token_value(self._collect_all_token_values(), self.default_token)
 
     def _validate_branches(
         self, repo_index: dict[RepositoryKey, Repository]
@@ -559,77 +363,6 @@ class ScenarioConfig:
                 f"Conflicting {kind} metadata for {owner}/{repo}:{existing.name} "
                 f"({', '.join(mismatch)} differs)"
             )
-            raise ConfigValidationError(msg)
-
-    def _validate_issues(self, repo_index: dict[RepositoryKey, Repository]) -> None:
-        issue_numbers: dict[RepositoryKey, set[int]] = {}
-        for issue in self.issues:
-            owner = _require_text(issue.owner, "Issue owner")
-            repo = _require_text(issue.repository, "Issue repository")
-            number = _require_positive_int(issue.number, "Issue number")
-            _require_text(issue.title, "Issue title")
-            self._require_state(issue.state, "Issue state")
-            if issue.author is not None:
-                _require_text(issue.author, "Issue author")
-            key = (owner, repo)
-            if key not in repo_index:
-                msg = f"Issue refers to unknown repository {owner}/{repo}"
-                raise ConfigValidationError(msg)
-            numbers = issue_numbers.setdefault(key, set())
-            if number in numbers:
-                msg = f"Duplicate issue number {number} for {owner}/{repo}"
-                raise ConfigValidationError(msg)
-            numbers.add(number)
-
-    def _validate_pull_requests(
-        self,
-        repo_index: dict[RepositoryKey, Repository],
-        branch_index: dict[RepositoryKey, dict[str, Branch]],
-    ) -> None:
-        pr_numbers: dict[RepositoryKey, set[int]] = {}
-        for pr in self.pull_requests:
-            owner = _require_text(pr.owner, "Pull request owner")
-            repo = _require_text(pr.repository, "Pull request repository")
-            number = _require_positive_int(pr.number, "Pull request number")
-            _require_text(pr.title, "Pull request title")
-            self._require_state(pr.state, "Pull request state")
-            if pr.author is not None:
-                _require_text(pr.author, "Pull request author")
-            key = (owner, repo)
-            if key not in repo_index:
-                msg = f"Pull request refers to unknown repository {owner}/{repo}"
-                raise ConfigValidationError(msg)
-            numbers = pr_numbers.setdefault(key, set())
-            if number in numbers:
-                msg = f"Duplicate pull request number {number} for {owner}/{repo}"
-                raise ConfigValidationError(msg)
-            numbers.add(number)
-            self._validate_pull_request_branches(pr, key, branch_index)
-
-    @staticmethod
-    def _validate_pull_request_branches(
-        pr: PullRequest,
-        key: RepositoryKey,
-        branch_index: dict[RepositoryKey, dict[str, Branch]],
-    ) -> None:
-        repo_branches = branch_index.get(key, {})
-        for label, name in ("base", pr.base_branch), ("head", pr.head_branch):
-            if name is None:
-                continue
-            _require_text(name, f"Pull request {label} branch")
-            if name not in repo_branches:
-                owner, repo = key
-                msg = (
-                    "Pull request branch must reference a configured branch "
-                    f"(missing {name!r} for {owner}/{repo})"
-                )
-                raise ConfigValidationError(msg)
-
-    @staticmethod
-    def _require_state(state: str, label: str) -> None:
-        allowed = {"open", "closed"}
-        if state not in allowed:
-            msg = f"{label} must be one of {sorted(allowed)}"
             raise ConfigValidationError(msg)
 
 
