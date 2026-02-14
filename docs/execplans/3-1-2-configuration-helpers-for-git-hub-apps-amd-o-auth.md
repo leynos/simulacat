@@ -291,7 +291,7 @@ Add two new tuple fields to `ScenarioConfig`:
         default_factory=tuple
     )
 
-Normalise both in `__post_init__`. No changes to `to_simulator_config()`
+Normalize both in `__post_init__`. No changes to `to_simulator_config()`
 since these are metadata-only and must not be serialized.
 
 **C3. Validation** (`simulacat/scenario_config.py`):
