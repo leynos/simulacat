@@ -413,7 +413,7 @@ class TestStopSimProcess:
     @staticmethod
     def test_default_timeout_is_five_seconds() -> None:
         """The public default timeout remains conservative to avoid flakiness."""
-        assert DEFAULT_STOP_TIMEOUT_SECONDS == 5.0
+        assert pytest.approx(5.0) == DEFAULT_STOP_TIMEOUT_SECONDS
 
     @staticmethod
     def test_default_timeout_allows_slow_exit() -> None:
@@ -455,7 +455,7 @@ class TestStopSimProcess:
 
         assert proc._terminated, "expected stop_sim_process to terminate the process"
         assert proc._killed, "expected stop_sim_process to kill after custom timeout"
-        assert proc.wait_timeouts[0] == 1.0, (
+        assert pytest.approx(1.0) == proc.wait_timeouts[0], (
             "expected stop_sim_process to use the provided timeout"
         )
         kill_wait_timeout = proc.wait_timeouts[1]

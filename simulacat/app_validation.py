@@ -156,7 +156,11 @@ def validate_app_installations(  # noqa: PLR0913, PLR0917 — FIXME: consider a 
     repo_index: dict[RepositoryKey, Repository],
     token_values: list[str],
 ) -> list[str]:
-    """Validate app installations and return the updated token-value pool.
+    """Validate app installations and return the extended token-value pool.
+
+    A *copy* of *token_values* is made internally; the caller's list is
+    never mutated.  Installation access tokens are appended to the copy
+    and the resulting list is returned.
 
     Parameters
     ----------
@@ -172,12 +176,12 @@ def validate_app_installations(  # noqa: PLR0913, PLR0917 — FIXME: consider a 
         Index of validated repositories keyed by ``(owner, name)``.
     token_values
         Existing token values from standalone ``AccessToken`` instances.
-        Installation access tokens are appended and checked for uniqueness.
+        Used for duplicate detection; **not** modified in-place.
 
     Returns
     -------
     list[str]
-        The extended list of all token values (standalone + installation).
+        A new list containing all token values (standalone + installation).
 
     Raises
     ------
@@ -186,6 +190,7 @@ def validate_app_installations(  # noqa: PLR0913, PLR0917 — FIXME: consider a 
         introduces duplicate tokens.
 
     """
+    all_token_values: list[str] = list(token_values)
     installation_ids: list[str] = []
     for installation in app_installations:
         _require_positive_int(installation.installation_id, "Installation ID")
@@ -233,17 +238,17 @@ def validate_app_installations(  # noqa: PLR0913, PLR0917 — FIXME: consider a 
             value = _require_text(
                 installation.access_token, "Installation access token"
             )
-            if value in token_values:
+            if value in all_token_values:
                 msg = (
                     f"Duplicate token value: installation "
                     f"{installation.installation_id} access_token "
                     f"duplicates a standalone token"
                 )
                 raise ConfigValidationError(msg)
-            token_values.append(value)
+            all_token_values.append(value)
 
     _ensure_unique(installation_ids, "installation ID")
-    return token_values
+    return all_token_values
 
 
 def collect_all_token_values(
