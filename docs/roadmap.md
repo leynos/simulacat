@@ -143,7 +143,7 @@ simulator supports them.
     `simulacat/unittests/test_auth_tokens.py` and behavioural scenarios in
     `tests/features/github_simulator_auth.feature`.
 
-- [ ] Provide configuration helpers for GitHub Apps or OAuth applications if
+- [x] Provide configuration helpers for GitHub Apps or OAuth applications if
       the simulator exposes these:
 
   - app installation metadata,

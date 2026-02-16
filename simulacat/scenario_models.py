@@ -125,6 +125,72 @@ class AccessToken:
 
 
 @dc.dataclass(frozen=True, slots=True)
+class GitHubApp:
+    """Represent a GitHub App for scenario configuration.
+
+    Parameters
+    ----------
+    app_slug : str
+        URL-friendly identifier for the app (e.g. ``my-bot``).
+    name : str
+        Human-readable display name for the app.
+    app_id : int | None
+        Numeric app ID assigned by GitHub. Optional metadata.
+    owner : str | None
+        User or organization login that owns the app.
+
+    """
+
+    app_slug: str
+    name: str
+    app_id: int | None = None
+    owner: str | None = None
+
+
+@dc.dataclass(frozen=True, slots=True)
+class AppInstallation:
+    """Represent a GitHub App installation for scenario configuration.
+
+    Parameters
+    ----------
+    installation_id : int
+        Unique numeric identifier for this installation.
+    app_slug : str
+        Slug of the ``GitHubApp`` this installation belongs to.
+    account : str
+        User or organization login where the app is installed.
+    repositories : tuple[str, ...]
+        Repository references in ``owner/name`` form accessible to the
+        installation.
+    permissions : tuple[str, ...]
+        Permission labels granted to this installation.
+    access_token : str | None
+        Optional token value used for ``Authorization`` headers. When set,
+        the token is folded into the token resolution pool alongside
+        ``ScenarioConfig.tokens``.
+
+    """
+
+    installation_id: int
+    app_slug: str
+    account: str
+    repositories: tuple[str, ...] = dc.field(default_factory=tuple)
+    permissions: tuple[str, ...] = dc.field(default_factory=tuple)
+    access_token: str | None = None
+
+    def __post_init__(self) -> None:
+        """Normalize collections into tuples for immutability."""
+        if isinstance(self.repositories, str):
+            msg = "Installation repositories must be an iterable of strings"
+            raise TypeError(msg)
+        if isinstance(self.permissions, str):
+            msg = "Installation permissions must be an iterable of strings"
+            raise TypeError(msg)
+        object.__setattr__(self, "repositories", tuple(self.repositories))
+        object.__setattr__(self, "permissions", tuple(self.permissions))
+
+
+@dc.dataclass(frozen=True, slots=True)
 class DefaultBranch:
     """Describe default branch metadata for a repository."""
 
@@ -265,8 +331,10 @@ class PullRequest:
 
 __all__ = [
     "AccessToken",
+    "AppInstallation",
     "Branch",
     "DefaultBranch",
+    "GitHubApp",
     "Issue",
     "Organization",
     "PullRequest",

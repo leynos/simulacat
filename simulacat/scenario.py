@@ -19,14 +19,17 @@ from __future__ import annotations
 from .scenario_config import ConfigValidationError, ScenarioConfig
 from .scenario_factories import (
     empty_org_scenario,
+    github_app_scenario,
     merge_scenarios,
     monorepo_with_apps_scenario,
     single_repo_scenario,
 )
 from .scenario_models import (
     AccessToken,
+    AppInstallation,
     Branch,
     DefaultBranch,
+    GitHubApp,
     Issue,
     Organization,
     PullRequest,
@@ -36,9 +39,11 @@ from .scenario_models import (
 
 __all__ = [
     "AccessToken",
+    "AppInstallation",
     "Branch",
     "ConfigValidationError",
     "DefaultBranch",
+    "GitHubApp",
     "Issue",
     "Organization",
     "PullRequest",
@@ -46,6 +51,7 @@ __all__ = [
     "ScenarioConfig",
     "User",
     "empty_org_scenario",
+    "github_app_scenario",
     "merge_scenarios",
     "monorepo_with_apps_scenario",
     "single_repo_scenario",

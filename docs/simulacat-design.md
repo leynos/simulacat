@@ -235,6 +235,46 @@ support.
    header. Attempting to resolve a token without a default selection raises
    `ConfigValidationError` to avoid ambiguous authentication.
 
+#### Step 3.1.2 – GitHub App installation metadata
+
+The following decisions were made during implementation of configuration
+helpers for GitHub Apps.
+
+1. **GitHub Apps only; OAuth applications are out of scope**: The simulator
+   (v0.6.2) supports neither GitHub App nor OAuth endpoints. GitHub Apps with
+   installations are the richer model, and OAuth apps are a simpler, distinct
+   flow that can be added in a future step if needed.
+
+2. **Metadata-only models**: `GitHubApp` and `AppInstallation` follow the
+   `AccessToken` precedent from Step 3.1.1. They are not serialized into the
+   simulator initial state because the simulator does not expose App
+   endpoints. The `to_simulator_config()` method omits `apps` and
+   `app_installations` from the output.
+
+3. **Installation access token integration**: `AppInstallation` carries an
+   optional `access_token` field. When set, the token is folded into the
+   token resolution pool alongside `ScenarioConfig.tokens`. The existing
+   `_select_auth_token_value()` logic applies: a single token auto-selects;
+   multiple tokens require `default_token`. This design is a convenience
+   alias and may need revisiting if the simulator adds support for
+   per-request token switching or installation token exchange.
+
+4. **Validation ordering**: App and installation validation runs after token
+   validation and before branch validation. Installation validation depends
+   on the app slug index, user/organization logins, and the repository
+   index. The `default_token` validation is deferred to after installation
+   validation so that installation access tokens are included in the
+   candidate pool.
+
+5. **Merge support**: `merge_scenarios` merges apps by `app_slug` and
+   installations by `installation_id`, following the `_MergeSpec` pattern
+   established in Step 2.2.
+
+6. **Factory helper**: `github_app_scenario()` creates a scenario with a
+   single `GitHubApp`, one `AppInstallation`, and the account user or
+   organization. It returns a `ScenarioConfig` that can be merged with other
+   scenarios.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:

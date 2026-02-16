@@ -11,7 +11,15 @@ import dataclasses as dc
 import typing as typ
 
 from .scenario_config import ConfigValidationError, ScenarioConfig
-from .scenario_models import Branch, DefaultBranch, Organization, Repository, User
+from .scenario_models import (
+    AppInstallation,
+    Branch,
+    DefaultBranch,
+    GitHubApp,
+    Organization,
+    Repository,
+    User,
+)
 
 if typ.TYPE_CHECKING:
     import collections.abc as cabc
@@ -66,6 +74,28 @@ def _merge_entries[T, Key](
                 )
                 raise ConfigValidationError(msg)
     return tuple(merged.values())
+
+
+def _merge_default_token(
+    scenarios: tuple[ScenarioConfig, ...],
+) -> str | None:
+    """Return the merged default_token across scenarios.
+
+    Raises ``ConfigValidationError`` when multiple scenarios specify
+    conflicting non-None ``default_token`` values.
+    """
+    result: str | None = None
+    for scenario in scenarios:
+        if scenario.default_token is None:
+            continue
+        if result is not None and result != scenario.default_token:
+            msg = (
+                "Conflicting default_token values across merged scenarios: "
+                f"{result!r} vs {scenario.default_token!r}"
+            )
+            raise ConfigValidationError(msg)
+        result = scenario.default_token
+    return result
 
 
 def single_repo_scenario(
@@ -212,6 +242,96 @@ def monorepo_with_apps_scenario(
     )
 
 
+def github_app_scenario(  # noqa: PLR0913 — FIXME: consider a config object to reduce arity
+    app_slug: str,
+    name: str,
+    *,
+    account: str,
+    installation_id: int = 1,
+    account_is_org: bool = False,
+    repositories: tuple[str, ...] = (),
+    permissions: tuple[str, ...] = (),
+    access_token: str | None = None,
+    app_id: int | None = None,
+) -> ScenarioConfig:
+    """Return a scenario with a GitHub App and one installation.
+
+    Parameters
+    ----------
+    app_slug : str
+        URL-friendly identifier for the app.
+    name : str
+        Human-readable display name for the app.
+    account : str
+        User or organization login where the app is installed.
+    installation_id : int, optional
+        Unique numeric identifier for this installation. Must be unique
+        across all installations when merging multiple app scenarios.
+    account_is_org : bool, optional
+        Whether the account should be treated as an organization.
+    repositories : tuple[str, ...], optional
+        Repository references in ``owner/name`` form accessible to the
+        installation.
+    permissions : tuple[str, ...], optional
+        Permission labels granted to this installation.
+    access_token : str | None, optional
+        Optional token value used for ``Authorization`` headers.
+    app_id : int | None, optional
+        Numeric app ID assigned by GitHub.
+
+    Returns
+    -------
+    ScenarioConfig
+        Scenario configuration with the app, installation, and account.
+
+    Raises
+    ------
+    ConfigValidationError
+        If any provided text values are blank.
+
+    """
+    app_slug = _require_text(app_slug, "App slug")
+    name = _require_text(name, "App name")
+    account = _require_text(account, "Account")
+
+    users: tuple[User, ...] = ()
+    organizations: tuple[Organization, ...] = ()
+    if account_is_org:
+        organizations = (Organization(login=account),)
+    else:
+        users = (User(login=account),)
+
+    app = GitHubApp(app_slug=app_slug, name=name, app_id=app_id)
+    installation = AppInstallation(
+        installation_id=installation_id,
+        app_slug=app_slug,
+        account=account,
+        repositories=repositories,
+        permissions=permissions,
+        access_token=access_token,
+    )
+
+    repo_objects: list[Repository] = []
+    for repo_ref in repositories:
+        if "/" not in repo_ref:
+            msg = (
+                f"Repository reference must be in 'owner/repo' form (got {repo_ref!r})"
+            )
+            raise ConfigValidationError(msg)
+        owner, repo_name = repo_ref.split("/", 1)
+        _require_text(owner, "Repository owner")
+        _require_text(repo_name, "Repository name")
+        repo_objects.append(Repository(owner=owner, name=repo_name))
+
+    return ScenarioConfig(
+        users=users,
+        organizations=organizations,
+        repositories=tuple(repo_objects),
+        apps=(app,),
+        app_installations=(installation,),
+    )
+
+
 def merge_scenarios(*scenarios: ScenarioConfig) -> ScenarioConfig:
     """Merge multiple scenarios into a single configuration.
 
@@ -292,6 +412,26 @@ def merge_scenarios(*scenarios: ScenarioConfig) -> ScenarioConfig:
             getter=lambda scenario: scenario.pull_requests,
         ),
     )
+    apps = _merge_entries(
+        scenario_list,
+        _MergeSpec(
+            label="app",
+            key=lambda app: app.app_slug,
+            format_key=lambda key: key,
+            getter=lambda scenario: scenario.apps,
+        ),
+    )
+    app_installations = _merge_entries(
+        scenario_list,
+        _MergeSpec(
+            label="app installation",
+            key=lambda inst: inst.installation_id,
+            format_key=str,
+            getter=lambda scenario: scenario.app_installations,
+        ),
+    )
+
+    default_token = _merge_default_token(scenario_list)
 
     return ScenarioConfig(
         users=users,
@@ -300,11 +440,15 @@ def merge_scenarios(*scenarios: ScenarioConfig) -> ScenarioConfig:
         branches=branches,
         issues=issues,
         pull_requests=pull_requests,
+        apps=apps,
+        app_installations=app_installations,
+        default_token=default_token,
     )
 
 
 __all__ = [
     "empty_org_scenario",
+    "github_app_scenario",
     "merge_scenarios",
     "monorepo_with_apps_scenario",
     "single_repo_scenario",
