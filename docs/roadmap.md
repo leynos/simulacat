@@ -149,7 +149,7 @@ simulator supports them.
   - app installation metadata,
   - per-installation access to repositories and organizations.
 
-- [ ] Document the limitations of each authentication mode compared with real
+- [x] Document the limitations of each authentication mode compared with real
       GitHub.
 
 ### Step 3.2 – CI usage and reference examples

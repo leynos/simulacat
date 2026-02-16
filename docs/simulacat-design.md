@@ -247,24 +247,23 @@ helpers for GitHub Apps.
 
 2. **Metadata-only models**: `GitHubApp` and `AppInstallation` follow the
    `AccessToken` precedent from Step 3.1.1. They are not serialized into the
-   simulator initial state because the simulator does not expose App
-   endpoints. The `to_simulator_config()` method omits `apps` and
-   `app_installations` from the output.
+   simulator initial state because the simulator does not expose App endpoints.
+   The `to_simulator_config()` method omits `apps` and `app_installations` from
+   the output.
 
 3. **Installation access token integration**: `AppInstallation` carries an
-   optional `access_token` field. When set, the token is folded into the
-   token resolution pool alongside `ScenarioConfig.tokens`. The existing
+   optional `access_token` field. When set, the token is folded into the token
+   resolution pool alongside `ScenarioConfig.tokens`. The existing
    `_select_auth_token_value()` logic applies: a single token auto-selects;
-   multiple tokens require `default_token`. This design is a convenience
-   alias and may need revisiting if the simulator adds support for
-   per-request token switching or installation token exchange.
+   multiple tokens require `default_token`. This design is a convenience alias
+   and may need revisiting if the simulator adds support for per-request token
+   switching or installation token exchange.
 
 4. **Validation ordering**: App and installation validation runs after token
-   validation and before branch validation. Installation validation depends
-   on the app slug index, user/organization logins, and the repository
-   index. The `default_token` validation is deferred to after installation
-   validation so that installation access tokens are included in the
-   candidate pool.
+   validation and before branch validation. Installation validation depends on
+   the app slug index, user/organization logins, and the repository index. The
+   `default_token` validation is deferred to after installation validation so
+   that installation access tokens are included in the candidate pool.
 
 5. **Merge support**: `merge_scenarios` merges apps by `app_slug` and
    installations by `installation_id`, following the `_MergeSpec` pattern
@@ -274,6 +273,31 @@ helpers for GitHub Apps.
    single `GitHubApp`, one `AppInstallation`, and the account user or
    organization. It returns a `ScenarioConfig` that can be merged with other
    scenarios.
+
+#### Step 3.1.3 – Authentication mode limitation documentation
+
+The following decisions were made during documentation of authentication mode
+limitations.
+
+1. **Consolidated reference section**: A dedicated "Authentication mode
+   limitations" section in the users' guide provides a single reference
+   comparing all three modes (unauthenticated, token-based, and GitHub App
+   installation) with real GitHub behaviour. Existing inline notes remain for
+   discoverability and cross-reference the consolidated section.
+
+2. **Executable limitation scenarios**: BDD scenarios and unit tests serve as
+   living documentation of the limitations. If a future simulator version adds
+   authentication features (token validation, permission enforcement, or GitHub
+   App endpoints), these tests will fail, signalling that the documentation
+   needs updating.
+
+3. **Simulator version pinning**: All limitation documentation is explicit
+   about `@simulacrum/github-api-simulator` v0.6.2 to make it clear when
+   documentation needs revision after a simulator upgrade.
+
+4. **OAuth applications remain out of scope**: Following the Step 3.1.2
+   decision, OAuth applications are documented as an explicit scope boundary
+   rather than a limitation of the current implementation.
 
 ## Bun entrypoint
 

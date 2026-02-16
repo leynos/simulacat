@@ -345,6 +345,9 @@ def github_sim_config():
     return {"__simulacat__": {"auth_token": "ghs_test"}}
 ```
 
+For a full comparison of token-based authentication with real GitHub, see
+[Authentication mode limitations](#authentication-mode-limitations).
+
 ### GitHub App installation metadata
 
 simulacat can model GitHub App and installation metadata in scenarios. These
@@ -353,8 +356,8 @@ endpoints or enforce installation-scoped permissions. The metadata documents
 test intent and integrates with the token resolution flow.
 
 Apps are represented by `GitHubApp` and installations by `AppInstallation`.
-When an installation declares an `access_token`, it is folded into the
-token resolution pool alongside standalone `AccessToken` values. The existing
+When an installation declares an `access_token`, it is folded into the token
+resolution pool alongside standalone `AccessToken` values. The existing
 `default_token` selection logic applies: a single token auto-selects; multiple
 tokens require an explicit `default_token`.
 
@@ -415,11 +418,80 @@ combined = merge_scenarios(repo, app)
 config = combined.to_simulator_config()
 ```
 
-**Limitations:** The `@simulacrum/github-api-simulator` (v0.6.2) does not
-support GitHub App endpoints. The `repositories` and `permissions` fields on
-`AppInstallation` document test intent only; the simulator does not enforce
-installation-scoped access. This design should be revisited if a future
-simulator release adds GitHub App support.
+For a full comparison of GitHub App authentication with real GitHub, see
+[Authentication mode limitations](#authentication-mode-limitations).
+
+### Authentication mode limitations
+
+The `@simulacrum/github-api-simulator` (v0.6.2) does not validate tokens,
+enforce permissions, or implement rate limiting. The following tables summarise
+the differences between simulacat's authentication modes and real GitHub
+behaviour. These limitations apply across all three modes.
+
+#### Cross-cutting limitations
+
+| Aspect                | Real GitHub                                         | simulacat               |
+| --------------------- | --------------------------------------------------- | ----------------------- |
+| Rate limiting         | 60 req/h unauthenticated, 5 000 req/h authenticated | No rate limiting        |
+| Secondary rate limits | Concurrent request and content creation limits      | Not modelled            |
+| Conditional requests  | ETag and Last-Modified support                      | Not implemented         |
+| OAuth applications    | Full OAuth 2.0 flow                                 | Explicitly out of scope |
+| Audit logging         | Authentication events logged                        | Not modelled            |
+| SAML/SSO enforcement  | Organisation-level SSO requirements                 | Not modelled            |
+| API versioning        | `X-GitHub-Api-Version` header                       | Not modelled            |
+
+#### Unauthenticated mode
+
+When no tokens are configured, the `github_simulator` fixture does not set an
+`Authorization` header. The simulator responds to all implemented endpoints
+regardless of authentication state.
+
+| Aspect                    | Real GitHub                           | simulacat                                           |
+| ------------------------- | ------------------------------------- | --------------------------------------------------- |
+| Private repository access | Returns 404                           | No visibility enforcement; all repositories visible |
+| Endpoint restrictions     | Some endpoints require authentication | All implemented endpoints respond                   |
+| IP-based throttling       | Progressive throttling by IP          | No throttling                                       |
+
+#### Token-based authentication (`AccessToken`)
+
+When an `AccessToken` is configured, the `github_simulator` fixture sets
+`Authorization: token <value>` on the `github3.py` session. The simulator
+accepts the header but does not validate the token or enforce any scoping.
+
+| Aspect                      | Real GitHub                                              | simulacat                                         |
+| --------------------------- | -------------------------------------------------------- | ------------------------------------------------- |
+| Token validation            | Tokens validated server-side; invalid tokens receive 401 | Any token value accepted; no validation           |
+| Permission enforcement      | Token scopes limit endpoint access                       | `permissions` field is metadata only              |
+| Token expiration            | Fine-grained PATs and OAuth tokens expire                | No expiration                                     |
+| Token format validation     | Validates prefix format (`ghp_`, `gho_`, `ghs_`)         | No format validation                              |
+| Token revocation            | Tokens can be revoked                                    | No revocation support                             |
+| Repository visibility       | Token scoping controls visible repositories              | `repository_visibility` is metadata only          |
+| Repository scoping          | Fine-grained PATs scope to specific repositories         | `repositories` field is metadata only             |
+| Per-request token switching | One token per request                                    | One token per fixture session via `default_token` |
+| Authorization header format | `Bearer <token>` or `token <token>`                      | Always `token <value>`                            |
+
+#### GitHub App installation authentication
+
+`GitHubApp` and `AppInstallation` models describe app metadata and
+per-installation access. The simulator (v0.6.2) does not expose GitHub App
+endpoints. These models are client-side metadata only and are not serialized
+into the simulator initial state.
+
+| Aspect                           | Real GitHub                                   | simulacat                                            |
+| -------------------------------- | --------------------------------------------- | ---------------------------------------------------- |
+| App endpoints                    | `GET /app`, `GET /app/installations`          | No GitHub App endpoints available                    |
+| Installation token exchange      | `POST /app/installations/{id}/access_tokens`  | No token exchange; `access_token` is a static string |
+| JWT authentication               | App authenticates with a signed JWT           | No JWT support                                       |
+| Installation-scoped permissions  | Per-installation permission enforcement       | `permissions` is metadata only                       |
+| Installation-scoped repositories | Installation limited to selected repositories | `repositories` is metadata only                      |
+| Webhook delivery                 | Installations receive webhooks                | No webhook delivery                                  |
+| Token lifetime                   | Installation tokens expire after one hour     | No expiration                                        |
+| Manifest flow                    | App creation via manifest                     | Not supported                                        |
+| Suspension                       | Apps can be suspended                         | Not modelled                                         |
+| Serialization                    | App data stored on GitHub servers             | Models excluded from simulator config                |
+
+These limitations should be revisited if a future simulator release adds
+authentication or GitHub App support.
 
 ## Configuration Schema
 
