@@ -274,7 +274,7 @@ helpers for GitHub Apps.
    organization. It returns a `ScenarioConfig` that can be merged with other
    scenarios.
 
-#### Step 3.1.3 – Authentication mode limitation documentation
+#### Step 3.1.3 – authentication mode limitation documentation
 
 The following decisions were made during documentation of authentication mode
 limitations.

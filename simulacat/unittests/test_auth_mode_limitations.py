@@ -132,7 +132,7 @@ class TestGitHubAppLimitationBehaviour:
                     installation_id=1,
                     app_slug="test-bot",
                     account="octocat",
-                    access_token="ghs_static_literal",  # noqa: S106 — test token value
+                    access_token="ghs_static_literal",  # noqa: S106 — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -161,7 +161,7 @@ class TestGitHubAppLimitationBehaviour:
                     app_slug="test-bot",
                     account="octocat",
                     permissions=("contents",),
-                    access_token="ghs_same",  # noqa: S106 — test token value
+                    access_token="ghs_same",  # noqa: S106 — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -175,7 +175,7 @@ class TestGitHubAppLimitationBehaviour:
                     app_slug="test-bot",
                     account="octocat",
                     permissions=("contents", "pull_requests", "admin"),
-                    access_token="ghs_same",  # noqa: S106 — test token value
+                    access_token="ghs_same",  # noqa: S106 — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -199,7 +199,7 @@ class TestGitHubAppLimitationBehaviour:
                 AccessToken(value="ghs_first", owner="alice"),
                 AccessToken(value="ghs_second", owner="alice"),
             ),
-            default_token="ghs_first",  # noqa: S106 — test default token
+            default_token="ghs_first",  # noqa: S106 — FIXME: use env or fixture for test tokens
         )
 
         resolved = scenario.resolve_auth_token()

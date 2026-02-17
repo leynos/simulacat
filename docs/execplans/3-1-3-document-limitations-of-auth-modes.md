@@ -230,10 +230,8 @@ implemented).
 Validation: run targeted tests:
 
     set -o pipefail
-    uv run pytest simulacat/unittests/test_auth_mode_limitations.py -v 2>&1 \
-      | tee /tmp/test-limitations-unit.log |
-    uv run pytest tests/steps/test_auth_mode_limitations.py -v 2>&1 \
-      | tee /tmp/test-limitations-bdd.log |
+    uv run pytest simulacat/unittests/test_auth_mode_limitations.py -v 2>&1 | tee /tmp/test-limitations-unit.log
+    uv run pytest tests/steps/test_auth_mode_limitations.py -v 2>&1 | tee /tmp/test-limitations-bdd.log
 
 Expected: all pass (since they test existing behaviour).
 
@@ -267,8 +265,7 @@ Expected: all exit 0.
    Run targeted tests to confirm they pass:
 
        set -o pipefail
-       uv run pytest simulacat/unittests/test_auth_mode_limitations.py -v \
-         2>&1 | tee /tmp/test-limitations-unit.log
+       uv run pytest simulacat/unittests/test_auth_mode_limitations.py -v 2>&1 | tee /tmp/test-limitations-unit.log
 
 2. Write BDD feature file `tests/features/auth_mode_limitations.feature` and
    step definitions in `tests/steps/test_auth_mode_limitations.py`.
@@ -276,8 +273,7 @@ Expected: all exit 0.
    Run targeted tests to confirm they pass:
 
        set -o pipefail
-       uv run pytest tests/steps/test_auth_mode_limitations.py -v 2>&1 \
-         | tee /tmp/test-limitations-bdd.log |
+       uv run pytest tests/steps/test_auth_mode_limitations.py -v 2>&1 | tee /tmp/test-limitations-bdd.log
 
 3. Add the consolidated "Authentication mode limitations" section to
    `docs/users-guide.md`.

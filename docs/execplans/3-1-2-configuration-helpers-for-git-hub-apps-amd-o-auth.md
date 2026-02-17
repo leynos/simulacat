@@ -416,8 +416,7 @@ Expected result: all exit 0.
    Run targeted tests to confirm they fail:
 
        set -o pipefail
-       uv run pytest simulacat/unittests/test_github_app.py -v 2>&1 \
-         | tee /tmp/test-github-app-pre.log |
+       uv run pytest simulacat/unittests/test_github_app.py -v 2>&1 | tee /tmp/test-github-app-pre.log
 
    Expected: import errors or `AttributeError` because models do not exist yet.
 
@@ -427,8 +426,7 @@ Expected result: all exit 0.
    Run targeted tests to confirm they fail:
 
        set -o pipefail
-       uv run pytest tests/steps/test_github_app.py -v 2>&1 \
-         | tee /tmp/test-github-app-bdd-pre.log |
+       uv run pytest tests/steps/test_github_app.py -v 2>&1 | tee /tmp/test-github-app-bdd-pre.log
 
    Expected: import errors because `GitHubApp` and `AppInstallation` are not
    yet defined.
@@ -448,10 +446,8 @@ Expected result: all exit 0.
 7. Run targeted tests to confirm they pass:
 
        set -o pipefail
-       uv run pytest simulacat/unittests/test_github_app.py -v 2>&1 \
-         | tee /tmp/test-github-app-post.log |
-       uv run pytest tests/steps/test_github_app.py -v 2>&1 \
-         | tee /tmp/test-github-app-bdd-post.log |
+       uv run pytest simulacat/unittests/test_github_app.py -v 2>&1 | tee /tmp/test-github-app-post.log
+       uv run pytest tests/steps/test_github_app.py -v 2>&1 | tee /tmp/test-github-app-bdd-post.log
 
    Expected: all new tests pass.
 

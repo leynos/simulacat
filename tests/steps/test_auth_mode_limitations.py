@@ -31,6 +31,7 @@ from pytest_bdd import given, scenarios, then, when
 from simulacat import (
     AccessToken,
     AppInstallation,
+    ConfigValidationError,
     GitHubApp,
     Repository,
     ScenarioConfig,
@@ -152,7 +153,7 @@ def given_installation_with_static_token(
                 installation_id=1,
                 app_slug="token-bot",
                 account="octocat",
-                access_token="ghs_literal_static_value",  # noqa: S106 — test token value
+                access_token="ghs_literal_static_value",  # noqa: S106 — FIXME: use env or fixture for test tokens
             ),
         ),
     )
@@ -171,7 +172,7 @@ def when_limitation_validated(
     try:
         scenario.validate()
         limitations_context["error"] = None
-    except Exception as exc:  # noqa: BLE001 — capture for assertion
+    except ConfigValidationError as exc:
         limitations_context["error"] = exc
 
 
@@ -247,6 +248,6 @@ def then_no_app_fields(limitations_context: LimitationsContext) -> None:
 def then_literal_token(limitations_context: LimitationsContext) -> None:
     """Assert that the resolved token is the literal static string."""
     token = limitations_context["token"]
-    assert token == "ghs_literal_static_value", (  # noqa: S105 — test token value
+    assert token == "ghs_literal_static_value", (  # noqa: S105 — FIXME: use env or fixture for test tokens
         "Expected resolved token to be the literal access_token value"
     )

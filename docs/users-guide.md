@@ -424,7 +424,7 @@ For a full comparison of GitHub App authentication with real GitHub, see
 ### Authentication mode limitations
 
 The `@simulacrum/github-api-simulator` (v0.6.2) does not validate tokens,
-enforce permissions, or implement rate limiting. The following tables summarise
+enforce permissions, or implement rate limiting. The following tables summarize
 the differences between simulacat's authentication modes and real GitHub
 behaviour. These limitations apply across all three modes.
 
