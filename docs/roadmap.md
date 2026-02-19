@@ -149,8 +149,17 @@ simulator supports them.
   - app installation metadata,
   - per-installation access to repositories and organizations.
 
-- [ ] Document the limitations of each authentication mode compared with real
-      GitHub.
+- [x] Document the limitations of each authentication mode compared with real
+      GitHub:
+
+  - consolidated "Authentication mode limitations" section in the users'
+    guide with comparison tables for unauthenticated, token-based, and
+    GitHub App modes,
+  - design decisions recorded in `docs/simulacat-design.md`,
+  - acceptance: `make check-fmt`, `make typecheck`, `make lint`, and
+    `make test` succeed, including the new unit tests in
+    `simulacat/unittests/test_auth_mode_limitations.py` and behavioural
+    scenarios in `tests/features/auth_mode_limitations.feature`.
 
 ### Step 3.2 – CI usage and reference examples
 

@@ -74,27 +74,27 @@ GitHub App endpoints or installation token exchange. These models are therefore
 ## Risks
 
 - Risk: the `access_token` field on `AppInstallation` may create confusion
-  about whether it replaces or supplements `ScenarioConfig.tokens`.
-  Severity: medium Likelihood: medium Mitigation: document clearly that
-  `AppInstallation.access_token` is a convenience alias; it is folded into
-  the token resolution flow alongside `ScenarioConfig.tokens`. If both an
+  about whether it replaces or supplements `ScenarioConfig.tokens`. Severity:
+  medium Likelihood: medium Mitigation: document clearly that
+  `AppInstallation.access_token` is a convenience alias; it is folded into the
+  token resolution flow alongside `ScenarioConfig.tokens`. If both an
   installation token and a standalone token are present, the existing
-  `default_token` selection rule applies. Record this as a design decision
-  and note in the roadmap that a future revision may introduce per-request
-  token switching when the simulator supports it.
+  `default_token` selection rule applies. Record this as a design decision and
+  note in the roadmap that a future revision may introduce per-request token
+  switching when the simulator supports it.
 
 - Risk: adding two new tuple fields (`apps`, `app_installations`) to
-  `ScenarioConfig` may complicate the merge logic.
-  Severity: medium Likelihood: low Mitigation: follow the established
-  `_MergeSpec` pattern in `scenario_factories.py` and add merge specs for
-  both new entity types. Identity keys: `app_slug` for `GitHubApp`,
-  `installation_id` for `AppInstallation`.
+  `ScenarioConfig` may complicate the merge logic. Severity: medium Likelihood:
+  low Mitigation: follow the established `_MergeSpec` pattern in
+  `scenario_factories.py` and add merge specs for both new entity types.
+  Identity keys: `app_slug` for `GitHubApp`, `installation_id` for
+  `AppInstallation`.
 
 - Risk: validation ordering may need adjustment because app installation
   validation depends on both app definitions and user/org/repo indexes.
   Severity: low Likelihood: low Mitigation: insert app validation in
-  `_build_indexes()` after users, organizations, and repositories are
-  validated but before branches (mirroring the position of token validation).
+  `_build_indexes()` after users, organizations, and repositories are validated
+  but before branches (mirroring the position of token validation).
 
 ## Progress
 
@@ -131,17 +131,17 @@ GitHub App endpoints or installation token exchange. These models are therefore
 ## Decision log
 
 - Decision: model GitHub Apps only; OAuth applications are out of scope.
-  Rationale: the simulator supports neither, and GitHub Apps with
-  installations are the richer model. OAuth apps are a simpler, distinct flow
-  that can be added later. Date/Author: 2026-02-12, user direction.
+  Rationale: the simulator supports neither, and GitHub Apps with installations
+  are the richer model. OAuth apps are a simpler, distinct flow that can be
+  added later. Date/Author: 2026-02-12, user direction.
 
 - Decision: `AppInstallation` carries an optional `access_token` field that
-  integrates with the existing `Authorization` header flow.
-  Rationale: lets tests express "this installation token is used for auth" in
-  a single place. The token value is folded into the token resolution flow
-  alongside `ScenarioConfig.tokens`. This design may need revisiting if
-  future simulator versions support per-request token switching or
-  installation token exchange. Date/Author: 2026-02-12, user direction.
+  integrates with the existing `Authorization` header flow. Rationale: lets
+  tests express "this installation token is used for auth" in a single place.
+  The token value is folded into the token resolution flow alongside
+  `ScenarioConfig.tokens`. This design may need revisiting if future simulator
+  versions support per-request token switching or installation token exchange.
+  Date/Author: 2026-02-12, user direction.
 
 - Decision: new models are metadata-only and are NOT serialized into the
   simulator initial state, following the `AccessToken` precedent from Step
@@ -161,15 +161,15 @@ Implementation complete. All acceptance criteria met:
 - Documentation updated in users' guide, design document, and roadmap.
 
 Key implementation note: the `default_token` validation was moved to a
-dedicated `_validate_default_token` method called after both
-`_validate_tokens` and `_validate_app_installations` to allow `default_token`
-to reference installation access tokens.
+dedicated `_validate_default_token` method called after both `_validate_tokens`
+and `_validate_app_installations` to allow `default_token` to reference
+installation access tokens.
 
 ## Context and orientation
 
-The simulacat project provides a pytest integration for running tests against
-a local GitHub API simulator. The codebase lives at the repository root with
-the following key layout:
+The simulacat project provides a pytest integration for running tests against a
+local GitHub API simulator. The codebase lives at the repository root with the
+following key layout:
 
 - `simulacat/scenario_models.py` – frozen dataclasses for domain concepts
   (`User`, `Organization`, `Repository`, `Branch`, `AccessToken`, `Issue`,
@@ -178,16 +178,15 @@ the following key layout:
   `validate()`, `to_simulator_config()`, and `resolve_auth_token()`. Contains
   `ConfigValidationError` and all validation helpers.
 - `simulacat/scenario_factories.py` – named factory functions
-  (`single_repo_scenario`, `monorepo_with_apps_scenario`,
-  `empty_org_scenario`) and `merge_scenarios` with `_MergeSpec`-based
-  conflict detection.
+  (`single_repo_scenario`, `monorepo_with_apps_scenario`, `empty_org_scenario`)
+  and `merge_scenarios` with `_MergeSpec`-based conflict detection.
 - `simulacat/scenario.py` – public re-exports of models, config, and
   factories.
 - `simulacat/__init__.py` – top-level re-exports for `from simulacat import`.
 - `simulacat/pytest_plugin.py` – `github_sim_config`, `github_simulator`,
-  `simulacat_single_repo`, `simulacat_empty_org` fixtures. Tokens flow
-  through `__simulacat__` metadata key and are set on the `github3.py`
-  session `Authorization` header.
+  `simulacat_single_repo`, `simulacat_empty_org` fixtures. Tokens flow through
+  `__simulacat__` metadata key and are set on the `github3.py` session
+  `Authorization` header.
 - `simulacat/fixtures.py` – lazy `__getattr__` imports to avoid hard pytest
   dependency.
 - `simulacat/types.py` – TypedDict definitions for the simulator JSON schema.
@@ -253,8 +252,8 @@ Write failing tests before implementation:
 - Scenario: invalid installation references raise a validation error.
 
 Validation: run `pytest simulacat/unittests/test_github_app.py -v` and
-`pytest tests/steps/test_github_app.py -v`; expect failures because the
-models and validation do not yet exist.
+`pytest tests/steps/test_github_app.py -v`; expect failures because the models
+and validation do not yet exist.
 
 ### Stage C: implementation (minimal change to satisfy tests)
 
@@ -274,25 +273,25 @@ Add two new frozen dataclasses after `AccessToken`:
         installation_id: int
         app_slug: str
         account: str
-        repositories: tuple[str, ...] = dc.field(default_factory=tuple)
-        permissions: tuple[str, ...] = dc.field(default_factory=tuple)
+        repositories: tuple[str, …] = dc.field(default_factory=tuple)
+        permissions: tuple[str, …] = dc.field(default_factory=tuple)
         access_token: str | None = None
 
-`AppInstallation.__post_init__` normalizes `repositories` and `permissions`
-to tuples and rejects bare string arguments, following the `AccessToken`
-pattern. Update `__all__` to include both new classes.
+`AppInstallation.__post_init__` normalizes `repositories` and `permissions` to
+tuples and rejects bare string arguments, following the `AccessToken` pattern.
+Update `__all__` to include both new classes.
 
 **C2. ScenarioConfig fields** (`simulacat/scenario_config.py`):
 
 Add two new tuple fields to `ScenarioConfig`:
 
-    apps: tuple[GitHubApp, ...] = dc.field(default_factory=tuple)
-    app_installations: tuple[AppInstallation, ...] = dc.field(
+    apps: tuple[GitHubApp, …] = dc.field(default_factory=tuple)
+    app_installations: tuple[AppInstallation, …] = dc.field(
         default_factory=tuple
     )
 
-Normalize both in `__post_init__`. No changes to `to_simulator_config()`
-since these are metadata-only and must not be serialized.
+Normalize both in `__post_init__`. No changes to `to_simulator_config()` since
+these are metadata-only and must not be serialized.
 
 **C3. Validation** (`simulacat/scenario_config.py`):
 
@@ -300,14 +299,13 @@ Add `_validate_apps()` and `_validate_app_installations()` methods:
 
 - `_validate_apps()`: validate `app_slug` is non-empty text, `name` is
   non-empty text, `app_id` (if set) is a positive integer, `owner` (if set)
-  references a defined user or organization. Ensure `app_slug` is unique
-  across all apps.
+  references a defined user or organization. Ensure `app_slug` is unique across
+  all apps.
 - `_validate_app_installations()`: validate `installation_id` is a positive
-  integer and unique, `app_slug` references a defined `GitHubApp`,
-  `account` references a defined user or organization, `repositories` entries
-  are in `owner/repo` format and reference defined repositories,
-  `permissions` are unique per installation, `access_token` (if set) is
-  non-empty text.
+  integer and unique, `app_slug` references a defined `GitHubApp`, `account`
+  references a defined user or organization, `repositories` entries are in
+  `owner/repo` format and reference defined repositories, `permissions` are
+  unique per installation, `access_token` (if set) is non-empty text.
 
 Call both in `_build_indexes()` after `_validate_tokens()` and before
 `_validate_branches()`. Store the app slug set in `_ScenarioIndexes` for
@@ -316,9 +314,9 @@ downstream use.
 **C4. Token integration** (`simulacat/scenario_config.py`):
 
 Update `resolve_auth_token()` to include installation access tokens in the
-candidate pool. When an `AppInstallation` declares an `access_token`, its
-value is appended to the token values list alongside `ScenarioConfig.tokens`.
-The existing `_select_auth_token_value()` logic then applies: single token
+candidate pool. When an `AppInstallation` declares an `access_token`, its value
+is appended to the token values list alongside `ScenarioConfig.tokens`. The
+existing `_select_auth_token_value()` logic then applies: single token
 auto-selects, multiple tokens require `default_token`. Validation must also
 check that installation access token values do not duplicate standalone token
 values.
@@ -342,15 +340,15 @@ Add `github_app_scenario()`:
         *,
         account: str,
         account_is_org: bool = False,
-        repositories: tuple[str, ...] = (),
-        permissions: tuple[str, ...] = (),
+        repositories: tuple[str, …] = (),
+        permissions: tuple[str, …] = (),
         access_token: str | None = None,
         app_id: int | None = None,
     ) -> ScenarioConfig:
 
-This factory creates a `GitHubApp`, an `AppInstallation`, the account
-user/org, and any referenced repositories. It returns a `ScenarioConfig`
-that can be merged with other scenarios.
+This factory creates a `GitHubApp`, an `AppInstallation`, the account user/org,
+and any referenced repositories. It returns a `ScenarioConfig` that can be
+merged with other scenarios.
 
 **C7. Public API exports**:
 
@@ -418,11 +416,9 @@ Expected result: all exit 0.
    Run targeted tests to confirm they fail:
 
        set -o pipefail
-       uv run pytest simulacat/unittests/test_github_app.py -v 2>&1 \
-         | tee /tmp/test-github-app-pre.log
+       uv run pytest simulacat/unittests/test_github_app.py -v 2>&1 | tee /tmp/test-github-app-pre.log
 
-   Expected: import errors or `AttributeError` because models do not exist
-   yet.
+   Expected: import errors or `AttributeError` because models do not exist yet.
 
 2. Write BDD feature file `tests/features/github_app.feature` and step
    definitions in `tests/steps/test_github_app.py`.
@@ -430,11 +426,10 @@ Expected result: all exit 0.
    Run targeted tests to confirm they fail:
 
        set -o pipefail
-       uv run pytest tests/steps/test_github_app.py -v 2>&1 \
-         | tee /tmp/test-github-app-bdd-pre.log
+       uv run pytest tests/steps/test_github_app.py -v 2>&1 | tee /tmp/test-github-app-bdd-pre.log
 
-   Expected: import errors because `GitHubApp` and `AppInstallation` are
-   not yet defined.
+   Expected: import errors because `GitHubApp` and `AppInstallation` are not
+   yet defined.
 
 3. Implement `GitHubApp` and `AppInstallation` in
    `simulacat/scenario_models.py`.
@@ -451,10 +446,8 @@ Expected result: all exit 0.
 7. Run targeted tests to confirm they pass:
 
        set -o pipefail
-       uv run pytest simulacat/unittests/test_github_app.py -v 2>&1 \
-         | tee /tmp/test-github-app-post.log
-       uv run pytest tests/steps/test_github_app.py -v 2>&1 \
-         | tee /tmp/test-github-app-bdd-post.log
+       uv run pytest simulacat/unittests/test_github_app.py -v 2>&1 | tee /tmp/test-github-app-post.log
+       uv run pytest tests/steps/test_github_app.py -v 2>&1 | tee /tmp/test-github-app-bdd-post.log
 
    Expected: all new tests pass.
 
@@ -484,8 +477,8 @@ Acceptance is achieved when:
   invalid configurations raise `ConfigValidationError` with descriptive
   messages.
 - An `AppInstallation` with an `access_token` integrates with
-  `resolve_auth_token()` and, via `github_simulator`, sets the
-  `Authorization` header on the `github3.py` session.
+  `resolve_auth_token()` and, via `github_simulator`, sets the `Authorization`
+  header on the `github3.py` session.
 - `github_app_scenario(...)` returns a valid `ScenarioConfig` that can be
   merged with other scenarios via `merge_scenarios`.
 - Unit tests and behavioural tests pass, with new tests failing before
@@ -589,18 +582,18 @@ New dataclasses in `simulacat/scenario_models.py`:
         installation_id: int
         app_slug: str
         account: str
-        repositories: tuple[str, ...] = dc.field(default_factory=tuple)
-        permissions: tuple[str, ...] = dc.field(default_factory=tuple)
+        repositories: tuple[str, …] = dc.field(default_factory=tuple)
+        permissions: tuple[str, …] = dc.field(default_factory=tuple)
         access_token: str | None = None
 
         def __post_init__(self) -> None:
             # Normalize collections; reject bare strings.
-            ...
+            …
 
 New fields on `ScenarioConfig`:
 
-    apps: tuple[GitHubApp, ...] = dc.field(default_factory=tuple)
-    app_installations: tuple[AppInstallation, ...] = dc.field(
+    apps: tuple[GitHubApp, …] = dc.field(default_factory=tuple)
+    app_installations: tuple[AppInstallation, …] = dc.field(
         default_factory=tuple
     )
 
@@ -612,14 +605,13 @@ New factory in `simulacat/scenario_factories.py`:
         *,
         account: str,
         account_is_org: bool = False,
-        repositories: tuple[str, ...] = (),
-        permissions: tuple[str, ...] = (),
+        repositories: tuple[str, …] = (),
+        permissions: tuple[str, …] = (),
         access_token: str | None = None,
         app_id: int | None = None,
     ) -> ScenarioConfig
 
-New public exports added to `simulacat/scenario.py` and
-`simulacat/__init__.py`:
+New public exports added to `simulacat/scenario.py` and `simulacat/__init__.py`:
 
 - `GitHubApp`
 - `AppInstallation`
