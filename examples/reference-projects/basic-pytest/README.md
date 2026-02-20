@@ -21,18 +21,7 @@ This reference project shows a minimal pytest suite that uses simulacat's
    package:
 
    ```bash
-   SIMULACAT_JS_ROOT="$(python - <<'PY'
-   from simulacat.orchestration import sim_entrypoint
-
-   entrypoint = sim_entrypoint()
-   for candidate in (entrypoint.parent, entrypoint.parent.parent):
-       if (candidate / "package.json").is_file():
-           print(candidate)
-           break
-   else:
-       raise SystemExit("Unable to locate simulacat package.json")
-   PY
-   )"
+   SIMULACAT_JS_ROOT="$(python -c 'from simulacat.orchestration import sim_package_root; print(sim_package_root())')"
 
    bun install --cwd "${SIMULACAT_JS_ROOT}"
    ```
@@ -43,7 +32,7 @@ This reference project shows a minimal pytest suite that uses simulacat's
    pytest -v tests
    ```
 
-## CI
+## Continuous integration (CI)
 
 The workflow in `.github/workflows/ci.yml` demonstrates the same flow in GitHub
 Actions with `actions/setup-python`, `actions/setup-node`, and Bun.

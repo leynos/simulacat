@@ -73,6 +73,38 @@ def sim_entrypoint() -> Path:
     return candidates[0]
 
 
+def sim_package_root() -> Path:
+    """Return the directory containing simulacat's bundled `package.json`.
+
+    This resolves the JavaScript dependency root used for `bun install` in both
+    editable-repository and installed-wheel layouts.
+
+    Returns
+    -------
+    Path
+        Absolute path to the directory containing `package.json`.
+
+    Raises
+    ------
+    GitHubSimProcessError
+        If no `package.json` can be found from known simulator entrypoint
+        parent locations.
+
+    """
+    entrypoint = sim_entrypoint()
+    candidates = (entrypoint.parent, entrypoint.parent.parent)
+
+    for candidate in candidates:
+        if (candidate / "package.json").is_file():
+            return candidate
+
+    msg = (
+        "Unable to locate simulacat package.json from simulator entrypoint at "
+        f"{entrypoint}"
+    )
+    raise GitHubSimProcessError(msg)
+
+
 def _empty_initial_state() -> dict[str, list[typ.Any]]:
     """Return the minimal valid initial state for the simulator.
 

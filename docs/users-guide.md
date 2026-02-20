@@ -39,22 +39,10 @@ simulator is started.
 
 Before running simulator-backed tests, install JavaScript dependencies in the
 directory that contains the simulacat `package.json`. This command resolves the
-correct directory from the installed `sim_entrypoint()` path and then runs
-`bun install`:
+correct directory via `sim_package_root()` and then runs `bun install`:
 
 ```bash
-SIMULACAT_JS_ROOT="$(python - <<'PY'
-from simulacat.orchestration import sim_entrypoint
-
-entrypoint = sim_entrypoint()
-for candidate in (entrypoint.parent, entrypoint.parent.parent):
-    if (candidate / "package.json").is_file():
-        print(candidate)
-        break
-else:
-    raise SystemExit("Unable to locate simulacat package.json")
-PY
-)"
+SIMULACAT_JS_ROOT="$(python -c 'from simulacat.orchestration import sim_package_root; print(sim_package_root())')"
 
 bun install --cwd "${SIMULACAT_JS_ROOT}"
 ```
@@ -704,7 +692,7 @@ default. Run the full set, including packaging checks, with:
 pytest -m slow
 ```
 
-## CI reference projects
+## Continuous integration (CI) reference projects
 
 Step 3.2 ships two minimal reference projects:
 

@@ -10,23 +10,13 @@ demonstrate CI integration:
 
 from __future__ import annotations
 
-from pathlib import Path
-
-
-def _repo_root() -> Path:
-    """Return the repository root from this test module location."""
-    return Path(__file__).resolve().parents[2]
-
-
-def _reference_project_path(name: str) -> Path:
-    """Return the absolute path for a named reference project."""
-    return _repo_root() / "examples" / "reference-projects" / name
+from tests.reference_project_paths import reference_project_path
 
 
 def test_reference_project_directories_exist() -> None:
     """Both Step 3.2 reference project directories exist."""
-    basic = _reference_project_path("basic-pytest")
-    authenticated = _reference_project_path("authenticated-pytest")
+    basic = reference_project_path("basic-pytest")
+    authenticated = reference_project_path("authenticated-pytest")
 
     assert basic.is_dir(), f"Missing reference project directory: {basic}"
     assert authenticated.is_dir(), (
@@ -41,7 +31,7 @@ def test_reference_projects_include_expected_files() -> None:
         "authenticated-pytest": "test_authenticated_simulator_smoke.py",
     }
     for project_name, test_file in expected_test_file.items():
-        project_dir = _reference_project_path(project_name)
+        project_dir = reference_project_path(project_name)
         expected_paths = (
             project_dir / "README.md",
             project_dir / "pyproject.toml",
@@ -59,7 +49,7 @@ def test_reference_project_tests_use_simulacat() -> None:
         "authenticated-pytest": "test_authenticated_simulator_smoke.py",
     }
     for project_name, test_file in expected_test_file.items():
-        test_path = _reference_project_path(project_name) / "tests" / test_file
+        test_path = reference_project_path(project_name) / "tests" / test_file
         content = test_path.read_text(encoding="utf-8")
         assert "github_simulator" in content, (
             f"Expected github_simulator usage in {test_path}"
@@ -71,7 +61,7 @@ def test_reference_ci_workflows_use_python_and_node_tooling() -> None:
     """Reference CI workflows include setup for Python and Node.js."""
     for project_name in ("basic-pytest", "authenticated-pytest"):
         workflow_path = (
-            _reference_project_path(project_name) / ".github" / "workflows" / "ci.yml"
+            reference_project_path(project_name) / ".github" / "workflows" / "ci.yml"
         )
         content = workflow_path.read_text(encoding="utf-8")
         assert "actions/setup-python" in content, (
@@ -79,5 +69,11 @@ def test_reference_ci_workflows_use_python_and_node_tooling() -> None:
         )
         assert "actions/setup-node" in content, (
             f"Missing actions/setup-node in {workflow_path}"
+        )
+        assert "bun-version" in content, (
+            f"Missing pinned bun-version in {workflow_path}"
+        )
+        assert "sim_package_root" in content, (
+            f"Expected sim_package_root helper usage in {workflow_path}"
         )
         assert "pytest" in content, f"Missing pytest run command in {workflow_path}"

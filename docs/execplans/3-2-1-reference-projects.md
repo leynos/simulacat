@@ -1,4 +1,4 @@
-# Step 3.2.1 CI reference projects
+# Step 3.2.1 Continuous integration (CI) reference projects
 
 This Execution Plan (ExecPlan) is a living document. The sections
 "Constraints", "Tolerances", "Risks", "Progress", "Surprises & Discoveries",
@@ -104,16 +104,16 @@ Success is observable when:
   `sys.executable -m pytest` than shelling out to `uv run pytest`, which avoids
   nested toolchain setup overhead inside worker processes.
 - Pytest test collection raised an import-file mismatch when both reference
-  projects used the same test module basename (`test_simulator_smoke.py`).
-  Fix: use unique filenames per project (`test_basic_simulator_smoke.py` and
+  projects used the same test module basename (`test_simulator_smoke.py`). Fix:
+  use unique filenames per project (`test_basic_simulator_smoke.py` and
   `test_authenticated_simulator_smoke.py`).
 
 ## Decision log
 
 - Decision: provide two reference projects rather than one.
-  Rationale: Step 3.2 says "projects" and two examples let us show a baseline
-  and an authenticated variant while staying minimal. Date/Author: 2026-02-20,
-  ExecPlan author.
+  Rationale: Step 3.2 says "projects", and two examples demonstrate both a
+  baseline and an authenticated variant while staying minimal. Date/Author:
+  2026-02-20, ExecPlan author.
 
 - Decision: store reference projects under `examples/reference-projects/`.
   Rationale: keeps end-user examples outside package internals and aligns with
@@ -203,7 +203,7 @@ Proposed new implementation targets:
 
 ## Plan of work
 
-### Stage A: finalise reference project contract (no functional edits)
+### Stage A: finalize reference project contract (no functional edits)
 
 Define the minimum contract each project must satisfy:
 

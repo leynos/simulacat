@@ -171,17 +171,60 @@ Demonstrate reliable use of `simulacat` in continuous integration environments.
 
   - use `simulacat` in a pytest suite,
   - run under a standard Python + Node.js toolchain in CI.
+  - prerequisites:
+    - environment requirements are documented and executable (see the
+      "Document environment requirements" checklist item below),
+    - reference suites include simulator lifecycle coverage by requesting the
+      `github_simulator` fixture (startup + teardown contract).
+  - measurable finish lines:
+    - both `examples/reference-projects/basic-pytest` and
+      `examples/reference-projects/authenticated-pytest` pass `pytest -v tests`
+      in CI,
+    - CI green on Python 3.13 + Node.js 22, with compatibility documented for
+      Python 3.12-3.13 and Node.js 20.x-22.x,
+    - simulator-related modules (`simulacat/orchestration.py` and
+      `simulacat/pytest_plugin.py`) maintain >=90% line coverage in CI,
+    - at least one example workflow demonstrates simulator start/stop via
+      `github_simulator` fixture execution.
 
 - [x] Document environment requirements:
 
   - Node.js version range,
   - expected method for installing Simulacrum dependencies.
+  - prerequisites:
+    - reference project installation commands are finalized and validated in CI
+      logs.
+  - measurable finish lines:
+    - exact runtime versions are documented: Python 3.12-3.13, Node.js
+      20.x-22.x, and Bun runtime available on PATH,
+    - verified CI execution target is documented: Linux (`ubuntu-latest`,
+      x86_64),
+    - install method is listed as concrete steps with commands (for example:
+      `python -m pip install ...`, resolve `SIMULACAT_JS_ROOT`, and
+      `bun install --cwd "${SIMULACAT_JS_ROOT}"`).
 
 - [x] Provide troubleshooting guidance with concrete failure signatures:
 
   - simulator startup failures,
   - configuration serialization errors,
   - mismatches between `github3.py` calls and simulator coverage.
+  - prerequisites / sequencing:
+    - complete environment setup first (see "Document environment
+      requirements"),
+    - run the reference project suites first (see "Supply minimal reference
+      projects") before classifying failures as troubleshooting items.
+  - measurable finish lines:
+    - troubleshooting docs include exact signatures for startup failures (for
+      example `GitHubSimProcessError: Bun executable not found` and simulator
+      listening-event startup failures),
+    - serialization guidance includes exact errors (for example
+      `TypeError: github_sim_config must be a mapping` and JSON serialization
+      type errors),
+    - coverage-mismatch guidance includes
+      `github3.exceptions.IncompleteResponse`
+      and a startup latency threshold (`>30s` treated as startup failure),
+    - uncovered `github3.py` compatibility-call rate is tracked with a target
+      of <=10% uncovered calls in the documented reference suite.
 
 ______________________________________________________________________
 

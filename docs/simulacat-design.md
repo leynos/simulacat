@@ -299,7 +299,7 @@ limitations.
    decision, OAuth applications are documented as an explicit scope boundary
    rather than a limitation of the current implementation.
 
-### Step 3.2 – CI usage and reference examples
+### Step 3.2 – Continuous integration (CI) usage and reference examples
 
 The following decisions were made during implementation of CI reference
 projects.
@@ -315,10 +315,10 @@ projects.
    - `actions/setup-node` for Node.js toolchain setup,
    - Bun for executing the simulator entrypoint.
 
-3. **Explicit Simulacrum dependency installation**: Reference workflows install
-   JavaScript dependencies by locating the simulacat `package.json` from
-   `sim_entrypoint()` and running `bun install --cwd <resolved-dir>`. This
-   avoids hard-coding source or wheel installation paths.
+3. **Explicit Simulacrum dependency installation**: Reference workflows and
+   docs resolve the JavaScript dependency root through `sim_package_root()` and
+   run `bun install --cwd <resolved-dir>`. This avoids hard-coding source or
+   wheel installation paths.
 
 4. **Executable validation for examples**: Step 3.2 adds both unit tests and
    pytest-bdd behavioural tests that validate:
@@ -328,8 +328,8 @@ projects.
 
 5. **Consumer-facing troubleshooting signatures**: The users' guide now
    includes concrete failure signatures for simulator startup, configuration
-   serialization, and `github3.py`/simulator coverage mismatches so CI failures
-   can be triaged quickly.
+   serialization, and `github3.py`/simulator coverage mismatches, so CI
+   failures can be triaged quickly.
 
 ## Bun entrypoint
 

@@ -15,15 +15,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
+          # Example point version within the documented Python 3.12-3.13 range.
           python-version: "3.13"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
+          # Example point version within the documented Node.js 20.x-22.x range.
           node-version: "22"
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.9"
 
       - name: Install Python dependencies
         run: |
@@ -32,18 +36,7 @@ jobs:
 
       - name: Install simulacat simulator dependencies
         run: |
-          SIMULACAT_JS_ROOT="$(python - <<'PY'
-          from simulacat.orchestration import sim_entrypoint
-
-          entrypoint = sim_entrypoint()
-          for candidate in (entrypoint.parent, entrypoint.parent.parent):
-              if (candidate / "package.json").is_file():
-                  print(candidate)
-                  break
-          else:
-              raise SystemExit("Unable to locate simulacat package.json")
-          PY
-          )"
+          SIMULACAT_JS_ROOT="$(python -c 'from simulacat.orchestration import sim_package_root; print(sim_package_root())')"
 
           bun install --cwd "${SIMULACAT_JS_ROOT}"
 
