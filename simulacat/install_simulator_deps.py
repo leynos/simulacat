@@ -58,15 +58,15 @@ def install_simulator_dependencies(*, bun_executable: str = "bun") -> Path:
             f"with command: {' '.join(command)}"
         )
         raise GitHubSimProcessError(msg) from exc
+    else:
+        if result.returncode != 0:
+            msg = (
+                "Failed to install simulator dependencies with command: "
+                f"{' '.join(command)}"
+            )
+            raise GitHubSimProcessError(msg)
 
-    if result.returncode != 0:
-        msg = (
-            "Failed to install simulator dependencies with command: "
-            f"{' '.join(command)}"
-        )
-        raise GitHubSimProcessError(msg)
-
-    return package_root
+        return package_root
 
 
 def main() -> int:

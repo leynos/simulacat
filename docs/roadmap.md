@@ -208,7 +208,7 @@ Demonstrate reliable use of `simulacat` in continuous integration environments.
   - simulator startup failures,
   - configuration serialization errors,
   - mismatches between `github3.py` calls and simulator coverage.
-  - prerequisites / sequencing:
+  - prerequisites:
     - complete environment setup first (see "Document environment
       requirements"),
     - run the reference project suites first (see "Supply minimal reference
