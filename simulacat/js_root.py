@@ -16,7 +16,15 @@ from simulacat.orchestration import GitHubSimProcessError, sim_package_root
 
 
 def main() -> int:
-    """Print the JavaScript package root and return a process exit code."""
+    """Resolve and print simulacat's JavaScript package root.
+
+    Returns
+    -------
+    int
+        `0` when resolution succeeds and the package root path is written to
+        stdout; otherwise `1` after writing an error message to stderr.
+
+    """
     try:
         package_root = sim_package_root()
     except GitHubSimProcessError as exc:

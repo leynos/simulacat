@@ -200,8 +200,8 @@ Demonstrate reliable use of `simulacat` in continuous integration environments.
     - verified CI execution target is documented: Linux (`ubuntu-latest`,
       x86_64),
     - install method is listed as concrete steps with commands (for example:
-      `python -m pip install ...`, resolve `SIMULACAT_JS_ROOT`, and
-      `bun install --cwd "${SIMULACAT_JS_ROOT}"`).
+      `python -m pip install ...` then
+      `python -m simulacat.install_simulator_deps`).
 
 - [x] Provide troubleshooting guidance with concrete failure signatures:
 

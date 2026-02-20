@@ -35,7 +35,7 @@ class TestJsRootCommand:
     ) -> None:
         """Resolution failures are reported to stderr with non-zero exit code."""
 
-        def raise_failure() -> None:
+        def raise_failure() -> typ.NoReturn:
             msg = "missing package manifest"
             raise GitHubSimProcessError(msg)
 

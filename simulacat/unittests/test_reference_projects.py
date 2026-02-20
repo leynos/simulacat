@@ -12,6 +12,11 @@ from __future__ import annotations
 
 from tests.reference_project_paths import reference_project_path
 
+REFERENCE_PROJECT_TEST_FILES = {
+    "basic-pytest": "test_basic_simulator_smoke.py",
+    "authenticated-pytest": "test_authenticated_simulator_smoke.py",
+}
+
 
 def test_reference_project_directories_exist() -> None:
     """Both Step 3.2 reference project directories exist."""
@@ -26,11 +31,7 @@ def test_reference_project_directories_exist() -> None:
 
 def test_reference_projects_include_expected_files() -> None:
     """Each reference project includes the minimum expected files."""
-    expected_test_file = {
-        "basic-pytest": "test_basic_simulator_smoke.py",
-        "authenticated-pytest": "test_authenticated_simulator_smoke.py",
-    }
-    for project_name, test_file in expected_test_file.items():
+    for project_name, test_file in REFERENCE_PROJECT_TEST_FILES.items():
         project_dir = reference_project_path(project_name)
         expected_paths = (
             project_dir / "README.md",
@@ -44,11 +45,7 @@ def test_reference_projects_include_expected_files() -> None:
 
 def test_reference_project_tests_use_simulacat() -> None:
     """Reference pytest suites use simulacat fixtures or scenario helpers."""
-    expected_test_file = {
-        "basic-pytest": "test_basic_simulator_smoke.py",
-        "authenticated-pytest": "test_authenticated_simulator_smoke.py",
-    }
-    for project_name, test_file in expected_test_file.items():
+    for project_name, test_file in REFERENCE_PROJECT_TEST_FILES.items():
         test_path = reference_project_path(project_name) / "tests" / test_file
         content = test_path.read_text(encoding="utf-8")
         assert "github_simulator" in content, (
@@ -73,7 +70,7 @@ def test_reference_ci_workflows_use_python_and_node_tooling() -> None:
         assert "bun-version" in content, (
             f"Missing pinned bun-version in {workflow_path}"
         )
-        assert "python -m simulacat.js_root" in content, (
-            f"Expected simulacat.js_root helper command usage in {workflow_path}"
+        assert "python -m simulacat.install_simulator_deps" in content, (
+            f"Expected central install command usage in {workflow_path}"
         )
         assert "pytest" in content, f"Missing pytest run command in {workflow_path}"

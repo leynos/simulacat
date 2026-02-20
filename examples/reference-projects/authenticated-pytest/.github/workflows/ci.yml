@@ -35,10 +35,7 @@ jobs:
           python -m pip install "pytest>=9.0.0,<10.0.0" "simulacat>=0.1.0,<0.2.0"
 
       - name: Install simulacat simulator dependencies
-        run: |
-          SIMULACAT_JS_ROOT="$(python -m simulacat.js_root)"
-
-          bun install --cwd "${SIMULACAT_JS_ROOT}"
+        run: python -m simulacat.install_simulator_deps
 
       - name: Run pytest suite
         run: pytest -v tests

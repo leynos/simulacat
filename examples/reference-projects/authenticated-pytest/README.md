@@ -21,9 +21,7 @@ token metadata and verifies the configured Authorization header.
    package:
 
    ```bash
-   SIMULACAT_JS_ROOT="$(python -m simulacat.js_root)"
-
-   bun install --cwd "${SIMULACAT_JS_ROOT}"
+   python -m simulacat.install_simulator_deps
    ```
 
 3. Run tests:
