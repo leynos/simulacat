@@ -5,7 +5,7 @@ This Execution Plan (ExecPlan) is a living document. The sections
 "Decision Log", and "Outcomes & Retrospective" must be kept up to date as work
 proceeds.
 
-Status: DRAFT
+Status: COMPLETE
 
 PLANS.md: not present in this repository.
 
@@ -80,15 +80,18 @@ Success is observable when:
 ## Progress
 
 - [x] (2026-02-20 00:00Z) Draft ExecPlan for Step 3.2.1.
-- [ ] Define the final reference project folder structure and naming.
-- [ ] Add unit tests for reference project contracts.
-- [ ] Add behavioural tests (pytest-bdd) for reference project execution and CI
-  wiring.
-- [ ] Add reference project files and CI workflows.
-- [ ] Update `docs/users-guide.md` with CI requirements and troubleshooting.
-- [ ] Update `docs/simulacat-design.md` with Step 3.2 design decisions.
-- [ ] Mark Step 3.2 tasks done in `docs/roadmap.md`.
-- [ ] Run all quality gates and record outcomes.
+- [x] (2026-02-20 08:16Z) Define the final reference project folder structure
+  and naming.
+- [x] (2026-02-20 08:20Z) Add unit tests for reference project contracts.
+- [x] (2026-02-20 08:21Z) Add behavioural tests (pytest-bdd) for reference
+  project execution and CI wiring.
+- [x] (2026-02-20 08:26Z) Add reference project files and CI workflows.
+- [x] (2026-02-20 08:31Z) Update `docs/users-guide.md` with CI requirements
+  and troubleshooting.
+- [x] (2026-02-20 08:32Z) Update `docs/simulacat-design.md` with Step 3.2
+  design decisions.
+- [x] (2026-02-20 08:32Z) Mark Step 3.2 tasks done in `docs/roadmap.md`.
+- [x] (2026-02-20 08:50Z) Run all quality gates and record outcomes.
 
 ## Surprises & discoveries
 
@@ -97,6 +100,13 @@ Success is observable when:
   for consumers.
 - `make test` already exercises both Python and Bun tests, which provides a
   stable gate for this work once reference-project tests are added.
+- Running subprocess pytest from behavioural tests is more stable when using
+  `sys.executable -m pytest` than shelling out to `uv run pytest`, which avoids
+  nested toolchain setup overhead inside worker processes.
+- Pytest test collection raised an import-file mismatch when both reference
+  projects used the same test module basename (`test_simulator_smoke.py`).
+  Fix: use unique filenames per project (`test_basic_simulator_smoke.py` and
+  `test_authenticated_simulator_smoke.py`).
 
 ## Decision log
 
@@ -115,10 +125,47 @@ Success is observable when:
   user-observable CI and pytest workflows. Date/Author: 2026-02-20, ExecPlan
   author.
 
+- Decision: resolve the `bun install` working directory from
+  `simulacat.orchestration.sim_entrypoint()` in CI examples and docs.
+  Rationale: this works for both editable/source layouts and installed wheel
+  layouts without hard-coding package paths. Date/Author: 2026-02-20, ExecPlan
+  author.
+
 ## Outcomes & retrospective
 
-Not yet implemented. This section will be updated when Step 3.2 is complete,
-including quality-gate outputs and any follow-up work.
+Implementation complete. Step 3.2 acceptance criteria were met with the
+following outcomes:
+
+- Added two runnable reference projects:
+  - `examples/reference-projects/basic-pytest`
+  - `examples/reference-projects/authenticated-pytest`
+- Added Step 3.2 validation tests:
+  - `simulacat/unittests/test_reference_projects.py`
+  - `tests/features/reference_projects.feature`
+  - `tests/steps/test_reference_projects.py`
+- Updated consumer documentation with:
+  - Node.js version range (20.x / 22.x),
+  - explicit Simulacrum dependency installation method,
+  - troubleshooting signatures for startup, serialization, and coverage
+    mismatches.
+- Added Step 3.2 design decisions to `docs/simulacat-design.md`.
+- Marked Step 3.2 task entries done in `docs/roadmap.md`.
+
+Validation evidence:
+
+- Pre-implementation tests failed as expected:
+  - `uv run pytest simulacat/unittests/test_reference_projects.py -v`
+  - `uv run pytest tests/steps/test_reference_projects.py -v`
+- Post-implementation targeted tests passed:
+  - 4 unit tests passed in `test_reference_projects.py`,
+  - 3 behavioural scenarios passed in `reference_projects.feature`.
+- Full quality gates passed:
+  - `make check-fmt`,
+  - `make typecheck`,
+  - `make lint`,
+  - `make test`,
+  - `make markdownlint`,
+  - `make nixie`.
 
 ## Context and orientation
 
@@ -343,3 +390,10 @@ Revision note (2026-02-20):
 - Initial draft created for Step 3.2.1 planning.
 - This revision defines scope, tolerances, and a test-first implementation
   sequence without applying code changes yet.
+
+Revision note (2026-02-20, implementation update):
+
+- Updated Status from `DRAFT` to `COMPLETE`.
+- Recorded completed progress steps and final validation evidence.
+- Added implementation discoveries and a path-resolution design decision.
+- Captured delivered artifacts, documentation updates, and roadmap completion.

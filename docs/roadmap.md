@@ -167,17 +167,17 @@ Demonstrate reliable use of `simulacat` in continuous integration environments.
 
 #### Tasks (Step 3.2)
 
-- [ ] Supply minimal reference projects that:
+- [x] Supply minimal reference projects that:
 
   - use `simulacat` in a pytest suite,
   - run under a standard Python + Node.js toolchain in CI.
 
-- [ ] Document environment requirements:
+- [x] Document environment requirements:
 
   - Node.js version range,
   - expected method for installing Simulacrum dependencies.
 
-- [ ] Provide troubleshooting guidance with concrete failure signatures:
+- [x] Provide troubleshooting guidance with concrete failure signatures:
 
   - simulator startup failures,
   - configuration serialization errors,
