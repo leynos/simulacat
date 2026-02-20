@@ -26,9 +26,10 @@ class TestInstallSimulatorDependencies:
         """Successful Bun execution returns resolved package root."""
 
         def fake_run(
-            command: list[str], *, check: bool
+            command: list[str], *, check: bool, timeout: int
         ) -> subprocess.CompletedProcess[str]:
             assert check is False, "Expected subprocess call to disable check mode"
+            assert timeout == 300, "Expected subprocess timeout to be 300 seconds"
             assert command == ["bun", "install", "--cwd", str(tmp_path)]
             return subprocess.CompletedProcess(args=command, returncode=0)
 
@@ -51,8 +52,10 @@ class TestInstallSimulatorDependencies:
             command: list[str],
             *,
             check: bool,
+            timeout: int,
         ) -> subprocess.CompletedProcess[str]:
             assert check is False, "Expected subprocess call to disable check mode"
+            assert timeout == 300, "Expected subprocess timeout to be 300 seconds"
             raise FileNotFoundError(command[0])
 
         monkeypatch.setattr(
@@ -71,9 +74,10 @@ class TestInstallSimulatorDependencies:
         """Non-zero Bun exit status raises GitHubSimProcessError."""
 
         def fake_run(
-            command: list[str], *, check: bool
+            command: list[str], *, check: bool, timeout: int
         ) -> subprocess.CompletedProcess[str]:
             assert check is False, "Expected subprocess call to disable check mode"
+            assert timeout == 300, "Expected subprocess timeout to be 300 seconds"
             return subprocess.CompletedProcess(args=command, returncode=2)
 
         monkeypatch.setattr(
@@ -84,6 +88,34 @@ class TestInstallSimulatorDependencies:
         with pytest.raises(
             GitHubSimProcessError,
             match="Failed to install simulator dependencies",
+        ):
+            install_simulator_deps.install_simulator_dependencies()
+
+    @staticmethod
+    def test_raises_when_bun_install_times_out(
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        """Timeouts from Bun are wrapped as GitHubSimProcessError."""
+
+        def fake_run(
+            command: list[str],
+            *,
+            check: bool,
+            timeout: int,
+        ) -> subprocess.CompletedProcess[str]:
+            assert check is False, "Expected subprocess call to disable check mode"
+            assert timeout == 300, "Expected subprocess timeout to be 300 seconds"
+            raise subprocess.TimeoutExpired(cmd=command, timeout=timeout)
+
+        monkeypatch.setattr(
+            install_simulator_deps, "sim_package_root", lambda: tmp_path
+        )
+        monkeypatch.setattr(install_simulator_deps.subprocess, "run", fake_run)
+
+        with pytest.raises(
+            GitHubSimProcessError,
+            match="Timed out while installing simulator dependencies",
         ):
             install_simulator_deps.install_simulator_dependencies()
 

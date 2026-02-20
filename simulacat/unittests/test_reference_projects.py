@@ -56,7 +56,7 @@ def test_reference_project_tests_use_simulacat() -> None:
 
 def test_reference_ci_workflows_use_python_and_node_tooling() -> None:
     """Reference CI workflows include setup for Python and Node.js."""
-    for project_name in ("basic-pytest", "authenticated-pytest"):
+    for project_name in REFERENCE_PROJECT_TEST_FILES:
         workflow_path = (
             reference_project_path(project_name) / ".github" / "workflows" / "ci.yml"
         )

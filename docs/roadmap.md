@@ -161,7 +161,7 @@ simulator supports them.
     `simulacat/unittests/test_auth_mode_limitations.py` and behavioural
     scenarios in `tests/features/auth_mode_limitations.feature`.
 
-### Step 3.2 – CI usage and reference examples
+### Step 3.2 – Continuous Integration (CI) usage and reference examples
 
 Demonstrate reliable use of `simulacat` in continuous integration environments.
 

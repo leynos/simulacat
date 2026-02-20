@@ -39,16 +39,24 @@ def install_simulator_dependencies(*, bun_executable: str = "bun") -> Path:
     ------
     GitHubSimProcessError
         If the package root cannot be resolved, Bun cannot be executed, or
-        dependency installation fails.
+        dependency installation fails or times out.
 
     """
     package_root = sim_package_root()
     command = [bun_executable, "install", "--cwd", str(package_root)]
+    timeout_seconds = 300
     try:
         # S603: command arguments are fixed executable + validated path.
-        result = subprocess.run(command, check=False)  # noqa: S603  # simulacat#123: explicit command list only; shell=False
+        result = subprocess.run(command, check=False, timeout=timeout_seconds)  # noqa: S603  # simulacat#123: explicit command list only; shell=False
     except FileNotFoundError as exc:
         msg = f"Bun executable not found: {bun_executable}"
+        raise GitHubSimProcessError(msg) from exc
+    except subprocess.TimeoutExpired as exc:
+        msg = (
+            "Timed out while installing simulator dependencies after "
+            f"{timeout_seconds}s using bun executable {bun_executable!r} "
+            f"with command: {' '.join(command)}"
+        )
         raise GitHubSimProcessError(msg) from exc
 
     if result.returncode != 0:
