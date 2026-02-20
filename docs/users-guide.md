@@ -39,10 +39,11 @@ simulator is started.
 
 Before running simulator-backed tests, install JavaScript dependencies in the
 directory that contains the simulacat `package.json`. This command resolves the
-correct directory via `sim_package_root()` and then runs `bun install`:
+correct directory via `python -m simulacat.js_root` and then runs
+`bun install`:
 
 ```bash
-SIMULACAT_JS_ROOT="$(python -c 'from simulacat.orchestration import sim_package_root; print(sim_package_root())')"
+SIMULACAT_JS_ROOT="$(python -m simulacat.js_root)"
 
 bun install --cwd "${SIMULACAT_JS_ROOT}"
 ```

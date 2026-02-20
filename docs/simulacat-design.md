@@ -316,7 +316,8 @@ projects.
    - Bun for executing the simulator entrypoint.
 
 3. **Explicit Simulacrum dependency installation**: Reference workflows and
-   docs resolve the JavaScript dependency root through `sim_package_root()` and
+   docs resolve the JavaScript dependency root through
+   `python -m simulacat.js_root` (which delegates to `sim_package_root()`) and
    run `bun install --cwd <resolved-dir>`. This avoids hard-coding source or
    wheel installation paths.
 

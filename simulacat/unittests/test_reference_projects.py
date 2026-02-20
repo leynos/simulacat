@@ -73,7 +73,7 @@ def test_reference_ci_workflows_use_python_and_node_tooling() -> None:
         assert "bun-version" in content, (
             f"Missing pinned bun-version in {workflow_path}"
         )
-        assert "sim_package_root" in content, (
-            f"Expected sim_package_root helper usage in {workflow_path}"
+        assert "python -m simulacat.js_root" in content, (
+            f"Expected simulacat.js_root helper command usage in {workflow_path}"
         )
         assert "pytest" in content, f"Missing pytest run command in {workflow_path}"
