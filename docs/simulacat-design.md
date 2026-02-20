@@ -299,6 +299,39 @@ limitations.
    decision, OAuth applications are documented as an explicit scope boundary
    rather than a limitation of the current implementation.
 
+### Step 3.2 – Continuous integration (CI) usage and reference examples
+
+The following decisions were made during implementation of CI reference
+projects.
+
+1. **Two minimal reference projects**: Step 3.2 ships two copyable reference
+   projects under `examples/reference-projects/`:
+   - `basic-pytest` for baseline fixture usage,
+   - `authenticated-pytest` for token metadata and header behaviour.
+
+2. **Standard CI scaffolding**: Each reference project includes a GitHub
+   Actions workflow that uses:
+   - `actions/setup-python` for Python runtime setup,
+   - `actions/setup-node` for Node.js toolchain setup,
+   - Bun for executing the simulator entrypoint.
+
+3. **Explicit Simulacrum dependency installation**: Reference workflows and
+   docs run `python -m simulacat.install_simulator_deps`, which resolves the
+   JavaScript dependency root and executes `bun install --cwd <resolved-dir>`.
+   This avoids hard-coding source or wheel installation paths and removes
+   duplicated shell snippets.
+
+4. **Executable validation for examples**: Step 3.2 adds both unit tests and
+   pytest-bdd behavioural tests that validate:
+   - reference project structure,
+   - workflow semantics (Python + Node.js setup actions),
+   - successful execution of each reference pytest suite.
+
+5. **Consumer-facing troubleshooting signatures**: The users' guide now
+   includes concrete failure signatures for simulator startup, configuration
+   serialization, and `github3.py`/simulator coverage mismatches, so CI
+   failures can be triaged quickly.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:

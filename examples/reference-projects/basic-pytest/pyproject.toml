@@ -1,0 +1,12 @@
+[project]
+name = "simulacat-reference-basic-pytest"
+version = "0.0.0"
+description = "Minimal unauthenticated simulacat pytest reference project"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest>=9.0.0,<10.0.0",
+    "simulacat>=0.1.0,<0.2.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-v"

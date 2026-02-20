@@ -45,6 +45,7 @@ from simulacat.orchestration import (
     _wait_for_port,
     _write_config,
     sim_entrypoint,
+    sim_package_root,
     start_sim_process,
     stop_sim_process,
 )
@@ -117,6 +118,18 @@ class TestSimEntrypoint:
 
         assert entrypoint.is_file(), (
             f"expected entrypoint to exist as a file: {entrypoint}"
+        )
+
+    @staticmethod
+    def test_package_root_contains_package_manifest() -> None:
+        """The resolved JavaScript package root contains package.json."""
+        package_root = sim_package_root()
+
+        assert package_root.is_dir(), (
+            f"expected package root to exist as a directory: {package_root}"
+        )
+        assert (package_root / "package.json").is_file(), (
+            f"expected package manifest at {package_root / 'package.json'}"
         )
 
 

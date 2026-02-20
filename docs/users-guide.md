@@ -6,9 +6,11 @@ GitHub API simulator powered by `@simulacrum/github-api-simulator`.
 ## Prerequisites
 
 - Python 3.12 or later
+- Node.js 20.x or 22.x
 - [Bun](https://bun.sh/) runtime installed and available in PATH
-- Node.js dependencies installed (`bun install` in the installed package
-  directory)
+- Simulacrum dependencies installed with `bun install` in the directory that
+  contains the simulacat `package.json` (see
+  [Installing Simulacrum dependencies](#installing-simulacrum-dependencies))
 
 ## Installation
 
@@ -32,6 +34,15 @@ entrypoint from the installed package, so `start_sim_process` works after a
 plain `pip install simulacat` without cloning the repository. Bun uses the
 packaged manifest to install `@simulacrum/github-api-simulator` when the
 simulator is started.
+
+## Installing Simulacrum dependencies
+
+Before running simulator-backed tests, install JavaScript dependencies in the
+directory that contains the simulacat `package.json`:
+
+```bash
+python -m simulacat.install_simulator_deps
+```
 
 ## pytest Fixtures
 
@@ -677,3 +688,55 @@ default. Run the full set, including packaging checks, with:
 ```bash
 pytest -m slow
 ```
+
+## Continuous integration (CI) reference projects
+
+Step 3.2 ships two minimal reference projects:
+
+- `examples/reference-projects/basic-pytest`
+- `examples/reference-projects/authenticated-pytest`
+
+Both projects provide:
+
+- a pytest smoke suite using simulacat fixtures,
+- a GitHub Actions workflow at `.github/workflows/ci.yml`,
+- standard CI setup via `actions/setup-python` and `actions/setup-node`.
+
+The authenticated reference also demonstrates `ScenarioConfig` token metadata
+and validates the resulting `Authorization` header.
+
+## Troubleshooting
+
+The following signatures cover common CI and local integration failures.
+
+### Simulator startup failures
+
+- Signature: `GitHubSimProcessError: Bun executable not found: ...`
+  Cause: Bun is not installed or not visible on `PATH`. Fix: install Bun and,
+  if needed, set the `BUN` environment variable to the executable path.
+- Signature:
+  `GitHubSimProcessError: Simulator exited before emitting listening event`
+  Cause: Simulacrum dependencies were not installed where simulacat resolves
+  `package.json`. Fix: run
+  [Installing Simulacrum dependencies](#installing-simulacrum-dependencies)
+  before starting tests.
+
+### Configuration serialization errors
+
+- Signature: `TypeError: github_sim_config must be a mapping`
+  Cause: fixture returned a non-mapping value (for example, a string). Fix:
+  return a dict-like value or `ScenarioConfig`.
+- Signature: `TypeError: Object of type PosixPath is not JSON serializable`
+  Cause: non-JSON values were included in `github_sim_config`. Fix: convert
+  values to JSON-compatible primitives before returning fixture data.
+
+### `github3.py` and simulator coverage mismatches
+
+- Signature: `github3.exceptions.IncompleteResponse`
+  Cause: selected endpoint response is missing fields expected by `github3.py`.
+  Fix: use supported calls (for example, `repository`, `repositories_by`,
+  `issue`, `pull_request`, and `rate_limit`) or use raw session requests.
+- Signature: HTTP `404` / `501` from simulator-backed calls
+  Cause: endpoint is not implemented by the simulator version in use. Fix:
+  constrain tests to implemented endpoints or model behaviour at the
+  configuration layer.
