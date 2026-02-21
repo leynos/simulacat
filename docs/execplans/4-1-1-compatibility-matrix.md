@@ -119,6 +119,12 @@ Success is observable when:
   `/tmp/step-4-1-github3-v4-compat.log`.
   Impact: `pyproject.toml` dependency range expanded to include both majors.
 
+- Observation: compatibility CI failed when invoking `pytest` without
+  `pytest-bdd` installed, even for non-BDD targets.
+  Evidence: CI traceback in this task (`ImportError: Error importing plugin
+  "pytest_bdd": No module named 'pytest_bdd'`).
+  Impact: compatibility workflow now installs `pytest-bdd` explicitly.
+
 ## Decision log
 
 - Decision: create a dedicated Step 4.1 ExecPlan that treats compatibility as
@@ -149,6 +155,12 @@ Success is observable when:
   compatibility notes forward-looking in the 0.6 line.
   Date/Author: 2026-02-21, ExecPlan author.
 
+- Decision: include `pytest-bdd` in compatibility workflow Python dependency
+  installation.
+  Rationale: repository conftest explicitly loads `pytest_bdd`, so test startup
+  requires the package even when running non-BDD modules.
+  Date/Author: 2026-02-21, ExecPlan author.
+
 ## Outcomes & retrospective
 
 Implementation complete. Step 4.1 acceptance criteria are met.
@@ -164,6 +176,8 @@ Delivered outcomes:
   `tests/steps/test_compatibility_matrix.py`.
 - Added a dedicated CI compatibility workflow:
   `.github/workflows/compatibility-matrix.yml`.
+- Added explicit `pytest-bdd` installation in compatibility workflow so pytest
+  startup succeeds in minimal CI environments.
 - Expanded `github3.py` dependency range in `pyproject.toml` to
   `>=3.2.0,<5.0.0`.
 - Updated simulator dependency in `package.json` to `^0.6.3` and refreshed

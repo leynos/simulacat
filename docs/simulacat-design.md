@@ -354,6 +354,11 @@ matrix.
    `@simulacrum/github-api-simulator` in the `0.6.x` line with a minimum of
    `0.6.2` and a recommended version of `0.6.3`.
 
+5. **Compatibility job installs pytest-bdd explicitly**: Repository-level
+   test configuration in `tests/conftest.py` registers the `pytest_bdd` plugin,
+   so the compatibility workflow installs `pytest-bdd` even when it runs only
+   non-BDD test modules.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:

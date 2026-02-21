@@ -53,6 +53,12 @@ def then_workflow_includes_github3_v4(workflow_text: str) -> None:
     assert '">=4.0.0,<5.0.0"' in workflow_text
 
 
+@then("the workflow installs pytest-bdd")
+def then_workflow_installs_pytest_bdd(workflow_text: str) -> None:
+    """Workflow installs pytest-bdd required by repository-level conftest."""
+    assert "pytest-bdd" in workflow_text
+
+
 @then('the users guide includes a "Compatibility matrix" section')
 def then_users_guide_has_compatibility_section(users_guide_text: str) -> None:
     """Users guide contains compatibility policy section."""

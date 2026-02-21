@@ -12,6 +12,10 @@ Feature: Compatibility matrix policy and CI coverage
     Then the workflow includes github3.py constraint ">=3.2.0,<4.0.0"
     And the workflow includes github3.py constraint ">=4.0.0,<5.0.0"
 
+  Scenario: Compatibility workflow installs required pytest plugins
+    Given the compatibility matrix workflow file
+    Then the workflow installs pytest-bdd
+
   Scenario: Users guide documents compatibility policy and workarounds
     Given the users guide document
     Then the users guide includes a "Compatibility matrix" section
