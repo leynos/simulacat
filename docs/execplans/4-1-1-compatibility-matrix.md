@@ -5,7 +5,7 @@ This Execution Plan (ExecPlan) is a living document. The sections
 "Decision Log", and "Outcomes & Retrospective" must be kept up to date as work
 proceeds.
 
-Status: DRAFT
+Status: COMPLETE
 
 PLANS.md: not present in this repository.
 
@@ -79,14 +79,17 @@ Success is observable when:
 ## Progress
 
 - [x] (2026-02-20 23:10Z) Draft ExecPlan for Step 4.1.1.
-- [ ] Baseline dependency/version discovery completed and documented.
-- [ ] Unit tests added first for compatibility-policy contracts.
-- [ ] Behavioural tests added first for matrix workflow and docs behaviour.
-- [ ] Compatibility matrix workflow implemented and passing.
-- [ ] Users' guide and design documentation updated.
-- [ ] Known incompatibilities and workarounds documented.
-- [ ] Step 4.1 roadmap tasks marked done.
-- [ ] All quality gates pass and evidence captured.
+- [x] (2026-02-21 00:05Z) Baseline dependency/version discovery completed and
+  documented.
+- [x] (2026-02-21 00:08Z) Unit tests added first for compatibility-policy
+  contracts.
+- [x] (2026-02-21 00:08Z) Behavioural tests added first for matrix workflow
+  and docs behaviour.
+- [x] (2026-02-21 00:13Z) Compatibility matrix workflow implemented and passing.
+- [x] (2026-02-21 00:15Z) Users' guide and design documentation updated.
+- [x] (2026-02-21 00:15Z) Known incompatibilities and workarounds documented.
+- [x] (2026-02-21 00:15Z) Step 4.1 roadmap tasks marked done.
+- [x] (2026-02-21 00:25Z) All quality gates pass and evidence captured.
 
 ## Surprises & discoveries
 
@@ -104,6 +107,18 @@ Success is observable when:
   Evidence: `docs/users-guide.md` prerequisites section.
   Impact: plan must align existing claims with tested matrix evidence.
 
+- Observation: `github3.py` major 5 is not yet published, so two-major
+  compatibility coverage must use 3.x and 4.x.
+  Evidence: package index query (`python -m pip index versions github3.py`)
+  and targeted compatibility runs.
+  Impact: workflow matrix uses `>=3.2.0,<4.0.0` and `>=4.0.0,<5.0.0`.
+
+- Observation: compatibility tests pass for both `github3.py` 3.2.0 and 4.0.1
+  against `tests/test_github3_compat.py`.
+  Evidence: `/tmp/step-4-1-github3-v3-compat.log` and
+  `/tmp/step-4-1-github3-v4-compat.log`.
+  Impact: `pyproject.toml` dependency range expanded to include both majors.
+
 ## Decision log
 
 - Decision: create a dedicated Step 4.1 ExecPlan that treats compatibility as
@@ -116,17 +131,70 @@ Success is observable when:
   gates green.
   Date/Author: 2026-02-20, ExecPlan author.
 
+- Decision: define `github3.py` support as `>=3.2.0,<5.0.0` with 4.0.1 as the
+  recommended version.
+  Rationale: both major tracks are currently relevant and validated; 5.x is
+  not published.
+  Date/Author: 2026-02-21, ExecPlan author.
+
+- Decision: add `.github/workflows/compatibility-matrix.yml` instead of
+  overloading `.github/workflows/ci.yml`.
+  Rationale: keeps compatibility sweeps isolated and explicit while preserving
+  existing CI latency expectations for the primary workflow.
+  Date/Author: 2026-02-21, ExecPlan author.
+
+- Decision: upgrade simulator dependency to `@simulacrum/github-api-simulator`
+  `^0.6.3` while retaining a documented minimum of 0.6.2.
+  Rationale: aligns recommended version with latest 0.6 patch release and keeps
+  compatibility notes forward-looking in the 0.6 line.
+  Date/Author: 2026-02-21, ExecPlan author.
+
 ## Outcomes & retrospective
 
-Pending implementation. No compatibility matrix changes have been applied yet.
+Implementation complete. Step 4.1 acceptance criteria are met.
+
+Delivered outcomes:
+
+- Added a canonical policy module:
+  `simulacat/compatibility_policy.py`.
+- Added Step 4.1 unit tests:
+  `simulacat/unittests/test_compatibility_matrix_policy.py`.
+- Added Step 4.1 behavioural tests:
+  `tests/features/compatibility_matrix.feature` and
+  `tests/steps/test_compatibility_matrix.py`.
+- Added a dedicated CI compatibility workflow:
+  `.github/workflows/compatibility-matrix.yml`.
+- Expanded `github3.py` dependency range in `pyproject.toml` to
+  `>=3.2.0,<5.0.0`.
+- Updated simulator dependency in `package.json` to `^0.6.3` and refreshed
+  `bun.lock`.
+- Updated consumer and design documentation:
+  `docs/users-guide.md` and `docs/simulacat-design.md`.
+- Marked Step 4.1 roadmap tasks complete in `docs/roadmap.md`.
+
+Validation evidence:
+
+- Fail-first tests captured in:
+  - `/tmp/step-4-1-unit-pre.log`
+  - `/tmp/step-4-1-bdd-pre.log`
+- Post-implementation targeted tests passed:
+  - `/tmp/step-4-1-unit-post.log`
+  - `/tmp/step-4-1-bdd-post.log`
+- Full quality gates passed:
+  - `/tmp/step-4-1-check-fmt.log`
+  - `/tmp/step-4-1-typecheck.log`
+  - `/tmp/step-4-1-lint.log`
+  - `/tmp/step-4-1-test.log`
+  - `/tmp/step-4-1-markdownlint.log`
+  - `/tmp/step-4-1-nixie.log`
 
 ## Context and orientation
 
 Relevant repository state before implementation:
 
-- `pyproject.toml` sets `requires-python = ">=3.12"` and currently pins
-  `github3.py>=4.0.0,<5.0.0`.
-- `package.json` pins `@simulacrum/github-api-simulator` to `0.6.2`.
+- `pyproject.toml` sets `requires-python = ">=3.12"` and supports
+  `github3.py>=3.2.0,<5.0.0`.
+- `package.json` tracks `@simulacrum/github-api-simulator` with `^0.6.3`.
 - `docs/users-guide.md` already documents Python 3.12+, Node.js 20.x/22.x, and
   Bun on `PATH`.
 - `.github/workflows/ci.yml` currently runs a single Python version (3.13).
@@ -323,3 +391,11 @@ Dependencies and tools used:
 - Python toolchain via `uv` and pytest/pytest-bdd for tests.
 - GitHub Actions workflow matrix for compatibility execution.
 - existing Bun/Node setup for simulator runtime.
+
+## Revision note
+
+Updated this ExecPlan from `DRAFT` to `COMPLETE` after implementation. Filled
+all mandatory living sections with executed timestamps, discoveries, decisions,
+and quality-gate evidence. Updated context to match shipped dependency ranges
+and workflow changes so future maintainers can resume from current state
+without external context.

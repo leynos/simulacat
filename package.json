@@ -6,7 +6,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@simulacrum/github-api-simulator": "0.6.2"
+    "@simulacrum/github-api-simulator": "^0.6.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.10",
