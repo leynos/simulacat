@@ -21,7 +21,8 @@ Success is observable when:
 
 - version ranges are documented in consumer and design docs with one canonical
   source of truth;
-- CI runs reference suites across multiple Python versions and at least two
+- continuous integration (CI) runs reference suites across multiple Python
+  versions and at least two
   `github3.py` major versions when both are supportable;
 - known incompatibilities and workarounds are tracked in a dedicated section;
 - unit tests (`pytest`) and behavioural tests (`pytest-bdd`) cover the new
@@ -34,8 +35,9 @@ Success is observable when:
 
 - Follow `.rules/python-*.md` for Python code and
   `docs/documentation-style-guide.md` for docs.
-- Keep existing public fixture and scenario APIs stable unless explicit failing
-  tests prove a compatibility bug that requires change.
+- Keep existing public fixture and scenario application programming interfaces
+  (APIs) stable unless explicit failing tests prove a compatibility bug that
+  requires change.
 - Do not add new runtime dependencies for `simulacat`.
 - Use pytest for unit tests and pytest-bdd for behavioural tests.
 - Prefer Make targets for quality gates and preserve existing CI conventions.
@@ -132,7 +134,7 @@ Success is observable when:
   Rationale: roadmap asks for both policy definition and automated verification.
   Date/Author: 2026-02-20, ExecPlan author.
 
-- Decision: include quality-gate commands for both code and markdown.
+- Decision: include quality-gate commands for both code and Markdown.
   Rationale: this task modifies CI/docs/tests and must keep repository health
   gates green.
   Date/Author: 2026-02-20, ExecPlan author.
@@ -411,5 +413,5 @@ Dependencies and tools used:
 Updated this ExecPlan from `DRAFT` to `COMPLETE` after implementation. Filled
 all mandatory living sections with executed timestamps, discoveries, decisions,
 and quality-gate evidence. Updated context to match shipped dependency ranges
-and workflow changes so future maintainers can resume from current state
+and workflow changes, so future maintainers can resume from current state
 without external context.

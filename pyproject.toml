@@ -27,6 +27,7 @@ simulacat = "simulacat.pytest_plugin"
 dev = [
     "pytest",
     "pytest-bdd",
+    "pyyaml",
     "ruff",
     "pytest-timeout",
     "pytest-xdist",
