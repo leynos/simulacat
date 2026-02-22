@@ -6,6 +6,7 @@ documentation and tests.
 
 from __future__ import annotations
 
+import collections.abc as cabc
 import dataclasses as dc
 from types import MappingProxyType
 
@@ -56,45 +57,45 @@ class KnownIncompatibility:
     workaround: str
 
 
-COMPATIBILITY_POLICY: MappingProxyType[str, DependencyCompatibility] = (
-    MappingProxyType({
-        "python": DependencyCompatibility(
-            minimum_version="3.12",
-            recommended_version="3.13",
-            supported_range=">=3.12,<3.14",
-            rationale=(
-                "Packaging metadata and CI target Python 3.12 and 3.13 as the "
-                "supported range."
-            ),
+COMPATIBILITY_POLICY: cabc.Mapping[str, DependencyCompatibility] = MappingProxyType({
+    "python": DependencyCompatibility(
+        minimum_version="3.12",
+        recommended_version="3.13",
+        supported_range=">=3.12,<3.14",
+        rationale=(
+            "Packaging metadata and CI target Python 3.12 and 3.13 as the "
+            "supported range."
         ),
-        "github3.py": DependencyCompatibility(
-            minimum_version="3.2.0",
-            recommended_version="4.0.1",
-            supported_range=">=3.2.0,<5.0.0",
-            rationale=(
-                "Compatibility tests pass on both github3.py 3.x and 4.x major tracks."
-            ),
+    ),
+    "github3.py": DependencyCompatibility(
+        minimum_version="3.2.0",
+        recommended_version="4.0.1",
+        supported_range=">=3.2.0,<5.0.0",
+        rationale=(
+            "Compatibility tests pass on both github3.py 3.x and 4.x major tracks."
         ),
-        "node.js": DependencyCompatibility(
-            minimum_version="20.x",
-            recommended_version="22.x",
-            supported_range="20.x-22.x",
-            rationale=(
-                "Node.js majors 20 and 22 are documented and aligned with CI "
-                "runtime support."
-            ),
+    ),
+    "node.js": DependencyCompatibility(
+        minimum_version="20.x",
+        recommended_version="22.x",
+        supported_range="20.x-22.x",
+        rationale=(
+            "Node.js majors 20 and 22 are documented and aligned with CI "
+            "runtime support."
         ),
-        "@simulacrum/github-api-simulator": DependencyCompatibility(
-            minimum_version="0.6.2",
-            recommended_version="0.6.3",
-            supported_range=">=0.6.2,<0.7.0",
-            rationale=(
-                "Patch releases 0.6.2 and newer in the 0.6 line retain the "
-                "required simulator API surface."
-            ),
+    ),
+    "@simulacrum/github-api-simulator": DependencyCompatibility(
+        minimum_version="0.6.2",
+        recommended_version="0.6.3",
+        supported_range=">=0.6.2,<0.7.0",
+        rationale=(
+            "Patch releases 0.6.2 and newer in the 0.6 line retain the "
+            "required simulator API surface."
         ),
-    })
-)
+    ),
+})
+
+COMPATIBILITY_POLICY_IS_MAPPING = isinstance(COMPATIBILITY_POLICY, cabc.Mapping)
 
 
 KNOWN_INCOMPATIBILITIES: tuple[KnownIncompatibility, ...] = (
