@@ -18,7 +18,7 @@ classifiers = [
     "Framework :: Pytest",
     "Topic :: Software Development :: Testing",
 ]
-dependencies = ["github3.py>=4.0.0,<5.0.0"]
+dependencies = ["github3.py>=3.2.0,<5.0.0"]
 
 [project.entry-points.pytest11]
 simulacat = "simulacat.pytest_plugin"
@@ -27,6 +27,7 @@ simulacat = "simulacat.pytest_plugin"
 dev = [
     "pytest",
     "pytest-bdd",
+    "pyyaml",
     "ruff",
     "pytest-timeout",
     "pytest-xdist",

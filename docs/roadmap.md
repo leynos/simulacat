@@ -238,19 +238,19 @@ Ensure the library remains stable across supported dependency versions.
 
 #### Tasks (Step 4.1)
 
-- [ ] Define a minimum-to-recommended version range for:
+- [x] Define a minimum-to-recommended version range for:
 
   - Python,
   - `github3.py`,
   - Node.js,
   - `@simulacrum/github-api-simulator`.
 
-- [ ] Add a test matrix that runs the reference suites across:
+- [x] Add a test matrix that runs the reference suites across:
 
   - multiple Python versions,
   - at least two `github3.py` major versions where relevant.
 
-- [ ] Track and document known incompatibilities and workarounds.
+- [x] Track and document known incompatibilities and workarounds.
 
 ### Step 4.2 – API stability and deprecation policy
 

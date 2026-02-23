@@ -44,6 +44,35 @@ directory that contains the simulacat `package.json`:
 python -m simulacat.install_simulator_deps
 ```
 
+## Compatibility matrix
+
+simulacat validates compatibility across the following dependency ranges. The
+"recommended" column is the default target for CI and local development.
+
+| Dependency | Minimum supported | Recommended | Supported range |
+| --- | --- | --- | --- |
+| Python | 3.12 | 3.13 | >=3.12,<3.14 |
+| github3.py | 3.2.0 | 4.0.1 | >=3.2.0,<5.0.0 |
+| Node.js | 20.x | 22.x | 20.x-22.x |
+| @simulacrum/github-api-simulator | 0.6.2 | 0.6.3 | >=0.6.2,<0.7.0 |
+
+The compatibility workflow (`.github/workflows/compatibility-matrix.yml`) runs
+reference suites across Python 3.12 and 3.13 with `github3.py` major tracks
+3.x and 4.x.
+
+### Known incompatibilities and workarounds
+
+- Dependency: `github3.py`
+  Affected versions: `>=5.0.0,<6.0.0`
+  Signature:
+  `ERROR: Could not find a version that satisfies the requirement github3.py>=5.0.0,<6.0.0`
+  Workaround: use `github3.py>=3.2.0,<5.0.0`.
+
+- Dependency: Python
+  Affected versions: `<3.12`
+  Signature: `ERROR: Package 'simulacat' requires a different Python`
+  Workaround: use Python 3.12 or 3.13.
+
 ## pytest Fixtures
 
 simulacat provides pytest fixtures for configuring the GitHub API simulator in
@@ -434,7 +463,7 @@ For a full comparison of GitHub App authentication with real GitHub, see
 
 ### Authentication mode limitations
 
-The `@simulacrum/github-api-simulator` (v0.6.2) does not validate tokens,
+The `@simulacrum/github-api-simulator` 0.6.x line does not validate tokens,
 enforce permissions, or implement rate limiting. The following tables summarize
 the differences between simulacat's authentication modes and real GitHub
 behaviour. These limitations apply across all three modes.
@@ -484,9 +513,9 @@ accepts the header but does not validate the token or enforce any scoping.
 #### GitHub App installation authentication
 
 `GitHubApp` and `AppInstallation` models describe app metadata and
-per-installation access. The simulator (v0.6.2) does not expose GitHub App
-endpoints. These models are client-side metadata only and are not serialized
-into the simulator initial state.
+per-installation access. The simulator in the 0.6.x line does not expose
+GitHub App endpoints. These models are client-side metadata only and are not
+serialized into the simulator initial state.
 
 | Aspect                           | Real GitHub                                   | simulacat                                            |
 | -------------------------------- | --------------------------------------------- | ---------------------------------------------------- |

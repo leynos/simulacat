@@ -332,6 +332,33 @@ projects.
    serialization, and `github3.py`/simulator coverage mismatches, so CI
    failures can be triaged quickly.
 
+### Step 4.1 – Compatibility test matrix
+
+The following decisions were made during implementation of the compatibility
+matrix.
+
+1. **Policy as code**: Compatibility ranges are defined in
+   `simulacat/compatibility_policy.py` so tests and docs read from a canonical
+   source rather than duplicating constants across files.
+
+2. **Relevant github3.py major tracks are 3.x and 4.x**: No 5.x release is
+   currently published, so compatibility coverage targets `>=3.2.0,<4.0.0` and
+   `>=4.0.0,<5.0.0`.
+
+3. **Reference-suite matrix in CI**: A dedicated workflow
+   (`.github/workflows/compatibility-matrix.yml`) runs compatibility tests for
+   each Python and `github3.py` major combination while reusing the existing
+   reference-suite smoke tests.
+
+4. **Simulator version policy moved to 0.6.x range**: The project now tracks
+   `@simulacrum/github-api-simulator` in the `0.6.x` line with a minimum of
+   `0.6.2` and a recommended version of `0.6.3`.
+
+5. **Compatibility job installs pytest-bdd explicitly**: Repository-level
+   test configuration in `tests/conftest.py` registers the `pytest_bdd` plugin,
+   so the compatibility workflow installs `pytest-bdd` even when it runs only
+   non-BDD test modules.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:
