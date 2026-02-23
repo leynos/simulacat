@@ -35,6 +35,41 @@ def extract_run_block(step: object) -> str | None:
     return None
 
 
+def get_reference_suites_matrix(workflow: dict[object, object]) -> dict[object, object]:
+    """Return the strategy matrix for the reference-suites workflow job."""
+    jobs = as_object_dict(
+        workflow.get("jobs"), expectation="Expected workflow to define jobs"
+    )
+    reference_suites_job = as_object_dict(
+        jobs.get("reference-suites"),
+        expectation="Expected compatibility workflow to define reference-suites job",
+    )
+    strategy = as_object_dict(
+        reference_suites_job.get("strategy"),
+        expectation="Expected strategy mapping on reference-suites",
+    )
+    return as_object_dict(
+        strategy.get("matrix"),
+        expectation="Expected matrix mapping on reference-suites",
+    )
+
+
+def extract_job_steps(workflow: dict[object, object], *, job_name: str) -> list[object]:
+    """Return validated workflow steps for the named job."""
+    jobs = as_object_dict(
+        workflow.get("jobs"), expectation="Expected workflow to define jobs"
+    )
+    job = as_object_dict(
+        jobs.get(job_name),
+        expectation=f"Expected compatibility workflow to define {job_name} job",
+    )
+    steps = job.get("steps")
+    assert isinstance(steps, list), (
+        f"Expected workflow job '{job_name}' steps to be a list"
+    )
+    return typ.cast("list[object]", steps)
+
+
 @given("the compatibility matrix workflow file", target_fixture="workflow")
 def given_compatibility_workflow_file() -> dict[object, object]:
     """Load and parse the compatibility matrix workflow."""
@@ -57,26 +92,17 @@ def given_users_guide_document() -> str:
 @then('the workflow includes Python versions "3.12" and "3.13"')
 def then_workflow_includes_python_versions(workflow: dict[object, object]) -> None:
     """Workflow matrix includes both supported Python versions."""
-    jobs = as_object_dict(
-        workflow.get("jobs"), expectation="Expected workflow to define jobs"
-    )
-    reference_suites_job = as_object_dict(
-        jobs.get("reference-suites"),
-        expectation="Expected compatibility workflow to define reference-suites job",
-    )
-    strategy = as_object_dict(
-        reference_suites_job.get("strategy"),
-        expectation="Expected strategy mapping on reference-suites",
-    )
-    matrix = as_object_dict(
-        strategy.get("matrix"),
-        expectation="Expected matrix mapping on reference-suites",
-    )
-
+    matrix = get_reference_suites_matrix(workflow)
     python_versions = matrix.get("python-version")
     assert python_versions == ["3.12", "3.13"], (
         "Expected Python matrix versions ['3.12', '3.13']"
     )
+
+
+@then('the workflow includes Node.js versions "20.x" and "22.x"')
+def then_workflow_includes_node_versions(workflow: dict[object, object]) -> None:
+    """Workflow matrix includes both supported Node.js major tracks."""
+    matrix = get_reference_suites_matrix(workflow)
     node_versions = matrix.get("node-version")
     assert node_versions == ["20.x", "22.x"], (
         "Expected Node.js matrix versions ['20.x', '22.x']"
@@ -86,15 +112,7 @@ def then_workflow_includes_python_versions(workflow: dict[object, object]) -> No
 @then("the workflow executes both reference project suites")
 def then_workflow_executes_reference_suites(workflow: dict[object, object]) -> None:
     """Workflow runs both Step 3.2 reference project suites."""
-    jobs = as_object_dict(
-        workflow.get("jobs"), expectation="Expected workflow to define jobs"
-    )
-    reference_suites_job = as_object_dict(
-        jobs.get("reference-suites"),
-        expectation="Expected compatibility workflow to define reference-suites job",
-    )
-    steps = reference_suites_job.get("steps")
-    assert isinstance(steps, list), "Expected workflow job steps to be a list"
+    steps = extract_job_steps(workflow, job_name="reference-suites")
     run_blocks = [run_block for step in steps if (run_block := extract_run_block(step))]
     combined_run_text = "\n".join(run_blocks)
     assert "examples/reference-projects/basic-pytest/tests" in combined_run_text, (
@@ -108,21 +126,7 @@ def then_workflow_executes_reference_suites(workflow: dict[object, object]) -> N
 @then('the workflow includes github3.py constraint ">=3.2.0,<4.0.0"')
 def then_workflow_includes_github3_v3(workflow: dict[object, object]) -> None:
     """Workflow matrix includes the github3.py v3 major track."""
-    jobs = as_object_dict(
-        workflow.get("jobs"), expectation="Expected workflow to define jobs"
-    )
-    reference_suites_job = as_object_dict(
-        jobs.get("reference-suites"),
-        expectation="Expected compatibility workflow to define reference-suites job",
-    )
-    strategy = as_object_dict(
-        reference_suites_job.get("strategy"),
-        expectation="Expected strategy mapping on reference-suites",
-    )
-    matrix = as_object_dict(
-        strategy.get("matrix"),
-        expectation="Expected matrix mapping on reference-suites",
-    )
+    matrix = get_reference_suites_matrix(workflow)
     github3_specs = matrix.get("github3-spec")
     assert isinstance(github3_specs, list), (
         "Expected github3-spec to be defined as a matrix list"
@@ -135,21 +139,7 @@ def then_workflow_includes_github3_v3(workflow: dict[object, object]) -> None:
 @then('the workflow includes github3.py constraint ">=4.0.0,<5.0.0"')
 def then_workflow_includes_github3_v4(workflow: dict[object, object]) -> None:
     """Workflow matrix includes the github3.py v4 major track."""
-    jobs = as_object_dict(
-        workflow.get("jobs"), expectation="Expected workflow to define jobs"
-    )
-    reference_suites_job = as_object_dict(
-        jobs.get("reference-suites"),
-        expectation="Expected compatibility workflow to define reference-suites job",
-    )
-    strategy = as_object_dict(
-        reference_suites_job.get("strategy"),
-        expectation="Expected strategy mapping on reference-suites",
-    )
-    matrix = as_object_dict(
-        strategy.get("matrix"),
-        expectation="Expected matrix mapping on reference-suites",
-    )
+    matrix = get_reference_suites_matrix(workflow)
     github3_specs = matrix.get("github3-spec")
     assert isinstance(github3_specs, list), (
         "Expected github3-spec to be defined as a matrix list"
@@ -162,15 +152,7 @@ def then_workflow_includes_github3_v4(workflow: dict[object, object]) -> None:
 @then("the workflow installs pytest-bdd")
 def then_workflow_installs_pytest_bdd(workflow: dict[object, object]) -> None:
     """Workflow installs pytest-bdd required by repository-level conftest."""
-    jobs = as_object_dict(
-        workflow.get("jobs"), expectation="Expected workflow to define jobs"
-    )
-    reference_suites_job = as_object_dict(
-        jobs.get("reference-suites"),
-        expectation="Expected compatibility workflow to define reference-suites job",
-    )
-    steps = reference_suites_job.get("steps")
-    assert isinstance(steps, list), "Expected workflow job steps to be a list"
+    steps = extract_job_steps(workflow, job_name="reference-suites")
     run_blocks = [run_block for step in steps if (run_block := extract_run_block(step))]
     combined_run_text = "\n".join(run_blocks)
     assert "pytest-bdd" in combined_run_text, (

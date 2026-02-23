@@ -5,6 +5,7 @@ Feature: Compatibility matrix policy and CI coverage
   Scenario: Compatibility workflow covers multiple Python versions and reference suites
     Given the compatibility matrix workflow file
     Then the workflow includes Python versions "3.12" and "3.13"
+    And the workflow includes Node.js versions "20.x" and "22.x"
     And the workflow executes both reference project suites
 
   Scenario: Compatibility workflow covers two github3.py major tracks
