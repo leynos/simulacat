@@ -95,7 +95,7 @@ COMPATIBILITY_POLICY: cabc.Mapping[str, DependencyCompatibility] = MappingProxyT
     ),
 })
 
-COMPATIBILITY_POLICY_IS_MAPPING = isinstance(COMPATIBILITY_POLICY, cabc.Mapping)
+COMPATIBILITY_POLICY_IS_MAPPING: bool = isinstance(COMPATIBILITY_POLICY, cabc.Mapping)
 
 
 KNOWN_INCOMPATIBILITIES: tuple[KnownIncompatibility, ...] = (

@@ -97,8 +97,12 @@ def then_workflow_executes_reference_suites(workflow: dict[object, object]) -> N
     assert isinstance(steps, list), "Expected workflow job steps to be a list"
     run_blocks = [run_block for step in steps if (run_block := extract_run_block(step))]
     combined_run_text = "\n".join(run_blocks)
-    assert "examples/reference-projects/basic-pytest/tests" in combined_run_text
-    assert "examples/reference-projects/authenticated-pytest/tests" in combined_run_text
+    assert "examples/reference-projects/basic-pytest/tests" in combined_run_text, (
+        "Expected workflow run steps to execute basic reference project tests"
+    )
+    assert (
+        "examples/reference-projects/authenticated-pytest/tests" in combined_run_text
+    ), "Expected workflow run steps to execute authenticated reference project tests"
 
 
 @then('the workflow includes github3.py constraint ">=3.2.0,<4.0.0"')
@@ -123,7 +127,9 @@ def then_workflow_includes_github3_v3(workflow: dict[object, object]) -> None:
     assert isinstance(github3_specs, list), (
         "Expected github3-spec to be defined as a matrix list"
     )
-    assert ">=3.2.0,<4.0.0" in github3_specs
+    assert ">=3.2.0,<4.0.0" in github3_specs, (
+        "Expected reference-suites matrix github3-spec to include >=3.2.0,<4.0.0"
+    )
 
 
 @then('the workflow includes github3.py constraint ">=4.0.0,<5.0.0"')
@@ -148,7 +154,9 @@ def then_workflow_includes_github3_v4(workflow: dict[object, object]) -> None:
     assert isinstance(github3_specs, list), (
         "Expected github3-spec to be defined as a matrix list"
     )
-    assert ">=4.0.0,<5.0.0" in github3_specs
+    assert ">=4.0.0,<5.0.0" in github3_specs, (
+        "Expected reference-suites matrix github3-spec to include >=4.0.0,<5.0.0"
+    )
 
 
 @then("the workflow installs pytest-bdd")
@@ -165,19 +173,26 @@ def then_workflow_installs_pytest_bdd(workflow: dict[object, object]) -> None:
     assert isinstance(steps, list), "Expected workflow job steps to be a list"
     run_blocks = [run_block for step in steps if (run_block := extract_run_block(step))]
     combined_run_text = "\n".join(run_blocks)
-    assert "pytest-bdd" in combined_run_text
+    assert "pytest-bdd" in combined_run_text, (
+        "Expected workflow Python dependency installation to include pytest-bdd"
+    )
 
 
 @then('the users guide includes a "Compatibility matrix" section')
 def then_users_guide_has_compatibility_section(users_guide_text: str) -> None:
     """Users guide contains compatibility policy section."""
-    assert "## Compatibility matrix" in users_guide_text
+    assert "## Compatibility matrix" in users_guide_text, (
+        "Expected users guide to contain a 'Compatibility matrix' section heading"
+    )
 
 
 @then('the users guide includes a "Known incompatibilities and workarounds" section')
 def then_users_guide_has_incompatibility_section(users_guide_text: str) -> None:
     """Users guide contains known incompatibility section."""
-    assert "### Known incompatibilities and workarounds" in users_guide_text
+    assert "### Known incompatibilities and workarounds" in users_guide_text, (
+        "Expected users guide to contain known incompatibilities and "
+        "workarounds heading"
+    )
 
 
 @then("the users guide documents Python, github3.py, Node.js, and simulator ranges")
