@@ -70,6 +70,22 @@ def extract_job_steps(workflow: dict[object, object], *, job_name: str) -> list[
     return typ.cast("list[object]", steps)
 
 
+def collect_run_blocks(workflow: dict[object, object], *, job_name: str) -> str:
+    """Return a newline-joined run script text for the named workflow job."""
+    steps = extract_job_steps(workflow, job_name=job_name)
+    run_blocks = [run_block for step in steps if (run_block := extract_run_block(step))]
+    return "\n".join(run_blocks)
+
+
+def get_validated_github3_specs(workflow: dict[object, object]) -> list[str]:
+    """Return github3-spec matrix entries after validating list shape."""
+    github3_specs = get_reference_suites_matrix(workflow).get("github3-spec")
+    assert isinstance(github3_specs, list), (
+        "Expected github3-spec to be defined as a matrix list"
+    )
+    return typ.cast("list[str]", github3_specs)
+
+
 @given("the compatibility matrix workflow file", target_fixture="workflow")
 def given_compatibility_workflow_file() -> dict[object, object]:
     """Load and parse the compatibility matrix workflow."""
@@ -112,9 +128,7 @@ def then_workflow_includes_node_versions(workflow: dict[object, object]) -> None
 @then("the workflow executes both reference project suites")
 def then_workflow_executes_reference_suites(workflow: dict[object, object]) -> None:
     """Workflow runs both Step 3.2 reference project suites."""
-    steps = extract_job_steps(workflow, job_name="reference-suites")
-    run_blocks = [run_block for step in steps if (run_block := extract_run_block(step))]
-    combined_run_text = "\n".join(run_blocks)
+    combined_run_text = collect_run_blocks(workflow, job_name="reference-suites")
     assert "examples/reference-projects/basic-pytest/tests" in combined_run_text, (
         "Expected workflow run steps to execute basic reference project tests"
     )
@@ -126,11 +140,7 @@ def then_workflow_executes_reference_suites(workflow: dict[object, object]) -> N
 @then('the workflow includes github3.py constraint ">=3.2.0,<4.0.0"')
 def then_workflow_includes_github3_v3(workflow: dict[object, object]) -> None:
     """Workflow matrix includes the github3.py v3 major track."""
-    matrix = get_reference_suites_matrix(workflow)
-    github3_specs = matrix.get("github3-spec")
-    assert isinstance(github3_specs, list), (
-        "Expected github3-spec to be defined as a matrix list"
-    )
+    github3_specs = get_validated_github3_specs(workflow)
     assert ">=3.2.0,<4.0.0" in github3_specs, (
         "Expected reference-suites matrix github3-spec to include >=3.2.0,<4.0.0"
     )
@@ -139,11 +149,7 @@ def then_workflow_includes_github3_v3(workflow: dict[object, object]) -> None:
 @then('the workflow includes github3.py constraint ">=4.0.0,<5.0.0"')
 def then_workflow_includes_github3_v4(workflow: dict[object, object]) -> None:
     """Workflow matrix includes the github3.py v4 major track."""
-    matrix = get_reference_suites_matrix(workflow)
-    github3_specs = matrix.get("github3-spec")
-    assert isinstance(github3_specs, list), (
-        "Expected github3-spec to be defined as a matrix list"
-    )
+    github3_specs = get_validated_github3_specs(workflow)
     assert ">=4.0.0,<5.0.0" in github3_specs, (
         "Expected reference-suites matrix github3-spec to include >=4.0.0,<5.0.0"
     )
@@ -152,9 +158,7 @@ def then_workflow_includes_github3_v4(workflow: dict[object, object]) -> None:
 @then("the workflow installs pytest-bdd")
 def then_workflow_installs_pytest_bdd(workflow: dict[object, object]) -> None:
     """Workflow installs pytest-bdd required by repository-level conftest."""
-    steps = extract_job_steps(workflow, job_name="reference-suites")
-    run_blocks = [run_block for step in steps if (run_block := extract_run_block(step))]
-    combined_run_text = "\n".join(run_blocks)
+    combined_run_text = collect_run_blocks(workflow, job_name="reference-suites")
     assert "pytest-bdd" in combined_run_text, (
         "Expected workflow Python dependency installation to include pytest-bdd"
     )
