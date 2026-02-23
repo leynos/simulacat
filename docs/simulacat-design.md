@@ -359,6 +359,46 @@ matrix.
    so the compatibility workflow installs `pytest-bdd` even when it runs only
    non-BDD test modules.
 
+### Step 4.2 – API stability and deprecation policy
+
+The following decisions were made during implementation of the API stability
+and deprecation policy.
+
+1. **Stability registry as code**: A dedicated `simulacat/api_stability.py`
+   module defines the canonical public API registry (`PUBLIC_API`) as a
+   `MappingProxyType`, following the immutable-mapping pattern established by
+   `compatibility_policy.py`. Tests enforce that every `__all__` symbol and
+   every registered fixture appears in the registry, so drift is caught by CI.
+
+2. **StrEnum for stability tiers**: `ApiStability` is a `StrEnum` with values
+   `stable`, `provisional`, and `deprecated`. `StrEnum` provides type safety,
+   IDE support, and exhaustive matching while remaining human-readable when
+   serialised. The project baseline of Python 3.12 guarantees `StrEnum`
+   availability.
+
+3. **Custom deprecation warning subclass**:
+   `SimulacatDeprecationWarning(DeprecationWarning)` allows consumers to filter
+   simulacat-specific deprecation warnings independently of other library
+   warnings using standard `warnings` module filters.
+
+4. **Three-phase deprecation lifecycle**: the deprecation process requires
+   three explicit steps: (a) introduce the replacement API alongside the old
+   one, (b) emit `SimulacatDeprecationWarning` with clear migration guidance,
+   (c) remove the deprecated API only after a documented transition period.
+   This lifecycle is documented in the users' guide and enforced by the
+   `DeprecatedApi` data class and `emit_deprecation_warning` helper.
+
+5. **All current symbols classified as stable**: the existing API has been
+   stable through Phases 1–4.1. Marking everything `ApiStability.STABLE`
+   formalises the implicit contract and provides a baseline for future
+   deprecation. No symbols are currently deprecated; the `DEPRECATED_APIS`
+   tuple is empty but the infrastructure is tested and ready.
+
+6. **Changelog at `docs/changelog.md`**: the changelog lives in the `docs/`
+   directory alongside the other documentation files. It links roadmap phases
+   and steps to shipped capabilities and describes behavioural changes at the
+   step level, providing a consumer-facing record of evolution.
+
 ## Bun entrypoint
 
 The Bun entrypoint is responsible for:

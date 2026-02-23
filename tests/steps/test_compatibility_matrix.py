@@ -181,6 +181,17 @@ def then_users_guide_has_incompatibility_section(users_guide_text: str) -> None:
     )
 
 
+def _normalize_table_rows(text: str) -> list[tuple[str, ...]]:
+    """Extract table rows from markdown and normalise cell whitespace."""
+    rows: list[tuple[str, ...]] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("|") and stripped.endswith("|"):
+            cells = tuple(cell.strip() for cell in stripped.split("|")[1:-1])
+            rows.append(cells)
+    return rows
+
+
 @then("the users guide documents Python, github3.py, Node.js, and simulator ranges")
 def then_users_guide_documents_ranges(users_guide_text: str) -> None:
     """Users guide lists all Step 4.1 dependency ranges from policy constants."""
@@ -190,12 +201,15 @@ def then_users_guide_documents_ranges(users_guide_text: str) -> None:
         "node.js": "Node.js",
         "@simulacrum/github-api-simulator": "@simulacrum/github-api-simulator",
     }
+    normalised_rows = _normalize_table_rows(users_guide_text)
     for policy_key, heading in dependency_heading_map.items():
         policy = COMPATIBILITY_POLICY[policy_key]
-        expected_table_row = (
-            f"| {heading} | {policy.minimum_version} | "
-            f"{policy.recommended_version} | {policy.supported_range} |"
+        expected_cells = (
+            heading,
+            policy.minimum_version,
+            policy.recommended_version,
+            policy.supported_range,
         )
-        assert expected_table_row in users_guide_text, (
-            f"Expected users guide compatibility row: {expected_table_row}"
+        assert expected_cells in normalised_rows, (
+            f"Expected users guide compatibility row with cells: {expected_cells}"
         )

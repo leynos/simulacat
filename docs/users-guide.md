@@ -49,29 +49,28 @@ python -m simulacat.install_simulator_deps
 simulacat validates compatibility across the following dependency ranges. The
 "recommended" column is the default target for CI and local development.
 
-| Dependency | Minimum supported | Recommended | Supported range |
-| --- | --- | --- | --- |
-| Python | 3.12 | 3.13 | >=3.12,<3.14 |
-| github3.py | 3.2.0 | 4.0.1 | >=3.2.0,<5.0.0 |
-| Node.js | 20.x | 22.x | 20.x-22.x |
-| @simulacrum/github-api-simulator | 0.6.2 | 0.6.3 | >=0.6.2,<0.7.0 |
+| Dependency                       | Minimum supported | Recommended | Supported range |
+| -------------------------------- | ----------------- | ----------- | --------------- |
+| Python                           | 3.12              | 3.13        | >=3.12,<3.14    |
+| github3.py                       | 3.2.0             | 4.0.1       | >=3.2.0,<5.0.0  |
+| Node.js                          | 20.x              | 22.x        | 20.x-22.x       |
+| @simulacrum/github-api-simulator | 0.6.2             | 0.6.3       | >=0.6.2,<0.7.0  |
 
 The compatibility workflow (`.github/workflows/compatibility-matrix.yml`) runs
-reference suites across Python 3.12 and 3.13 with `github3.py` major tracks
-3.x and 4.x.
+reference suites across Python 3.12 and 3.13 with `github3.py` major tracks 3.x
+and 4.x.
 
 ### Known incompatibilities and workarounds
 
 - Dependency: `github3.py`
-  Affected versions: `>=5.0.0,<6.0.0`
-  Signature:
+  Affected versions: `>=5.0.0,<6.0.0` Signature:
   `ERROR: Could not find a version that satisfies the requirement github3.py>=5.0.0,<6.0.0`
-  Workaround: use `github3.py>=3.2.0,<5.0.0`.
+   Workaround: use `github3.py>=3.2.0,<5.0.0`.
 
 - Dependency: Python
-  Affected versions: `<3.12`
-  Signature: `ERROR: Package 'simulacat' requires a different Python`
-  Workaround: use Python 3.12 or 3.13.
+  Affected versions: `<3.12` Signature:
+  `ERROR: Package 'simulacat' requires a different Python` Workaround: use
+  Python 3.12 or 3.13.
 
 ## pytest Fixtures
 
@@ -513,8 +512,8 @@ accepts the header but does not validate the token or enforce any scoping.
 #### GitHub App installation authentication
 
 `GitHubApp` and `AppInstallation` models describe app metadata and
-per-installation access. The simulator in the 0.6.x line does not expose
-GitHub App endpoints. These models are client-side metadata only and are not
+per-installation access. The simulator in the 0.6.x line does not expose GitHub
+App endpoints. These models are client-side metadata only and are not
 serialized into the simulator initial state.
 
 | Aspect                           | Real GitHub                                   | simulacat                                            |
@@ -769,3 +768,62 @@ The following signatures cover common CI and local integration failures.
   Cause: endpoint is not implemented by the simulator version in use. Fix:
   constrain tests to implemented endpoints or model behaviour at the
   configuration layer.
+
+## API stability
+
+simulacat classifies every public symbol and fixture into one of three
+stability tiers. The canonical registry lives in
+`simulacat.api_stability.PUBLIC_API`.
+
+| Tier            | Meaning                                                                            | Consumer guidance                                                        |
+| --------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **stable**      | Part of the supported API. Changes follow the deprecation lifecycle.               | Safe to depend on without pinning a specific patch version.              |
+| **provisional** | May change without the full deprecation lifecycle.                                 | Pin your simulacat version if you depend on provisional symbols.         |
+| **deprecated**  | Will be removed in a future version. Warnings are emitted with migration guidance. | Migrate to the documented replacement before the stated removal version. |
+
+All symbols exported via `simulacat.__all__` and all fixtures registered
+through the `pytest11` entry point (`github_sim_config`, `github_simulator`,
+`simulacat_single_repo`, `simulacat_empty_org`) are currently classified as
+**stable**.
+
+You can inspect the stability tier of any symbol programmatically:
+
+```python
+from simulacat import PUBLIC_API
+
+tier = PUBLIC_API["ScenarioConfig"]
+print(tier)  # "stable"
+```
+
+## Deprecation policy
+
+When a public API element needs to change, simulacat follows a three-phase
+deprecation lifecycle:
+
+1. **Introduce replacement alongside old API.** The new symbol or fixture is
+   added and documented while the old one continues to work unchanged.
+
+2. **Emit warnings with migration guidance.** The old symbol emits a
+   `SimulacatDeprecationWarning` (a subclass of `DeprecationWarning`) that
+   names the replacement and provides migration instructions. Consumers can
+   filter these warnings independently:
+
+   ```python
+   import warnings
+   from simulacat import SimulacatDeprecationWarning
+
+   # Turn simulacat deprecation warnings into errors during CI.
+   warnings.filterwarnings("error", category=SimulacatDeprecationWarning)
+   ```
+
+3. **Remove after a documented transition period.** The deprecated symbol is
+   removed only after the transition period stated in the warning message. The
+   removal version is recorded in `DEPRECATED_APIS` in
+   `simulacat/api_stability.py` and announced in the [changelog](changelog.md).
+
+No symbols are currently deprecated.
+
+## Changelog
+
+A changelog linking roadmap phases and steps to released capabilities is
+maintained at [docs/changelog.md](changelog.md).

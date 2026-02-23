@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from .api_stability import (
+    PUBLIC_API,
+    ApiStability,
+    SimulacatDeprecationWarning,
+)
 from .config import (
     default_github_sim_config,
     is_json_serializable,
@@ -29,7 +34,9 @@ from .scenario import (
 from .types import GitHubSimConfig
 
 __all__ = [
+    "PUBLIC_API",
     "AccessToken",
+    "ApiStability",
     "AppInstallation",
     "Branch",
     "ConfigValidationError",
@@ -41,6 +48,7 @@ __all__ = [
     "PullRequest",
     "Repository",
     "ScenarioConfig",
+    "SimulacatDeprecationWarning",
     "User",
     "default_github_sim_config",
     "empty_org_scenario",
