@@ -258,14 +258,14 @@ Provide a predictable public surface for downstream users.
 
 #### Tasks (Step 4.2)
 
-- [ ] Mark public modules, fixtures, and configuration helpers as part of the
+- [x] Mark public modules, fixtures, and configuration helpers as part of the
       supported API.
-- [ ] Document the deprecation process for any API changes:
+- [x] Document the deprecation process for any API changes:
 
   - introduce new APIs alongside old ones,
   - emit warnings with clear migration guidance,
   - remove deprecated APIs only after a documented transition period.
 
-- [ ] Maintain a short changelog that links roadmap items to released
+- [x] Maintain a short changelog that links roadmap items to released
       capabilities and describes behavioural changes at the level of phases and
       steps.

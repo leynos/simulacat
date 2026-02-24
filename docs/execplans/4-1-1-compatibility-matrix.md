@@ -22,8 +22,8 @@ Success is observable when:
 - version ranges are documented in consumer and design docs with one canonical
   source of truth;
 - continuous integration (CI) runs reference suites across multiple Python
-  versions and at least two
-  `github3.py` major versions when both are supportable;
+  versions and at least two `github3.py` major versions when both are
+  supportable;
 - known incompatibilities and workarounds are tracked in a dedicated section;
 - unit tests (`pytest`) and behavioural tests (`pytest-bdd`) cover the new
   compatibility policy and matrix contracts;
@@ -60,23 +60,17 @@ Success is observable when:
 ## Risks
 
 - Risk: `github3.py` major versions may have incompatible Python support
-  windows.
-  Severity: high.
-  Likelihood: medium.
-  Mitigation: probe available versions first and explicitly encode exclusions.
+  windows. Severity: high. Likelihood: medium. Mitigation: probe available
+  versions first and explicitly encode exclusions.
 
 - Risk: matrix jobs may become flaky because simulator startup depends on Bun
-  and subprocess timing.
-  Severity: medium.
-  Likelihood: medium.
-  Mitigation: keep matrix focused on reference suites and isolate compatibility
-  jobs from unrelated test load.
+  and subprocess timing. Severity: medium. Likelihood: medium. Mitigation: keep
+  matrix focused on reference suites and isolate compatibility jobs from
+  unrelated test load.
 
 - Risk: documentation drift between CI matrix and users' guide.
-  Severity: medium.
-  Likelihood: medium.
-  Mitigation: add tests that assert docs and workflow mention the same policy
-  values.
+  Severity: medium. Likelihood: medium. Mitigation: add tests that assert docs
+  and workflow mention the same policy values.
 
 ## Progress
 
@@ -96,71 +90,65 @@ Success is observable when:
 ## Surprises & discoveries
 
 - Observation: repository CI currently runs only Python 3.13 in
-  `.github/workflows/ci.yml`; no compatibility matrix exists yet.
-  Evidence: workflow inspection on 2026-02-20.
-  Impact: Step 4.1 requires new matrix workflow or matrix expansion.
+  `.github/workflows/ci.yml`; no compatibility matrix exists yet. Evidence:
+  workflow inspection on 2026-02-20. Impact: Step 4.1 requires new matrix
+  workflow or matrix expansion.
 
 - Observation: `pyproject.toml` currently pins `github3.py>=4.0.0,<5.0.0`.
-  Evidence: `[project.dependencies]` in `pyproject.toml`.
-  Impact: supporting two majors may require range expansion or explicit
-  incompatibility documentation if v5 is not viable.
+  Evidence: `[project.dependencies]` in `pyproject.toml`. Impact: supporting
+  two majors may require range expansion or explicit incompatibility
+  documentation if v5 is not viable.
 
 - Observation: users' guide already states Python 3.12+ and Node.js 20.x/22.x.
-  Evidence: `docs/users-guide.md` prerequisites section.
-  Impact: plan must align existing claims with tested matrix evidence.
+  Evidence: `docs/users-guide.md` prerequisites section. Impact: plan must
+  align existing claims with tested matrix evidence.
 
 - Observation: `github3.py` major 5 is not yet published, so two-major
-  compatibility coverage must use 3.x and 4.x.
-  Evidence: package index query (`python -m pip index versions github3.py`)
-  and targeted compatibility runs.
+  compatibility coverage must use 3.x and 4.x. Evidence: package index query
+  (`python -m pip index versions github3.py`) and targeted compatibility runs.
   Impact: workflow matrix uses `>=3.2.0,<4.0.0` and `>=4.0.0,<5.0.0`.
 
 - Observation: compatibility tests pass for both `github3.py` 3.2.0 and 4.0.1
-  against `tests/test_github3_compat.py`.
-  Evidence: `/tmp/step-4-1-github3-v3-compat.log` and
-  `/tmp/step-4-1-github3-v4-compat.log`.
-  Impact: `pyproject.toml` dependency range expanded to include both majors.
+  against `tests/test_github3_compat.py`. Evidence:
+  `/tmp/step-4-1-github3-v3-compat.log` and
+  `/tmp/step-4-1-github3-v4-compat.log`. Impact: `pyproject.toml` dependency
+  range expanded to include both majors.
 
 - Observation: compatibility CI failed when invoking `pytest` without
-  `pytest-bdd` installed, even for non-BDD targets.
-  Evidence: CI traceback in this task (`ImportError: Error importing plugin
-  "pytest_bdd": No module named 'pytest_bdd'`).
-  Impact: compatibility workflow now installs `pytest-bdd` explicitly.
+  `pytest-bdd` installed, even for non-BDD targets. Evidence: CI traceback in
+  this task
+  (`ImportError: Error importing plugin "pytest_bdd": No module named 'pytest_bdd'`).
+   Impact: compatibility workflow now installs `pytest-bdd` explicitly.
 
 ## Decision log
 
 - Decision: create a dedicated Step 4.1 ExecPlan that treats compatibility as
-  a first-class tested contract rather than only a docs update.
-  Rationale: roadmap asks for both policy definition and automated verification.
+  a first-class tested contract rather than only a docs update. Rationale:
+  roadmap asks for both policy definition and automated verification.
   Date/Author: 2026-02-20, ExecPlan author.
 
 - Decision: include quality-gate commands for both code and Markdown.
   Rationale: this task modifies CI/docs/tests and must keep repository health
-  gates green.
-  Date/Author: 2026-02-20, ExecPlan author.
+  gates green. Date/Author: 2026-02-20, ExecPlan author.
 
 - Decision: define `github3.py` support as `>=3.2.0,<5.0.0` with 4.0.1 as the
-  recommended version.
-  Rationale: both major tracks are currently relevant and validated; 5.x is
-  not published.
-  Date/Author: 2026-02-21, ExecPlan author.
+  recommended version. Rationale: both major tracks are currently relevant and
+  validated; 5.x is not published. Date/Author: 2026-02-21, ExecPlan author.
 
 - Decision: add `.github/workflows/compatibility-matrix.yml` instead of
-  overloading `.github/workflows/ci.yml`.
-  Rationale: keeps compatibility sweeps isolated and explicit while preserving
-  existing CI latency expectations for the primary workflow.
-  Date/Author: 2026-02-21, ExecPlan author.
+  overloading `.github/workflows/ci.yml`. Rationale: keeps compatibility sweeps
+  isolated and explicit while preserving existing CI latency expectations for
+  the primary workflow. Date/Author: 2026-02-21, ExecPlan author.
 
 - Decision: upgrade simulator dependency to `@simulacrum/github-api-simulator`
-  `^0.6.3` while retaining a documented minimum of 0.6.2.
-  Rationale: aligns recommended version with latest 0.6 patch release and keeps
-  compatibility notes forward-looking in the 0.6 line.
-  Date/Author: 2026-02-21, ExecPlan author.
+  `^0.6.3` while retaining a documented minimum of 0.6.2. Rationale: aligns
+  recommended version with latest 0.6 patch release and keeps compatibility
+  notes forward-looking in the 0.6 line. Date/Author: 2026-02-21, ExecPlan
+  author.
 
 - Decision: include `pytest-bdd` in compatibility workflow Python dependency
-  installation.
-  Rationale: repository conftest explicitly loads `pytest_bdd`, so test startup
-  requires the package even when running non-BDD modules.
+  installation. Rationale: repository conftest explicitly loads `pytest_bdd`,
+  so test startup requires the package even when running non-BDD modules.
   Date/Author: 2026-02-21, ExecPlan author.
 
 ## Outcomes & retrospective

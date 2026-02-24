@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import typing as typ
 from pathlib import Path
 
@@ -181,6 +182,48 @@ def then_users_guide_has_incompatibility_section(users_guide_text: str) -> None:
     )
 
 
+_HEADING_LEVEL = re.compile(r"^(#{1,6})\s")
+_SEPARATOR_CELL = re.compile(r"^:?-{3,}:?$")
+
+
+def _extract_section(text: str, heading: str) -> str:
+    """Return the markdown section starting at *heading*."""
+    lines = text.splitlines(keepends=True)
+    start_idx: int | None = None
+    start_level = 0
+
+    for idx, line in enumerate(lines):
+        if line.rstrip("\r\n") == heading:
+            match = _HEADING_LEVEL.match(line)
+            if match:
+                start_idx = idx
+                start_level = len(match.group(1))
+                break
+
+    if start_idx is None:
+        return ""
+
+    for idx in range(start_idx + 1, len(lines)):
+        match = _HEADING_LEVEL.match(lines[idx])
+        if match and len(match.group(1)) <= start_level:
+            return "".join(lines[start_idx:idx])
+
+    return "".join(lines[start_idx:])
+
+
+def _normalize_table_rows(text: str) -> tuple[tuple[str, ...], ...]:
+    """Extract data rows from a markdown table, normalizing cell whitespace."""
+    rows: list[tuple[str, ...]] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("|") and stripped.endswith("|"):
+            cells = tuple(cell.strip() for cell in stripped.split("|")[1:-1])
+            if all(_SEPARATOR_CELL.match(c) for c in cells):
+                continue
+            rows.append(cells)
+    return tuple(rows)
+
+
 @then("the users guide documents Python, github3.py, Node.js, and simulator ranges")
 def then_users_guide_documents_ranges(users_guide_text: str) -> None:
     """Users guide lists all Step 4.1 dependency ranges from policy constants."""
@@ -190,12 +233,19 @@ def then_users_guide_documents_ranges(users_guide_text: str) -> None:
         "node.js": "Node.js",
         "@simulacrum/github-api-simulator": "@simulacrum/github-api-simulator",
     }
+    compat_section = _extract_section(users_guide_text, "## Compatibility matrix")
+    assert compat_section, (
+        "Expected users guide to contain a 'Compatibility matrix' section"
+    )
+    normalized_rows = _normalize_table_rows(compat_section)
     for policy_key, heading in dependency_heading_map.items():
         policy = COMPATIBILITY_POLICY[policy_key]
-        expected_table_row = (
-            f"| {heading} | {policy.minimum_version} | "
-            f"{policy.recommended_version} | {policy.supported_range} |"
+        expected_cells = (
+            heading,
+            policy.minimum_version,
+            policy.recommended_version,
+            policy.supported_range,
         )
-        assert expected_table_row in users_guide_text, (
-            f"Expected users guide compatibility row: {expected_table_row}"
+        assert expected_cells in normalized_rows, (
+            f"Expected users guide compatibility row with cells: {expected_cells}"
         )
