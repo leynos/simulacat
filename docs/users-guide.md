@@ -63,14 +63,22 @@ and 4.x.
 ### Known incompatibilities and workarounds
 
 - Dependency: `github3.py`
-  Affected versions: `>=5.0.0,<6.0.0` Signature:
-  `ERROR: Could not find a version that satisfies the requirement github3.py>=5.0.0,<6.0.0`
-   Workaround: use `github3.py>=3.2.0,<5.0.0`.
+  Affected versions: `>=5.0.0,<6.0.0`
+
+  ```plaintext
+  ERROR: Could not find a version that satisfies the requirement github3.py>=5.0.0,<6.0.0
+  ```
+
+  Workaround: use `github3.py>=3.2.0,<5.0.0`.
 
 - Dependency: Python
-  Affected versions: `<3.12` Signature:
-  `ERROR: Package 'simulacat' requires a different Python` Workaround: use
-  Python 3.12 or 3.13.
+  Affected versions: `<3.12`
+
+  ```plaintext
+  ERROR: Package 'simulacat' requires a different Python
+  ```
+
+  Workaround: use Python 3.12 or 3.13.
 
 ## pytest Fixtures
 
@@ -778,7 +786,7 @@ stability tiers. The canonical registry lives in
 | Tier            | Meaning                                                                            | Consumer guidance                                                        |
 | --------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | **stable**      | Part of the supported API. Changes follow the deprecation lifecycle.               | Safe to depend on without pinning a specific patch version.              |
-| **provisional** | May change without the full deprecation lifecycle.                                 | Pin your simulacat version if you depend on provisional symbols.         |
+| **provisional** | May change without the full deprecation lifecycle.                                 | Pin the simulacat version when depending on provisional symbols.         |
 | **deprecated**  | Will be removed in a future version. Warnings are emitted with migration guidance. | Migrate to the documented replacement before the stated removal version. |
 
 All symbols exported via `simulacat.__all__` and all fixtures registered
@@ -786,7 +794,7 @@ through the `pytest11` entry point (`github_sim_config`, `github_simulator`,
 `simulacat_single_repo`, `simulacat_empty_org`) are currently classified as
 **stable**.
 
-You can inspect the stability tier of any symbol programmatically:
+The stability tier of any symbol can be inspected programmatically:
 
 ```python
 from simulacat import PUBLIC_API

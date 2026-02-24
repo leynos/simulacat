@@ -19,7 +19,7 @@ capabilities through a changelog that links roadmap items to released behaviour.
 
 Success is observable when:
 
-- every symbol in `simulacat/__init__.__all__` and every registered pytest
+- every symbol in `simulacat.__all__` and every registered pytest
   fixture is mapped to an explicit stability tier (stable, provisional, or
   deprecated) in a canonical source-of-truth module;
 - a custom `SimulacatDeprecationWarning` subclass exists and a helper function
@@ -30,8 +30,8 @@ Success is observable when:
   stability tiers and the three-phase deprecation lifecycle (introduce
   alongside, warn with guidance, remove after transition period);
 - design decisions are recorded in `docs/simulacat-design.md`;
-- unit tests (pytest) and behavioural tests (pytest-bdd) cover the new
-  contracts;
+- unit tests (pytest) and behaviour-driven development (BDD) tests (pytest-bdd)
+  cover the new contracts;
 - `make check-fmt`, `make typecheck`, `make lint`, and `make test` pass;
 - Markdown validation (`make markdownlint`, `make nixie`) passes;
 - Step 4.2 tasks in `docs/roadmap.md` are marked done.
@@ -105,7 +105,7 @@ Success is observable when:
   strings. Evidence: `tests/steps/test_compatibility_matrix.py` assertion
   `| Python | 3.12 | 3.13 | >=3.12,<3.14 |` failed against padded
   `| Python                           | 3.12              | ...`. Impact:
-  updated the existing test to normalise cell whitespace before comparison.
+  updated the existing test to normalize cell whitespace before comparison.
 
 ## Decision log
 
@@ -117,7 +117,7 @@ Success is observable when:
 
 - Decision: use `enum.StrEnum` for `ApiStability` tiers rather than plain
   string constants. Rationale: provides type safety, IDE support, and
-  exhaustive matching while remaining human-readable when serialised. StrEnum
+  exhaustive matching while remaining human-readable when serialized. StrEnum
   is available from Python 3.11+ and the project baseline is 3.12. Date/Author:
   2026-02-23, ExecPlan author.
 
@@ -135,10 +135,10 @@ Success is observable when:
 - Decision: all current public symbols and fixtures are classified as `STABLE`
   since the project is establishing its first stability policy. Rationale: the
   existing API has been stable through Phases 1–4.1. Marking everything stable
-  formalises the implicit contract and provides a baseline for future
+  formalizes the implicit contract and provides a baseline for future
   deprecation. Date/Author: 2026-02-23, ExecPlan author.
 
-- Decision: `DEPRECATED_APIS` is initially an empty tuple. The infrastructure
+- Decision: `DEPRECATED_APIS` is initially an empty mapping. The infrastructure
   is in place for when deprecations are needed. Rationale: establishing the
   deprecation mechanism now (with tests) means future deprecations follow a
   tested path. No symbols are currently deprecated. Date/Author: 2026-02-23,
@@ -158,7 +158,7 @@ Delivered outcomes:
 - Added a canonical API stability module: `simulacat/api_stability.py` with
   `ApiStability` StrEnum, `DeprecatedApi` dataclass,
   `SimulacatDeprecationWarning`, `PUBLIC_API` registry, `DEPRECATED_APIS`
-  tuple, and `emit_deprecation_warning` helper.
+  mapping, and `emit_deprecation_warning` helper.
 - Added Step 4.2 unit tests:
   `simulacat/unittests/test_api_stability.py` (14 tests).
 - Added Step 4.2 behavioural tests:
@@ -263,7 +263,7 @@ Implement minimal changes to satisfy failing tests:
   - `SimulacatDeprecationWarning(DeprecationWarning)`,
   - `PUBLIC_API` MappingProxyType mapping all 22 `__all__` symbols plus 4
     fixture names to `ApiStability.STABLE`,
-  - `DEPRECATED_APIS` empty tuple,
+  - `DEPRECATED_APIS` empty mapping,
   - `emit_deprecation_warning(symbol_name)` function;
 - create `docs/changelog.md` covering Phases 1–4;
 - update `simulacat/__init__.py` to export `ApiStability`,
@@ -277,7 +277,7 @@ Implement minimal changes to satisfy failing tests:
   - "Deprecation policy" section describing the three-phase lifecycle,
   - "Changelog" section linking to `docs/changelog.md`.
 
-### Stage D: finalise, harden, and close roadmap task
+### Stage D: finalize, harden, and close roadmap task
 
 - mark all Step 4.2 task checkboxes as done in `docs/roadmap.md`;
 - run full repository quality gates and markdown validations;
@@ -390,7 +390,7 @@ In `simulacat/api_stability.py`:
     class SimulacatDeprecationWarning(DeprecationWarning): …
 
     PUBLIC_API: cabc.Mapping[str, ApiStability]
-    DEPRECATED_APIS: tuple[DeprecatedApi, …]
+    DEPRECATED_APIS: cabc.Mapping[str, DeprecatedApi]
 
     def emit_deprecation_warning(symbol_name: str) -> None: …
 

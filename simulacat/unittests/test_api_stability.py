@@ -4,24 +4,19 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
 import simulacat
 from simulacat.api_stability import (
     DEPRECATED_APIS,
+    FIXTURE_NAMES,
     PUBLIC_API,
     ApiStability,
     DeprecatedApi,
     SimulacatDeprecationWarning,
     emit_deprecation_warning,
-)
-
-_FIXTURE_NAMES: tuple[str, ...] = (
-    "github_sim_config",
-    "github_simulator",
-    "simulacat_single_repo",
-    "simulacat_empty_org",
 )
 
 
@@ -39,7 +34,7 @@ class TestPublicApiRegistry:
     @staticmethod
     def test_public_api_covers_registered_fixtures() -> None:
         """Every registered pytest fixture appears in PUBLIC_API."""
-        missing = set(_FIXTURE_NAMES) - set(PUBLIC_API)
+        missing = set(FIXTURE_NAMES) - set(PUBLIC_API)
         assert not missing, f"PUBLIC_API is missing fixtures: {sorted(missing)}"
 
     @staticmethod
@@ -61,19 +56,20 @@ class TestApiStabilityTiers:
     """Validate the ApiStability enum."""
 
     @staticmethod
-    def test_has_stable_tier() -> None:
-        """ApiStability defines a STABLE tier."""
-        assert ApiStability.STABLE == "stable"
-
-    @staticmethod
-    def test_has_provisional_tier() -> None:
-        """ApiStability defines a PROVISIONAL tier."""
-        assert ApiStability.PROVISIONAL == "provisional"
-
-    @staticmethod
-    def test_has_deprecated_tier() -> None:
-        """ApiStability defines a DEPRECATED tier."""
-        assert ApiStability.DEPRECATED == "deprecated"
+    @pytest.mark.parametrize(
+        ("member", "expected_value"),
+        [
+            (ApiStability.STABLE, "stable"),
+            (ApiStability.PROVISIONAL, "provisional"),
+            (ApiStability.DEPRECATED, "deprecated"),
+        ],
+    )
+    def test_tier_has_expected_value(
+        member: ApiStability,
+        expected_value: str,
+    ) -> None:
+        """ApiStability members have the expected string values."""
+        assert member == expected_value
 
 
 class TestDeprecationWarning:
@@ -91,33 +87,44 @@ class TestDeprecationWarning:
             emit_deprecation_warning("nonexistent_symbol_xyz")
 
     @staticmethod
-    def test_emit_warning_for_deprecated_symbol() -> None:
+    def test_emit_warning_for_deprecated_symbol(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """emit_deprecation_warning emits a warning with migration guidance."""
-        # Use a real deprecated entry if available, otherwise this test
-        # validates the mechanism with a synthetic entry via monkeypatch.
-        if DEPRECATED_APIS:
-            entry = DEPRECATED_APIS[0]
-            with warnings.catch_warnings(record=True) as caught:
-                warnings.simplefilter("always")
-                emit_deprecation_warning(entry.symbol_name)
-            assert len(caught) == 1
-            assert issubclass(caught[0].category, SimulacatDeprecationWarning)
-            assert entry.replacement in str(caught[0].message)
-            assert entry.guidance in str(caught[0].message)
+        entry = DeprecatedApi(
+            symbol_name="__test_old_api__",
+            deprecated_since="0.1.0",
+            replacement="new_api",
+            removal_version="1.0.0",
+            guidance="Migrate to new_api for improved stability.",
+        )
+        patched = MappingProxyType({entry.symbol_name: entry})
+        monkeypatch.setattr("simulacat.api_stability.DEPRECATED_APIS", patched)
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            emit_deprecation_warning(entry.symbol_name)
+
+        assert len(caught) == 1
+        assert issubclass(caught[0].category, SimulacatDeprecationWarning)
+        message = str(caught[0].message)
+        assert entry.replacement in message
+        assert entry.guidance in message
+        assert entry.removal_version in message
 
 
 class TestDeprecatedApisRegistry:
-    """Validate the DEPRECATED_APIS tuple structure."""
+    """Validate the DEPRECATED_APIS mapping structure."""
 
     @staticmethod
-    def test_deprecated_apis_is_tuple() -> None:
-        """DEPRECATED_APIS is a tuple."""
-        assert isinstance(DEPRECATED_APIS, tuple)
+    def test_deprecated_apis_is_mapping() -> None:
+        """DEPRECATED_APIS is a mapping."""
+        assert isinstance(DEPRECATED_APIS, MappingProxyType)
 
     @staticmethod
     def test_deprecated_entries_have_required_fields() -> None:
         """Every DeprecatedApi entry has non-empty required fields."""
-        for entry in DEPRECATED_APIS:
+        for entry in DEPRECATED_APIS.values():
             assert isinstance(entry, DeprecatedApi)
             assert entry.symbol_name.strip()
             assert entry.deprecated_since.strip()
@@ -132,13 +139,17 @@ class TestChangelog:
     def _changelog_path() -> Path:
         return Path(__file__).resolve().parents[2] / "docs" / "changelog.md"
 
-    def test_changelog_exists(self) -> None:
+    @staticmethod
+    def test_changelog_exists() -> None:
         """Changelog file exists at docs/changelog.md."""
-        assert self._changelog_path().is_file(), "Expected docs/changelog.md to exist"
+        assert TestChangelog._changelog_path().is_file(), (
+            "Expected docs/changelog.md to exist"
+        )
 
-    def test_changelog_references_phases(self) -> None:
+    @staticmethod
+    def test_changelog_references_phases() -> None:
         """Changelog references completed roadmap phases."""
-        text = self._changelog_path().read_text(encoding="utf-8")
+        text = TestChangelog._changelog_path().read_text(encoding="utf-8")
         for phase_number in range(1, 5):
             assert f"Phase {phase_number}" in text, (
                 f"Expected changelog to reference Phase {phase_number}"

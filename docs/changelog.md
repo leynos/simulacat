@@ -5,7 +5,7 @@ describes behavioural changes. Entries are ordered from newest to oldest.
 
 ______________________________________________________________________
 
-## Phase 4 – Hardening and compatibility
+## Phase 4 – hardening and compatibility
 
 ### Step 4.2 – API stability and deprecation policy
 
@@ -19,7 +19,7 @@ ______________________________________________________________________
   transition period.
 - Added this changelog.
 
-### Step 4.1 – Compatibility test matrix
+### Step 4.1 – compatibility test matrix
 
 - Defined minimum-to-recommended version ranges for Python, `github3.py`,
   Node.js, and `@simulacrum/github-api-simulator` in
@@ -32,16 +32,16 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 3 – Ecosystem integration and advanced use cases
+## Phase 3 – ecosystem integration and advanced use cases
 
-### Step 3.2 – Continuous integration (CI) usage and reference examples
+### Step 3.2 – continuous integration (CI) usage and reference examples
 
 - Shipped two reference projects (`basic-pytest` and `authenticated-pytest`)
   under `examples/reference-projects/`.
 - Documented environment requirements, installation steps, and
   troubleshooting signatures for common CI failures.
 
-### Step 3.1 – Authentication and GitHub App workflows
+### Step 3.1 – authentication and GitHub App workflows
 
 - Added optional `AccessToken` support in client construction with
   `Authorization` header injection via the `github_simulator` fixture.
@@ -52,9 +52,9 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 2 – Scenario modelling and ergonomics
+## Phase 2 – scenario modelling and ergonomics
 
-### Step 2.2 – Reusable scenarios and fixtures
+### Step 2.2 – reusable scenarios and fixtures
 
 - Introduced named scenario factories (`single_repo_scenario`,
   `monorepo_with_apps_scenario`, `empty_org_scenario`) and the
@@ -62,7 +62,7 @@ ______________________________________________________________________
 - Added higher-level fixtures `simulacat_single_repo` and
   `simulacat_empty_org`.
 
-### Step 2.1 – Configuration schema and helpers
+### Step 2.1 – configuration schema and helpers
 
 - Designed the scenario data-class schema (`User`, `Organization`,
   `Repository`, `Branch`, `DefaultBranch`, `Issue`, `PullRequest`,
@@ -72,16 +72,16 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 1 – Core simulation and pytest integration
+## Phase 1 – core simulation and pytest integration
 
 ### Step 1.2 – pytest fixture and client binding
 
 - Exposed the `github_sim_config` and `github_simulator` fixtures via the
   `pytest11` entry point, enabling zero-boilerplate simulator integration.
 - Supported fixture override at function, module, and package scopes with
-  indirect parametrisation.
+  indirect parametrization.
 
-### Step 1.1 – Simulator orchestration
+### Step 1.1 – simulator orchestration
 
 - Implemented the Bun/TypeScript entry point (`src/github-sim-server.ts`) for
   starting the `@simulacrum/github-api-simulator` on a random port.

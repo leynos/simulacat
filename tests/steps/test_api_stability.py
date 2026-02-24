@@ -5,12 +5,17 @@ from __future__ import annotations
 import typing as typ
 import warnings
 from pathlib import Path
+from types import MappingProxyType
 
 from pytest_bdd import given, scenarios, then, when
+
+if typ.TYPE_CHECKING:
+    import pytest
 
 import simulacat
 from simulacat.api_stability import (
     DEPRECATED_APIS,
+    FIXTURE_NAMES,
     PUBLIC_API,
     ApiStability,
     DeprecatedApi,
@@ -20,15 +25,8 @@ from simulacat.api_stability import (
 
 scenarios("../features/api_stability.feature")
 
-_FIXTURE_NAMES: tuple[str, ...] = (
-    "github_sim_config",
-    "github_simulator",
-    "simulacat_single_repo",
-    "simulacat_empty_org",
-)
 
-
-def repo_root() -> Path:
+def _repo_root() -> Path:
     """Return the repository root path."""
     return Path(__file__).resolve().parents[2]
 
@@ -57,7 +55,7 @@ def then_all_symbols_have_tier(public_api: dict[str, ApiStability]) -> None:
 @then("every registered fixture has a stability tier")
 def then_all_fixtures_have_tier(public_api: dict[str, ApiStability]) -> None:
     """Every registered pytest fixture appears in PUBLIC_API."""
-    for fixture_name in _FIXTURE_NAMES:
+    for fixture_name in FIXTURE_NAMES:
         assert fixture_name in public_api, (
             f"Fixture {fixture_name!r} is not in PUBLIC_API"
         )
@@ -80,14 +78,15 @@ class _DeprecationContext(typ.TypedDict):
     "a deprecated API entry with a replacement and guidance",
     target_fixture="deprecation_ctx",
 )
-def given_deprecated_api_entry() -> _DeprecationContext:
-    """Provide a deprecated API entry for testing.
+def given_deprecated_api_entry(monkeypatch: pytest.MonkeyPatch) -> _DeprecationContext:
+    """Provide a deprecated API entry injected into DEPRECATED_APIS.
 
-    If no real deprecated entries exist, create a synthetic one to validate
-    the mechanism.
+    If no real deprecated entries exist, create a synthetic one and inject
+    it via monkeypatch so the production ``emit_deprecation_warning`` code
+    path is always exercised.
     """
     if DEPRECATED_APIS:
-        entry = DEPRECATED_APIS[0]
+        _name, entry = next(iter(DEPRECATED_APIS.items()))
     else:
         entry = DeprecatedApi(
             symbol_name="__test_synthetic_deprecated__",
@@ -96,6 +95,8 @@ def given_deprecated_api_entry() -> _DeprecationContext:
             removal_version="1.0.0",
             guidance="Migrate to new_replacement_api for improved stability.",
         )
+        patched = MappingProxyType({entry.symbol_name: entry})
+        monkeypatch.setattr("simulacat.api_stability.DEPRECATED_APIS", patched)
     return {"entry": entry, "caught": []}
 
 
@@ -103,25 +104,12 @@ def given_deprecated_api_entry() -> _DeprecationContext:
 def when_deprecation_warning_emitted(
     deprecation_ctx: _DeprecationContext,
 ) -> None:
-    """Emit a deprecation warning for the test entry."""
+    """Emit a deprecation warning via the production code path."""
     entry = deprecation_ctx["entry"]
-
-    if entry.symbol_name == "__test_synthetic_deprecated__":
-        # Emit directly since synthetic entries are not in DEPRECATED_APIS.
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            warnings.warn(
-                f"{entry.symbol_name} is deprecated since {entry.deprecated_since}. "
-                f"Use {entry.replacement} instead. {entry.guidance}",
-                SimulacatDeprecationWarning,
-                stacklevel=2,
-            )
-        deprecation_ctx["caught"] = list(caught)
-    else:
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            emit_deprecation_warning(entry.symbol_name)
-        deprecation_ctx["caught"] = list(caught)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        emit_deprecation_warning(entry.symbol_name)
+    deprecation_ctx["caught"] = list(caught)
 
 
 @then("the warning is a SimulacatDeprecationWarning")
@@ -162,7 +150,7 @@ def then_warning_includes_guidance(
 @given("the changelog document", target_fixture="changelog_text")
 def given_changelog_document() -> str:
     """Load the changelog markdown text."""
-    changelog_path = repo_root() / "docs" / "changelog.md"
+    changelog_path = _repo_root() / "docs" / "changelog.md"
     return changelog_path.read_text(encoding="utf-8")
 
 
@@ -189,7 +177,7 @@ def then_changelog_describes_steps(changelog_text: str) -> None:
 @given("the users guide document", target_fixture="users_guide_text")
 def given_users_guide_document() -> str:
     """Load the users guide markdown text."""
-    users_guide_path = repo_root() / "docs" / "users-guide.md"
+    users_guide_path = _repo_root() / "docs" / "users-guide.md"
     return users_guide_path.read_text(encoding="utf-8")
 
 

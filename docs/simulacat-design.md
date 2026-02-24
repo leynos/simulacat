@@ -373,7 +373,7 @@ and deprecation policy.
 2. **StrEnum for stability tiers**: `ApiStability` is a `StrEnum` with values
    `stable`, `provisional`, and `deprecated`. `StrEnum` provides type safety,
    IDE support, and exhaustive matching while remaining human-readable when
-   serialised. The project baseline of Python 3.12 guarantees `StrEnum`
+   serialized. The project baseline of Python 3.12 guarantees `StrEnum`
    availability.
 
 3. **Custom deprecation warning subclass**:
@@ -390,9 +390,9 @@ and deprecation policy.
 
 5. **All current symbols classified as stable**: the existing API has been
    stable through Phases 1–4.1. Marking everything `ApiStability.STABLE`
-   formalises the implicit contract and provides a baseline for future
+   formalizes the implicit contract and provides a baseline for future
    deprecation. No symbols are currently deprecated; the `DEPRECATED_APIS`
-   tuple is empty but the infrastructure is tested and ready.
+   mapping is empty but the infrastructure is tested and ready.
 
 6. **Changelog at `docs/changelog.md`**: the changelog lives in the `docs/`
    directory alongside the other documentation files. It links roadmap phases

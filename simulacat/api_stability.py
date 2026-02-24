@@ -136,17 +136,20 @@ PUBLIC_API: cabc.Mapping[str, ApiStability] = MappingProxyType({
     "simulacat_empty_org": ApiStability.STABLE,
 })
 
+FIXTURE_NAMES: tuple[str, ...] = (
+    "github_sim_config",
+    "github_simulator",
+    "simulacat_single_repo",
+    "simulacat_empty_org",
+)
+
 
 # -- Deprecated APIs ----------------------------------------------------------
 #
 # Currently empty. When a symbol is deprecated, add a DeprecatedApi entry
 # here and change its PUBLIC_API tier to ApiStability.DEPRECATED.
 
-DEPRECATED_APIS: tuple[DeprecatedApi, ...] = ()
-
-_DEPRECATED_LOOKUP: cabc.Mapping[str, DeprecatedApi] = MappingProxyType({
-    entry.symbol_name: entry for entry in DEPRECATED_APIS
-})
+DEPRECATED_APIS: cabc.Mapping[str, DeprecatedApi] = MappingProxyType({})
 
 
 def emit_deprecation_warning(symbol_name: str) -> None:
@@ -164,14 +167,18 @@ def emit_deprecation_warning(symbol_name: str) -> None:
         If ``symbol_name`` is not in ``DEPRECATED_APIS``.
 
     """
-    entry = _DEPRECATED_LOOKUP.get(symbol_name)
+    entry = DEPRECATED_APIS.get(symbol_name)
     if entry is None:
         msg = f"{symbol_name!r} is not in DEPRECATED_APIS"
         raise ValueError(msg)
 
+    # stacklevel=2 points the warning at the direct caller's frame.
+    # If this function is wrapped by another helper, the wrapper must
+    # increase the stacklevel accordingly.
     warnings.warn(
-        f"{entry.symbol_name} is deprecated since {entry.deprecated_since}. "
-        f"Use {entry.replacement} instead. {entry.guidance}",
+        f"{entry.symbol_name} is deprecated since {entry.deprecated_since} "
+        f"and will be removed in {entry.removal_version}. "
+        f"Use {entry.replacement} instead. {entry.guidance.strip()}",
         SimulacatDeprecationWarning,
         stacklevel=2,
     )

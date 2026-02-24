@@ -181,6 +181,38 @@ def then_users_guide_has_incompatibility_section(users_guide_text: str) -> None:
     )
 
 
+def _extract_section(text: str, heading: str) -> str:
+    """Return the text of a markdown section starting at *heading*.
+
+    The section runs from the heading line (inclusive) up to the next
+    heading of equal or higher level, or end of text.
+    """
+    import re
+
+    lines = text.splitlines(keepends=True)
+    level_pattern = re.compile(r"^(#{1,6})\s")
+    start_idx: int | None = None
+    start_level = 0
+
+    for idx, line in enumerate(lines):
+        if heading in line:
+            match = level_pattern.match(line)
+            if match:
+                start_idx = idx
+                start_level = len(match.group(1))
+                break
+
+    if start_idx is None:
+        return ""
+
+    for idx in range(start_idx + 1, len(lines)):
+        match = level_pattern.match(lines[idx])
+        if match and len(match.group(1)) <= start_level:
+            return "".join(lines[start_idx:idx])
+
+    return "".join(lines[start_idx:])
+
+
 def _normalize_table_rows(text: str) -> list[tuple[str, ...]]:
     """Extract table rows from markdown and normalise cell whitespace."""
     rows: list[tuple[str, ...]] = []
@@ -201,7 +233,11 @@ def then_users_guide_documents_ranges(users_guide_text: str) -> None:
         "node.js": "Node.js",
         "@simulacrum/github-api-simulator": "@simulacrum/github-api-simulator",
     }
-    normalised_rows = _normalize_table_rows(users_guide_text)
+    compat_section = _extract_section(users_guide_text, "## Compatibility matrix")
+    assert compat_section, (
+        "Expected users guide to contain a 'Compatibility matrix' section"
+    )
+    normalised_rows = _normalize_table_rows(compat_section)
     for policy_key, heading in dependency_heading_map.items():
         policy = COMPATIBILITY_POLICY[policy_key]
         expected_cells = (
