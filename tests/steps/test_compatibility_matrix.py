@@ -208,13 +208,18 @@ def _extract_section(text: str, heading: str) -> str:
     return "".join(lines[start_idx:])
 
 
+_SEPARATOR_CELL = re.compile(r"^:?-{3,}:?$")
+
+
 def _normalize_table_rows(text: str) -> list[tuple[str, ...]]:
-    """Extract table rows from markdown and normalize cell whitespace."""
+    """Extract data rows from a markdown table, normalizing cell whitespace."""
     rows: list[tuple[str, ...]] = []
     for line in text.splitlines():
         stripped = line.strip()
         if stripped.startswith("|") and stripped.endswith("|"):
             cells = tuple(cell.strip() for cell in stripped.split("|")[1:-1])
+            if all(_SEPARATOR_CELL.match(c) for c in cells):
+                continue
             rows.append(cells)
     return rows
 

@@ -117,8 +117,8 @@ class TestDeprecationWarning:
         assert entry.replacement in message, (
             f"Warning should mention replacement {entry.replacement!r}"
         )
-        assert entry.guidance in message, (
-            f"Warning should include guidance {entry.guidance!r}"
+        assert entry.guidance.strip() in message, (
+            f"Warning should include guidance {entry.guidance.strip()!r}"
         )
         assert entry.removal_version in message, (
             f"Warning should include removal version {entry.removal_version!r}"
