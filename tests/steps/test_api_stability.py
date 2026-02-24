@@ -119,7 +119,9 @@ def then_warning_is_correct_type(
     """Assert emitted warning is a SimulacatDeprecationWarning."""
     caught = deprecation_ctx["caught"]
     assert len(caught) == 1, f"Expected 1 warning, got {len(caught)}"
-    assert issubclass(caught[0].category, SimulacatDeprecationWarning)
+    assert issubclass(caught[0].category, SimulacatDeprecationWarning), (
+        f"Expected SimulacatDeprecationWarning, got {caught[0].category}"
+    )
 
 
 @then("the warning message includes the replacement name")

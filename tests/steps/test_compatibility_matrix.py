@@ -182,11 +182,7 @@ def then_users_guide_has_incompatibility_section(users_guide_text: str) -> None:
 
 
 def _extract_section(text: str, heading: str) -> str:
-    """Return the text of a markdown section starting at *heading*.
-
-    The section runs from the heading line (inclusive) up to the next
-    heading of equal or higher level, or end of text.
-    """
+    """Return the markdown section starting at *heading*."""
     import re
 
     lines = text.splitlines(keepends=True)
@@ -214,7 +210,7 @@ def _extract_section(text: str, heading: str) -> str:
 
 
 def _normalize_table_rows(text: str) -> list[tuple[str, ...]]:
-    """Extract table rows from markdown and normalise cell whitespace."""
+    """Extract table rows from markdown and normalize cell whitespace."""
     rows: list[tuple[str, ...]] = []
     for line in text.splitlines():
         stripped = line.strip()

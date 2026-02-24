@@ -44,7 +44,8 @@ Success is observable when:
   existing function signatures or remove existing exports.
 - Do not add new runtime dependencies for `simulacat`.
 - Use pytest for unit tests and pytest-bdd for behavioural tests.
-- Prefer Make targets for quality gates and preserve existing CI conventions.
+- Prefer Make targets for quality gates and preserve existing continuous
+  integration (CI) conventions.
 - Use `enum.StrEnum` for stability tiers (Python 3.12+ is the baseline).
 - Use `from __future__ import annotations` in all new Python modules.
 - Import conventions: `typing as typ`, `collections.abc as cabc`,

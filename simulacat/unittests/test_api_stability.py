@@ -69,7 +69,9 @@ class TestApiStabilityTiers:
         expected_value: str,
     ) -> None:
         """ApiStability members have the expected string values."""
-        assert member == expected_value
+        assert member == expected_value, (
+            f"{member.name} should be {expected_value!r}, got {member.value!r}"
+        )
 
 
 class TestDeprecationWarning:
@@ -78,7 +80,9 @@ class TestDeprecationWarning:
     @staticmethod
     def test_warning_is_deprecation_subclass() -> None:
         """SimulacatDeprecationWarning is a DeprecationWarning subclass."""
-        assert issubclass(SimulacatDeprecationWarning, DeprecationWarning)
+        assert issubclass(SimulacatDeprecationWarning, DeprecationWarning), (
+            "SimulacatDeprecationWarning must be a DeprecationWarning subclass"
+        )
 
     @staticmethod
     def test_emit_raises_for_unknown_symbol() -> None:
@@ -105,12 +109,20 @@ class TestDeprecationWarning:
             warnings.simplefilter("always")
             emit_deprecation_warning(entry.symbol_name)
 
-        assert len(caught) == 1
-        assert issubclass(caught[0].category, SimulacatDeprecationWarning)
+        assert len(caught) == 1, f"Expected 1 warning, got {len(caught)}"
+        assert issubclass(caught[0].category, SimulacatDeprecationWarning), (
+            f"Expected SimulacatDeprecationWarning, got {caught[0].category}"
+        )
         message = str(caught[0].message)
-        assert entry.replacement in message
-        assert entry.guidance in message
-        assert entry.removal_version in message
+        assert entry.replacement in message, (
+            f"Warning should mention replacement {entry.replacement!r}"
+        )
+        assert entry.guidance in message, (
+            f"Warning should include guidance {entry.guidance!r}"
+        )
+        assert entry.removal_version in message, (
+            f"Warning should include removal version {entry.removal_version!r}"
+        )
 
 
 class TestDeprecatedApisRegistry:
@@ -119,17 +131,27 @@ class TestDeprecatedApisRegistry:
     @staticmethod
     def test_deprecated_apis_is_mapping() -> None:
         """DEPRECATED_APIS is a mapping."""
-        assert isinstance(DEPRECATED_APIS, MappingProxyType)
+        assert isinstance(DEPRECATED_APIS, MappingProxyType), (
+            "DEPRECATED_APIS must be a MappingProxyType"
+        )
 
     @staticmethod
     def test_deprecated_entries_have_required_fields() -> None:
         """Every DeprecatedApi entry has non-empty required fields."""
         for entry in DEPRECATED_APIS.values():
-            assert isinstance(entry, DeprecatedApi)
-            assert entry.symbol_name.strip()
-            assert entry.deprecated_since.strip()
-            assert entry.replacement.strip()
-            assert entry.guidance.strip()
+            assert isinstance(entry, DeprecatedApi), (
+                f"Expected DeprecatedApi, got {type(entry)}"
+            )
+            assert entry.symbol_name.strip(), "symbol_name must not be empty"
+            assert entry.deprecated_since.strip(), (
+                f"{entry.symbol_name}: deprecated_since must not be empty"
+            )
+            assert entry.replacement.strip(), (
+                f"{entry.symbol_name}: replacement must not be empty"
+            )
+            assert entry.guidance.strip(), (
+                f"{entry.symbol_name}: guidance must not be empty"
+            )
 
 
 class TestChangelog:

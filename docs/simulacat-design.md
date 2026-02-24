@@ -392,7 +392,7 @@ and deprecation policy.
    stable through Phases 1–4.1. Marking everything `ApiStability.STABLE`
    formalizes the implicit contract and provides a baseline for future
    deprecation. No symbols are currently deprecated; the `DEPRECATED_APIS`
-   mapping is empty but the infrastructure is tested and ready.
+   mapping is empty, but the infrastructure is tested and ready.
 
 6. **Changelog at `docs/changelog.md`**: the changelog lives in the `docs/`
    directory alongside the other documentation files. It links roadmap phases

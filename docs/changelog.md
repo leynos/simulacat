@@ -24,7 +24,7 @@ ______________________________________________________________________
 - Defined minimum-to-recommended version ranges for Python, `github3.py`,
   Node.js, and `@simulacrum/github-api-simulator` in
   `simulacat/compatibility_policy.py`.
-- Added a dedicated CI compatibility workflow
+- Added a dedicated continuous integration (CI) compatibility workflow
   (`.github/workflows/compatibility-matrix.yml`) running reference suites
   across Python 3.12/3.13 and `github3.py` major tracks 3.x/4.x.
 - Documented known incompatibilities and workarounds for `github3.py >=5.0.0`
