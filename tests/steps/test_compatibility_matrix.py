@@ -182,16 +182,19 @@ def then_users_guide_has_incompatibility_section(users_guide_text: str) -> None:
     )
 
 
+_HEADING_LEVEL = re.compile(r"^(#{1,6})\s")
+_SEPARATOR_CELL = re.compile(r"^:?-{3,}:?$")
+
+
 def _extract_section(text: str, heading: str) -> str:
     """Return the markdown section starting at *heading*."""
     lines = text.splitlines(keepends=True)
-    level_pattern = re.compile(r"^(#{1,6})\s")
     start_idx: int | None = None
     start_level = 0
 
     for idx, line in enumerate(lines):
-        if heading in line:
-            match = level_pattern.match(line)
+        if line.rstrip("\n") == heading:
+            match = _HEADING_LEVEL.match(line)
             if match:
                 start_idx = idx
                 start_level = len(match.group(1))
@@ -201,14 +204,11 @@ def _extract_section(text: str, heading: str) -> str:
         return ""
 
     for idx in range(start_idx + 1, len(lines)):
-        match = level_pattern.match(lines[idx])
+        match = _HEADING_LEVEL.match(lines[idx])
         if match and len(match.group(1)) <= start_level:
             return "".join(lines[start_idx:idx])
 
     return "".join(lines[start_idx:])
-
-
-_SEPARATOR_CELL = re.compile(r"^:?-{3,}:?$")
 
 
 def _normalize_table_rows(text: str) -> list[tuple[str, ...]]:
