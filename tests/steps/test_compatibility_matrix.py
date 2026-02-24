@@ -211,7 +211,7 @@ def _extract_section(text: str, heading: str) -> str:
     return "".join(lines[start_idx:])
 
 
-def _normalize_table_rows(text: str) -> list[tuple[str, ...]]:
+def _normalize_table_rows(text: str) -> tuple[tuple[str, ...], ...]:
     """Extract data rows from a markdown table, normalizing cell whitespace."""
     rows: list[tuple[str, ...]] = []
     for line in text.splitlines():
@@ -221,7 +221,7 @@ def _normalize_table_rows(text: str) -> list[tuple[str, ...]]:
             if all(_SEPARATOR_CELL.match(c) for c in cells):
                 continue
             rows.append(cells)
-    return rows
+    return tuple(rows)
 
 
 @then("the users guide documents Python, github3.py, Node.js, and simulator ranges")
