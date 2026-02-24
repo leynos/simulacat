@@ -193,7 +193,7 @@ def _extract_section(text: str, heading: str) -> str:
     start_level = 0
 
     for idx, line in enumerate(lines):
-        if line.rstrip("\n") == heading:
+        if line.rstrip("\r\n") == heading:
             match = _HEADING_LEVEL.match(line)
             if match:
                 start_idx = idx
