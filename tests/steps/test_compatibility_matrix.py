@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import typing as typ
 from pathlib import Path
 
@@ -183,8 +184,6 @@ def then_users_guide_has_incompatibility_section(users_guide_text: str) -> None:
 
 def _extract_section(text: str, heading: str) -> str:
     """Return the markdown section starting at *heading*."""
-    import re
-
     lines = text.splitlines(keepends=True)
     level_pattern = re.compile(r"^(#{1,6})\s")
     start_idx: int | None = None
@@ -233,7 +232,7 @@ def then_users_guide_documents_ranges(users_guide_text: str) -> None:
     assert compat_section, (
         "Expected users guide to contain a 'Compatibility matrix' section"
     )
-    normalised_rows = _normalize_table_rows(compat_section)
+    normalized_rows = _normalize_table_rows(compat_section)
     for policy_key, heading in dependency_heading_map.items():
         policy = COMPATIBILITY_POLICY[policy_key]
         expected_cells = (
@@ -242,6 +241,6 @@ def then_users_guide_documents_ranges(users_guide_text: str) -> None:
             policy.recommended_version,
             policy.supported_range,
         )
-        assert expected_cells in normalised_rows, (
+        assert expected_cells in normalized_rows, (
             f"Expected users guide compatibility row with cells: {expected_cells}"
         )

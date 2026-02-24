@@ -48,7 +48,7 @@ class TestPublicApiRegistry:
     @staticmethod
     def test_public_api_is_immutable() -> None:
         """PUBLIC_API is a read-only mapping."""
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match="does not support item assignment"):
             PUBLIC_API["__test__"] = ApiStability.STABLE  # type: ignore[index]
 
 
@@ -152,6 +152,9 @@ class TestDeprecatedApisRegistry:
             assert entry.guidance.strip(), (
                 f"{entry.symbol_name}: guidance must not be empty"
             )
+            assert entry.removal_version.strip(), (
+                f"{entry.symbol_name}: removal_version must not be empty"
+            )
 
 
 class TestChangelog:
@@ -159,6 +162,7 @@ class TestChangelog:
 
     @staticmethod
     def _changelog_path() -> Path:
+        """Return the path to the project changelog."""
         return Path(__file__).resolve().parents[2] / "docs" / "changelog.md"
 
     @staticmethod
