@@ -40,7 +40,7 @@ pytestmark = test_conftest.bun_required
 
 if typ.TYPE_CHECKING:
     import collections.abc as cabc
-    import subprocess  # noqa: S404  # simulacat#123: typing-only reference; no runtime process creation
+    import subprocess  # simulacat#123: typing-only
     from pathlib import Path
 
 scenarios("../features/simulator_orchestration.feature")

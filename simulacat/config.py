@@ -84,7 +84,7 @@ def merge_configs(*configs: cabc.Mapping[str, typ.Any]) -> GitHubSimConfig:
     """
     result: GitHubSimConfig = {}
     for config in configs:
-        result.update(config)
+        result.update(config.items())
     return result
 
 

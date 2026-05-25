@@ -17,7 +17,7 @@ import pytest
 from simulacat.scenario_config import ScenarioConfig
 
 if typ.TYPE_CHECKING:
-    import subprocess  # noqa: S404  # simulacat#123: typing-only; fixture doesn't spawn processes directly
+    import subprocess  # simulacat#123: typing-only
     from pathlib import Path
 
     from simulacat.types import GitHubSimConfig
@@ -210,8 +210,7 @@ def github_simulator(
         session.base_url = base_url
         if auth_token is not None:
             session.headers["Authorization"] = f"token {auth_token}"
-        client = github3.GitHub(session=session)
-        yield client
+        yield github3.GitHub(session=session)
     finally:
         if proc is not None:
             stop_sim_process(proc)

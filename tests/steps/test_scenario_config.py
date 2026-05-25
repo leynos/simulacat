@@ -46,7 +46,7 @@ def scenario_context() -> ScenarioContext:
 
 
 def _find_repo(config: GitHubSimConfig, full_name: str) -> GitHubRepositoryConfig:
-    repos = typ.cast("list[GitHubRepositoryConfig]", config.get("repositories", []))
+    repos = config.get("repositories", [])
     for repo in repos:
         owner = repo.get("owner")
         name = repo.get("name")
@@ -59,7 +59,7 @@ def _find_repo(config: GitHubSimConfig, full_name: str) -> GitHubRepositoryConfi
 def _find_branch(
     config: GitHubSimConfig, full_name: str, branch: str
 ) -> GitHubBranchConfig:
-    branches = typ.cast("list[GitHubBranchConfig]", config.get("branches", []))
+    branches = config.get("branches", [])
     for entry in branches:
         owner = entry.get("owner")
         name = entry.get("repository")

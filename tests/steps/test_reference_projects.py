@@ -66,7 +66,7 @@ def when_project_pytest_suite_executed(
     timeout_seconds = 300
 
     try:
-        result = subprocess.run(  # noqa: S603  # static test command
+        result = subprocess.run(  # static test command
             [sys.executable, "-m", "pytest", "-q", "tests"],
             cwd=project_dir,
             check=False,

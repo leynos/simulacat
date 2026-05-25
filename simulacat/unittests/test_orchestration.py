@@ -257,7 +257,7 @@ class TestStartSimProcess:
         """A silent simulator that never writes stdout triggers the timeout."""
 
         def silent_proc(*_args: object) -> subprocess.Popen[str]:
-            return subprocess.Popen(  # noqa: S603  # simulacat#123: test helper spawns controlled Python process; shell=False
+            return subprocess.Popen(  # simulacat#123: controlled test process
                 [sys.executable, "-c", "import time; time.sleep(60)"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
