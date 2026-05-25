@@ -241,8 +241,8 @@ Keep docs close to code.
 ### Dependency Management
 
 - **Version policy**: Use caret requirements (`^x.y.z`) for all direct
-  dependencies. Avoid `*`, `>=` or tag aliases like `latest`. Use tilde
-  (`~x.y.z`) only with a documented justification.
+  dependencies. Avoid `*`, `>=` or tag aliases like `latest`. Use tilde (
+  `~x.y.z`) only with a documented justification.
 - **Lockfile**: Commit `bun.lock`. Recreate on major tool upgrades; keep
   `bun.lockb` ignored.
 - **Audit**: Run `bun x pnpm@latest audit` (aliased as `make audit`) locally

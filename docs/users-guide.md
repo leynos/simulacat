@@ -104,6 +104,7 @@ for all tests in a module:
 import pytest
 from simulacat import GitHubSimConfig
 
+
 @pytest.fixture
 def github_sim_config() -> GitHubSimConfig:
     return {
@@ -124,6 +125,7 @@ Override in a specific test file or test function for fine-grained control:
 import pytest
 from simulacat import GitHubSimConfig
 
+
 @pytest.fixture
 def github_sim_config() -> GitHubSimConfig:
     return {
@@ -133,6 +135,7 @@ def github_sim_config() -> GitHubSimConfig:
         "branches": [],
         "blobs": [],
     }
+
 
 def test_with_custom_config(github_sim_config: GitHubSimConfig) -> None:
     assert github_sim_config["users"][0]["login"] == "feature-user"
@@ -151,6 +154,7 @@ config = {"users": [{"login": "test"}]}
 assert is_json_serializable(config)
 
 from pathlib import Path
+
 invalid = {"path": Path("/tmp")}
 assert not is_json_serializable(invalid)
 ```
@@ -375,6 +379,7 @@ scenario = ScenarioConfig(
     ),
 )
 
+
 @pytest.fixture
 def github_sim_config():
     return scenario
@@ -441,6 +446,7 @@ scenario = ScenarioConfig(
         ),
     ),
 )
+
 
 @pytest.fixture
 def github_sim_config():
@@ -569,12 +575,12 @@ including the other keys.
 
 ```python
 {
-    "login": "username",           # Required
-    "organizations": ["org1"],     # Required, list of org logins
-    "id": 1,                       # Optional, auto-generated
-    "name": "Display Name",        # Optional
-    "bio": "Profile bio",         # Optional
-    "email": "user@example.com",   # Optional
+    "login": "username",  # Required
+    "organizations": ["org1"],  # Required, list of org logins
+    "id": 1,  # Optional, auto-generated
+    "name": "Display Name",  # Optional
+    "bio": "Profile bio",  # Optional
+    "email": "user@example.com",  # Optional
 }
 ```
 
@@ -582,12 +588,12 @@ including the other keys.
 
 ```python
 {
-    "owner": "username",           # Required
-    "name": "repo-name",           # Required
-    "id": 1,                       # Optional, auto-generated
-    "description": "About repo",   # Optional
-    "private": False,              # Optional
-    "default_branch": "main",      # Optional
+    "owner": "username",  # Required
+    "name": "repo-name",  # Required
+    "id": 1,  # Optional, auto-generated
+    "description": "About repo",  # Optional
+    "private": False,  # Optional
+    "default_branch": "main",  # Optional
 }
 ```
 
@@ -595,11 +601,11 @@ including the other keys.
 
 ```python
 {
-    "owner": "username",           # Required
-    "repository": "repo-name",     # Required
-    "name": "main",                # Required
-    "sha": "abc123",               # Optional
-    "protected": False,            # Optional
+    "owner": "username",  # Required
+    "repository": "repo-name",  # Required
+    "name": "main",  # Required
+    "sha": "abc123",  # Optional
+    "protected": False,  # Optional
 }
 ```
 
@@ -622,6 +628,7 @@ configuration layers:
 
 ```python
 import pytest
+
 
 @pytest.fixture
 def github_sim_config(simulacat_single_repo):

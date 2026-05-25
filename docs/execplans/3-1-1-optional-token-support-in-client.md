@@ -339,6 +339,7 @@ class AccessToken:
     permissions: tuple[str, ...] = ()
     repository_visibility: str | None = None
 
+
 @dc.dataclass(frozen=True, slots=True)
 class ScenarioConfig:
     tokens: tuple[AccessToken, ...] = ()
