@@ -282,7 +282,7 @@ label slice", and "Simulator control APIs".
 
 ### Step 5.1 – Repository label scenarios for github3.py
 
-Replace downstream Betamax or hand-written GitHub-shaped HTTP handlers for
+Replace downstream Betamax or handwritten GitHub-shaped HTTP handlers for
 label create, lookup, and update tests with real simulacat-backed workflows.
 
 #### Tasks (Step 5.1)
@@ -335,7 +335,7 @@ label create, lookup, and update tests with real simulacat-backed workflows.
 
 ### Step 5.2 – Simulator state, request log, and fault fixtures
 
-Expose the simulator-control features from Simulacat Core in pytest-friendly
+Expose the simulator-control features from Simulacat Core, in pytest-friendly
 forms so tests can assert effects without replacing the backend.
 
 #### Tasks (Step 5.2)
@@ -350,7 +350,7 @@ forms so tests can assert effects without replacing the backend.
     - Simulacat Core roadmap tasks 9.3.1 and 9.3.2 are complete and published.
   - measurable finish lines:
     - tests can assert that a `POST` or `PATCH` label request occurred without
-      hand-written handlers,
+      handwritten handlers,
     - documentation clearly distinguishes public fixture API from lower-level
       diagnostic metadata.
 
