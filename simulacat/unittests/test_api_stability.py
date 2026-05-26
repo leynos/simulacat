@@ -20,6 +20,9 @@ from simulacat.api_stability import (
     emit_deprecation_warning,
 )
 
+if typ.TYPE_CHECKING:
+    import collections.abc as cabc
+
 
 class TestPublicApiRegistry:
     """Validate that PUBLIC_API covers the full public surface."""
@@ -49,7 +52,10 @@ class TestPublicApiRegistry:
     @staticmethod
     def test_public_api_is_immutable() -> None:
         """PUBLIC_API is a read-only mapping."""
-        mutable_api = typ.cast("typ.MutableMapping[str, ApiStability]", PUBLIC_API)
+        mutable_api = typ.cast(
+            "cabc.MutableMapping[str, ApiStability]",
+            PUBLIC_API,
+        )
         with pytest.raises(TypeError, match="does not support item assignment"):
             mutable_api["__test__"] = ApiStability.STABLE
 

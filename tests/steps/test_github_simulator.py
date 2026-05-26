@@ -37,6 +37,7 @@ if typ.TYPE_CHECKING:
     import collections.abc as cabc
 
     from simulacat.types import GitHubSimConfig
+    from tests.github_protocols import GitHubClient
 
 
 scenarios("../features/github_simulator.feature")
@@ -47,28 +48,6 @@ class ClientContext(typ.TypedDict):
 
     client: GitHubClient | None
     base_url: str | None
-
-
-class GitHubClient(typ.Protocol):
-    """Protocol for the subset of github3.GitHub used in behavioural tests."""
-
-    def issue(self, owner: str, repository: str, number: int) -> object:
-        """Return a single issue by number."""
-
-    def organization(self, login: str) -> object:
-        """Return an organization object by login."""
-
-    def pull_request(self, owner: str, repository: str, number: int) -> object:
-        """Return a single pull request by number."""
-
-    def rate_limit(self) -> dict[str, object]:
-        """Return the rate limit payload."""
-
-    def repositories_by(self, username: str) -> cabc.Iterable[object]:
-        """Iterate over repositories owned by a user/org."""
-
-    def repository(self, owner: str, repository: str) -> object:
-        """Return a repository by owner/name."""
 
 
 class OrganizationClient(typ.Protocol):

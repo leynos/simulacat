@@ -16,6 +16,7 @@ pytestmark = test_conftest.bun_required
 
 if typ.TYPE_CHECKING:
     from simulacat import GitHubSimConfig
+    from tests.github_protocols import GitHubClient
 
 
 class Organization(typ.Protocol):
@@ -23,30 +24,6 @@ class Organization(typ.Protocol):
 
     def repositories(self) -> typ.Iterable[object]:
         """Return repositories for the organization."""
-        ...
-
-
-class GitHubClient(typ.Protocol):
-    """Minimal github3 client surface used by compatibility tests."""
-
-    def repository(self, owner: str, repository: str) -> object:
-        """Return a repository by owner and name."""
-        ...
-
-    def repositories_by(self, owner: str) -> typ.Iterable[object]:
-        """Return repositories for a user."""
-        ...
-
-    def organization(self, login: str) -> Organization:
-        """Return an organization by login."""
-        ...
-
-    def issue(self, owner: str, repository: str, number: int) -> object:
-        """Return an issue by repository and number."""
-        ...
-
-    def pull_request(self, owner: str, repository: str, number: int) -> object:
-        """Return a pull request by repository and number."""
         ...
 
 
@@ -97,7 +74,7 @@ def test_repository_listing_returns_configured_org_repositories(
     github_simulator: GitHubClient,
 ) -> None:
     """github3 Organization repositories can be listed against the simulator."""
-    org = github_simulator.organization("acme")
+    org = typ.cast("Organization", github_simulator.organization("acme"))
     repos = list(org.repositories())
     full_names = {getattr(repo, "full_name", "") for repo in repos}
     assert "acme/orgrepo" in full_names
