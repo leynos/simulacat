@@ -335,8 +335,8 @@ label create, lookup, and update tests with real simulacat-backed workflows.
 
 ### Step 5.2 – Simulator state, request log, and fault fixtures
 
-Expose the simulator-control features from Simulacat Core, in pytest-friendly
-forms so tests can assert effects without replacing the backend.
+Expose the simulator-control features from Simulacat Core in pytest-friendly
+forms, so tests can assert effects without replacing the backend.
 
 #### Tasks (Step 5.2)
 

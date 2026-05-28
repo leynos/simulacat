@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections.abc as cabc  # noqa: TC003
 import typing as typ
 import warnings
 from pathlib import Path
@@ -19,9 +20,6 @@ from simulacat.api_stability import (
     SimulacatDeprecationWarning,
     emit_deprecation_warning,
 )
-
-if typ.TYPE_CHECKING:
-    import collections.abc as cabc
 
 
 class TestPublicApiRegistry:
