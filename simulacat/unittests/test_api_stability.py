@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import collections.abc as cabc  # noqa: TC003
 import typing as typ
 import warnings
 from pathlib import Path
 from types import MappingProxyType
+
+if typ.TYPE_CHECKING:
+    import collections.abc as cabc
 
 import pytest
 
