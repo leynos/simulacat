@@ -16,6 +16,15 @@ pytestmark = test_conftest.bun_required
 
 if typ.TYPE_CHECKING:
     from simulacat import GitHubSimConfig
+    from tests.github_protocols import GitHubClient
+
+
+class Organization(typ.Protocol):
+    """Minimal github3 organization surface used by compatibility tests."""
+
+    def repositories(self) -> typ.Iterable[object]:
+        """Return repositories for the organization."""
+        ...
 
 
 @pytest.fixture
@@ -32,10 +41,10 @@ def github_sim_config() -> GitHubSimConfig:
 
 
 def test_repository_lookup_returns_configured_repository(
-    github_simulator: object,
+    github_simulator: GitHubClient,
 ) -> None:
     """github3.GitHub.repository can look up repositories on the simulator."""
-    repo = github_simulator.repository("alice", "repo1")  # type: ignore[attr-defined]
+    repo = github_simulator.repository("alice", "repo1")
     assert getattr(repo, "full_name", None) == "alice/repo1"
     language = getattr(repo, "language", None)
     assert language is None or isinstance(language, str)
@@ -46,10 +55,10 @@ def test_repository_lookup_returns_configured_repository(
 
 
 def test_repository_listing_returns_configured_user_repositories(
-    github_simulator: object,
+    github_simulator: GitHubClient,
 ) -> None:
     """github3.GitHub.repositories_by returns repositories from the simulator."""
-    repos = list(github_simulator.repositories_by("alice"))  # type: ignore[attr-defined]
+    repos = list(github_simulator.repositories_by("alice"))
     full_names = {getattr(repo, "full_name", "") for repo in repos}
     assert "alice/repo1" in full_names
     for repo in repos:
@@ -62,10 +71,10 @@ def test_repository_listing_returns_configured_user_repositories(
 
 
 def test_repository_listing_returns_configured_org_repositories(
-    github_simulator: object,
+    github_simulator: GitHubClient,
 ) -> None:
     """github3 Organization repositories can be listed against the simulator."""
-    org = github_simulator.organization("acme")  # type: ignore[attr-defined]
+    org = typ.cast("Organization", github_simulator.organization("acme"))
     repos = list(org.repositories())
     full_names = {getattr(repo, "full_name", "") for repo in repos}
     assert "acme/orgrepo" in full_names
@@ -79,15 +88,15 @@ def test_repository_listing_returns_configured_org_repositories(
 
 
 def test_issue_and_pull_request_retrieval_exposes_rich_body_fields(
-    github_simulator: object,
+    github_simulator: GitHubClient,
 ) -> None:
     """github3 Issue / PullRequest retrieval includes body_html/body_text."""
-    issue = github_simulator.issue("alice", "repo1", 1)  # type: ignore[attr-defined]
+    issue = github_simulator.issue("alice", "repo1", 1)
     assert getattr(issue, "number", None) == 1
     assert isinstance(getattr(issue, "body_html", None), str)
     assert isinstance(getattr(issue, "body_text", None), str)
 
-    pr = github_simulator.pull_request("alice", "repo1", 1)  # type: ignore[attr-defined]
+    pr = github_simulator.pull_request("alice", "repo1", 1)
     assert getattr(pr, "number", None) == 1
     assert isinstance(getattr(pr, "body_html", None), str)
     assert isinstance(getattr(pr, "body_text", None), str)

@@ -104,8 +104,8 @@ Success is observable when:
   align existing claims with tested matrix evidence.
 
 - Observation: `github3.py` major 5 is not yet published, so two-major
-  compatibility coverage must use 3.x and 4.x. Evidence: package index query
-  (`python -m pip index versions github3.py`) and targeted compatibility runs.
+  compatibility coverage must use 3.x and 4.x. Evidence: package index query (
+  `python -m pip index versions github3.py`) and targeted compatibility runs.
   Impact: workflow matrix uses `>=3.2.0,<4.0.0` and `>=4.0.0,<5.0.0`.
 
 - Observation: compatibility tests pass for both `github3.py` 3.2.0 and 4.0.1
@@ -116,8 +116,8 @@ Success is observable when:
 
 - Observation: compatibility CI failed when invoking `pytest` without
   `pytest-bdd` installed, even for non-BDD targets. Evidence: CI traceback in
-  this task
-  (`ImportError: Error importing plugin "pytest_bdd": No module named 'pytest_bdd'`).
+  this task (
+  `ImportError: Error importing plugin "pytest_bdd": No module named 'pytest_bdd'`).
    Impact: compatibility workflow now installs `pytest-bdd` explicitly.
 
 ## Decision log

@@ -82,10 +82,10 @@ def merge_configs(*configs: cabc.Mapping[str, typ.Any]) -> GitHubSimConfig:
         # Result: {"users": [{"login": "override"}], "organizations": []}
 
     """
-    result: GitHubSimConfig = {}
+    result: dict[str, object] = {}
     for config in configs:
         result.update(config)
-    return result
+    return typ.cast("GitHubSimConfig", result)
 
 
 __all__ = [

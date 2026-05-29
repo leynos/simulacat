@@ -59,8 +59,8 @@ The following decisions were made during implementation:
    passed).
 
 4. **Error event protocol**: The server emits JSON events for both success
-   (`{"event":"listening","port":N}`) and error cases
-   (`{"event":"error","message":"..."}`), allowing the Python side to
+   (`{"event":"listening","port":N}`) and error cases (
+   `{"event":"error","message":"..."}`), allowing the Python side to
    distinguish startup failures from other issues.
 
 5. **Process management**: The `start_sim_process` function wraps
@@ -398,6 +398,89 @@ and deprecation policy.
    directory alongside the other documentation files. It links roadmap phases
    and steps to shipped capabilities and describes behavioural changes at the
    step level, providing a consumer-facing record of evolution.
+
+### Phase 5 – core-backed labels and diagnostics
+
+Phase 5 deliberately separates backend simulation responsibilities from
+Python-side ergonomics. Simulacat Core owns stateful GitHub behaviour:
+repository label entities, mutable label REST handlers, request-derived REST
+URLs, `github3.py` payload contract tests, simulator state inspection, request
+logs, fault injection, pagination, token scenarios, and schema conformance.
+This project owns the pytest-facing surface that makes those capabilities easy
+to consume.
+
+The design depends on the following Simulacat Core roadmap and architecture
+items:
+
+- roadmap step 1.4, which moves common `github3.py` payload compatibility into
+  core and documents API-root behaviour;
+- roadmap step 1.5, which adds mutable repository labels as an early vertical
+  slice;
+- roadmap step 9.3, which adds simulator state, request log, and
+  fault-control APIs;
+- roadmap step 9.5, which hardens pagination, optional token scenarios, and
+  schema conformance for supported surfaces;
+- architecture sections "GitHub client compatibility", "Repository label
+  slice", and "Simulator control APIs".
+
+#### Step 5.1 – repository label scenarios
+
+Python label support should be a thin scenario layer over Simulacat Core state,
+not a replacement backend. The scenario schema will add a label model with
+`name`, `color`, and optional `description`, then serialize labels to the core
+`initialState.labels` shape once that shape is published.
+
+Design rules:
+
+1. **Repository-scoped labels**: Labels belong to a repository identified by
+   owner and name. Validation fails if a label references an unknown repository.
+
+2. **Core owns mutation semantics**: `repo.create_label(...)`,
+   `repo.label(...)`, and label update calls run through the real simulator.
+   simulacat must not reintroduce a Betamax cassette or Python HTTP handler for
+   the happy path once the core label slice is available.
+
+3. **Client contract is executable**: Behavioural tests use the public
+   `github_simulator` fixture and a real `github3.py` client to prove missing
+   lookup, create, lookup after create, and update flows across the supported
+   `github3.py` 3.x and 4.x tracks.
+
+4. **Token defaults stay local-test friendly**: The label suite uses
+   token-bearing requests to verify that core's default mutable-route mode
+   accepts ordinary local Authorization headers without returning
+   `401 Bad credentials`.
+
+#### Step 5.2 – diagnostics and fault fixtures
+
+The current `github_simulator` fixture yields a configured `github3.GitHub`
+client. Phase 5 may add a diagnostic companion fixture or context object, but
+the public design must avoid forcing existing tests to change.
+
+The diagnostic surface should expose only stable, test-useful data:
+
+- simulator base URL;
+- lifecycle metadata safe for assertions;
+- request log reads when Simulacat Core exposes them;
+- state inspection and reset helpers when Simulacat Core exposes them;
+- error-injection helpers with automatic teardown cleanup.
+
+The process handle itself is implementation detail unless a concrete user
+workflow requires it. Prefer a structured context object over returning a raw
+tuple from `github_simulator`, because changing that fixture's return type
+would break existing tests.
+
+#### Step 5.3 – client recipes and compatibility tracking
+
+The supported `github3.py` setup remains
+`github3.GitHub(session=GitHubSession(...))` with `GitHubSession.base_url`
+pointed at the simulator root. A `github3.GitHubEnterprise(..., token=...)`
+setup remains a documented limitation unless Simulacat Core ships and tests
+Enterprise-compatible `/api/v3` pathing.
+
+Client recipes should cite the Simulacat Core capability matrix rather than
+implying that every GitHub API method is supported. When core adds pagination,
+permission scenarios, or schema conformance checks, simulacat should surface
+only the behaviours that its public fixtures configure or assert.
 
 ## Bun entrypoint
 

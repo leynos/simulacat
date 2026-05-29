@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import typing as typ
 import warnings
 from pathlib import Path
 from types import MappingProxyType
+
+if typ.TYPE_CHECKING:
+    import collections.abc as cabc
 
 import pytest
 
@@ -48,8 +52,12 @@ class TestPublicApiRegistry:
     @staticmethod
     def test_public_api_is_immutable() -> None:
         """PUBLIC_API is a read-only mapping."""
+        mutable_api = typ.cast(
+            "cabc.MutableMapping[str, ApiStability]",
+            PUBLIC_API,
+        )
         with pytest.raises(TypeError, match="does not support item assignment"):
-            PUBLIC_API["__test__"] = ApiStability.STABLE  # type: ignore[index]
+            mutable_api["__test__"] = ApiStability.STABLE
 
 
 class TestApiStabilityTiers:

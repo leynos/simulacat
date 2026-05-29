@@ -194,14 +194,14 @@ Relevant repository state before implementation:
 - `simulacat/__init__.py` exports 22 symbols via `__all__`: configuration
   helpers (`default_github_sim_config`, `is_json_serializable`,
   `merge_configs`), scenario models (`User`, `Organization`, `Repository`,
-  `Branch`, `DefaultBranch`, `Issue`, `PullRequest`, `AccessToken`,
-  `GitHubApp`, `AppInstallation`), scenario management (`ScenarioConfig`,
+  `Branch`, `DefaultBranch`, `Issue`, `PullRequest`, `AccessToken`, `GitHubApp`,
+   `AppInstallation`), scenario management (`ScenarioConfig`,
   `ConfigValidationError`), scenario factories (`single_repo_scenario`,
   `monorepo_with_apps_scenario`, `empty_org_scenario`, `merge_scenarios`,
   `github_app_scenario`), and types (`GitHubSimConfig`).
 - `simulacat/pytest_plugin.py` registers four fixtures via the `pytest11`
-  entry point: `github_sim_config`, `github_simulator`,
-  `simulacat_single_repo`, `simulacat_empty_org`.
+  entry point: `github_sim_config`, `github_simulator`, `simulacat_single_repo`,
+   `simulacat_empty_org`.
 - `simulacat/compatibility_policy.py` defines `COMPATIBILITY_POLICY` as a
   `MappingProxyType` and `KNOWN_INCOMPATIBILITIES` as a tuple of frozen
   dataclasses. This module is the pattern to follow for `api_stability.py`.

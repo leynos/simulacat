@@ -16,6 +16,14 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+class GitHubClient(typ.Protocol):
+    """Minimal github3 client surface used by these smoke tests."""
+
+    def repository(self, owner: str, repository: str) -> object:
+        """Return a repository by owner and name."""
+        ...
+
+
 @pytest.fixture
 def github_sim_config() -> ScenarioConfig:
     """Return an authenticated scenario with one repository."""
@@ -40,7 +48,7 @@ def test_reference_auth_header_is_applied(github_simulator: object) -> None:
     assert _authorization_header(github_simulator) == "token ghs_reference_token"
 
 
-def test_authenticated_repository_lookup_works(github_simulator: object) -> None:
+def test_authenticated_repository_lookup_works(github_simulator: GitHubClient) -> None:
     """Authenticated reference setup still supports repository lookup."""
-    repo = github_simulator.repository("octocat", "demo")  # type: ignore[attr-defined]
+    repo = github_simulator.repository("octocat", "demo")
     assert getattr(repo, "full_name", None) == "octocat/demo"

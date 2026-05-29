@@ -269,3 +269,136 @@ Provide a predictable public surface for downstream users.
 - [x] Maintain a short changelog that links roadmap items to released
       capabilities and describes behavioural changes at the level of phases and
       steps.
+
+______________________________________________________________________
+
+## Phase 5 – Core-backed GitHub label workflows and diagnostics
+
+Adopt the Simulacat Core slices needed for mutable repository labels,
+client-library payload compatibility, and simulator-side diagnostics. This
+phase depends on Simulacat Core roadmap steps 1.4, 1.5, 9.3, and 9.5, plus the
+Simulacat Core architecture sections "GitHub client compatibility", "Repository
+label slice", and "Simulator control APIs".
+
+### Step 5.1 – Repository label scenarios for github3.py
+
+Replace downstream Betamax or handwritten GitHub-shaped HTTP handlers for
+label create, lookup, and update tests with real simulacat-backed workflows.
+
+#### Tasks (Step 5.1)
+
+- [ ] Add Python-side label models and builders:
+
+  - `Label` or equivalent scenario object with `name`, `color`, and optional
+    `description`,
+  - repository and scenario helpers that serialize labels to the
+    Simulacat Core `initialState.labels` shape,
+  - validation that rejects labels attached to unknown repositories.
+  - prerequisites:
+    - Simulacat Core roadmap task 1.5.1 is complete and published.
+  - measurable finish lines:
+    - unit tests cover valid label serialization and unknown-repository
+      validation,
+    - users can construct a repository with labels without raw nested
+      dictionaries.
+
+- [ ] Add a github3.py repository-label behavioural suite:
+
+  - missing label lookup returns the expected `github3.py` not-found error,
+  - `repo.create_label(...)` returns the created label, not an OpenAPI example,
+  - `repo.label(...)` returns the created label by name,
+  - label update persists colour and description changes,
+  - token-bearing write requests do not fail with `401 Bad credentials` under
+    the default local simulator mode.
+  - prerequisites:
+    - Simulacat Core roadmap tasks 1.5.2 and 1.5.3 are complete and published,
+    - Simulacat Core roadmap task 1.4.2 has moved common github3.py payload
+      compatibility out of simulacat route-local patches.
+  - measurable finish lines:
+    - the behavioural suite runs against the packaged simulator without
+      Betamax,
+    - the existing compatibility matrix covers the label workflow for
+      `github3.py` 3.x and 4.x.
+
+- [ ] Publish label-focused scenario fixtures and examples:
+
+  - a reusable single-repository-with-labels scenario,
+  - an example test that performs create, lookup, and update through
+    `github_simulator`,
+  - migration notes for projects replacing custom HTTP handlers.
+  - prerequisites:
+    - the label behavioural suite is green.
+  - measurable finish lines:
+    - the users' guide includes a copyable label-sync example,
+    - reference-project documentation names the required Simulacat Core
+      version.
+
+### Step 5.2 – Simulator state, request log, and fault fixtures
+
+Expose the simulator-control features from Simulacat Core in pytest-friendly
+forms, so tests can assert effects without replacing the backend.
+
+#### Tasks (Step 5.2)
+
+- [ ] Add optional fixture access to simulator diagnostics:
+
+  - base URL,
+  - process handle or lifecycle metadata safe for assertions,
+  - request log access once core exposes it,
+  - state inspection and reset helpers once core exposes them.
+  - prerequisites:
+    - Simulacat Core roadmap tasks 9.3.1 and 9.3.2 are complete and published.
+  - measurable finish lines:
+    - tests can assert that a `POST` or `PATCH` label request occurred without
+      handwritten handlers,
+    - documentation clearly distinguishes public fixture API from lower-level
+      diagnostic metadata.
+
+- [ ] Add pytest-facing error-injection helpers:
+
+  - configure the next matching request to return a chosen status and payload,
+  - support malformed-payload cases for client validation tests,
+  - reset injected faults during fixture teardown.
+  - prerequisites:
+    - Simulacat Core roadmap task 9.3.3 is complete and published.
+  - measurable finish lines:
+    - users can test retry and error paths without Betamax or custom
+      `BaseHTTPRequestHandler` code,
+    - injected faults are isolated to the intended test.
+
+### Step 5.3 – Client compatibility recipes and coverage tracking
+
+Keep simulacat's public guidance aligned with the client contracts that
+Simulacat Core supports.
+
+#### Tasks (Step 5.3)
+
+- [ ] Document supported client setup recipes:
+
+  - the supported `github3.GitHub` plus `GitHubSession.base_url` setup,
+  - the current `github3.GitHubEnterprise(..., token=...)` limitation unless
+    Simulacat Core ships `/api/v3` Enterprise compatibility,
+  - raw request usage for endpoints outside the `github3.py` contract,
+  - PyGithub and Octokit notes where the core capability matrix supports them.
+  - prerequisites:
+    - Simulacat Core roadmap task 1.4.3 is complete and published,
+    - Simulacat Core roadmap task 9.1.1 has a capability matrix precise enough
+      to cite.
+  - measurable finish lines:
+    - the users' guide includes exact setup snippets and known limits,
+    - compatibility troubleshooting points readers at the core capability
+      matrix before suggesting custom handlers.
+
+- [ ] Track protocol-edge compatibility surfaced by core:
+
+  - pagination for supported list endpoints,
+  - optional permission and token scenarios,
+  - OpenAPI/schema conformance failures that affect client libraries.
+  - prerequisites:
+    - Simulacat Core roadmap tasks 9.5.1, 9.5.2, and 9.5.3 are complete as
+      applicable.
+  - measurable finish lines:
+    - simulacat tests cover the core behaviours it exposes through public
+      fixtures,
+    - unsupported or not-yet-surfaced core enhancements are listed in
+      troubleshooting or compatibility guidance rather than hidden.

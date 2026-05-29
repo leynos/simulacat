@@ -104,8 +104,8 @@ fixtures with unit and behavioural coverage. Updated the users' guide, design
 notes, and roadmap, and ran all quality gates successfully. One gap: the
 pre-implementation failing-test check could not be demonstrated because
 `pytest` was not on PATH before the virtual environment was created; the full
-suite was executed via `make test` after implementation. Removed the
-placeholder `hello` compatibility export in a follow-up cleanup.
+suite was executed via `make test` after implementation. Removed the placeholder
+ `hello` compatibility export in a follow-up cleanup.
 
 ## Context and orientation
 
