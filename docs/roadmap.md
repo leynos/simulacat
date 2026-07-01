@@ -16,17 +16,17 @@ ordering and dependency, not calendar commitments.
 
 ______________________________________________________________________
 
-## Phase 1 – Core simulation and pytest integration
+## 1. Core simulation and pytest integration
 
 Establish a reliable foundation for running tests against a local GitHub API
 simulator with minimal user configuration.
 
-### Step 1.1 – Simulator orchestration ✅
+### 1.1. Simulator orchestration ✅
 
 Provide a stable process boundary between Python tests and the Simulacrum
 GitHub API simulator.
 
-#### Tasks (Step 1.1)
+**Tasks (Step 1.1):**
 
 - [x] Implement a Bun/TypeScript entry point (`src/github-sim-server.ts`) that:
 
@@ -46,12 +46,12 @@ GitHub API simulator.
   - `terminate` on fixture teardown,
   - `kill` only when the process does not exit within a short timeout.
 
-### Step 1.2 – pytest fixture and client binding ✅
+### 1.2. pytest fixture and client binding ✅
 
 Expose the simulator through a `github3.py` client with clear fixture
 boundaries.
 
-#### Tasks (Step 1.2)
+**Tasks (Step 1.2):**
 
 - [x] Provide a `github_sim_config` fixture that:
 
@@ -71,17 +71,17 @@ boundaries.
 
 ______________________________________________________________________
 
-## Phase 2 – Scenario modelling and ergonomics
+## 2. Scenario modelling and ergonomics
 
 Make it straightforward to describe realistic GitHub states and reuse them
 across test suites.
 
-### Step 2.1 – Configuration schema and helpers
+### 2.1. Configuration schema and helpers
 
 Define a stable configuration surface that hides simulator internals from test
 code.
 
-#### Tasks (Step 2.1)
+**Tasks (Step 2.1):**
 
 - [x] Design a Python-side configuration schema for common GitHub concepts:
 
@@ -99,11 +99,11 @@ code.
   - “single repo, single user” smoke test,
   - “multiple repositories with public and private visibility”.
 
-### Step 2.2 – Reusable scenarios and fixtures
+### 2.2. Reusable scenarios and fixtures
 
 Enable reuse of common GitHub layouts across tests without duplication.
 
-#### Tasks (Step 2.2)
+**Tasks (Step 2.2):**
 
 - [x] Introduce named “scenario” factories, for example:
 
@@ -123,16 +123,16 @@ Enable reuse of common GitHub layouts across tests without duplication.
 
 ______________________________________________________________________
 
-## Phase 3 – Ecosystem integration and advanced use cases
+## 3. Ecosystem integration and advanced use cases
 
 Support more advanced workflows and integration into real project pipelines.
 
-### Step 3.1 – Authentication and GitHub App workflows
+### 3.1. Authentication and GitHub App workflows
 
 Model authentication flows beyond simple unauthenticated calls where the
 simulator supports them.
 
-#### Tasks (Step 3.1)
+**Tasks (Step 3.1):**
 
 - [x] Add optional token support in client construction:
 
@@ -161,11 +161,11 @@ simulator supports them.
     `simulacat/unittests/test_auth_mode_limitations.py` and behavioural
     scenarios in `tests/features/auth_mode_limitations.feature`.
 
-### Step 3.2 – Continuous Integration (CI) usage and reference examples
+### 3.2. Continuous Integration (CI) usage and reference examples
 
 Demonstrate reliable use of `simulacat` in continuous integration environments.
 
-#### Tasks (Step 3.2)
+**Tasks (Step 3.2):**
 
 - [x] Supply minimal reference projects that:
 
@@ -228,15 +228,15 @@ Demonstrate reliable use of `simulacat` in continuous integration environments.
 
 ______________________________________________________________________
 
-## Phase 4 – Hardening and compatibility
+## 4. Hardening and compatibility
 
 Increase confidence in `simulacat` as a long-term dependency.
 
-### Step 4.1 – Compatibility test matrix
+### 4.1. Compatibility test matrix
 
 Ensure the library remains stable across supported dependency versions.
 
-#### Tasks (Step 4.1)
+**Tasks (Step 4.1):**
 
 - [x] Define a minimum-to-recommended version range for:
 
@@ -252,11 +252,11 @@ Ensure the library remains stable across supported dependency versions.
 
 - [x] Track and document known incompatibilities and workarounds.
 
-### Step 4.2 – API stability and deprecation policy
+### 4.2. API stability and deprecation policy
 
 Provide a predictable public surface for downstream users.
 
-#### Tasks (Step 4.2)
+**Tasks (Step 4.2):**
 
 - [x] Mark public modules, fixtures, and configuration helpers as part of the
       supported API.
@@ -272,7 +272,7 @@ Provide a predictable public surface for downstream users.
 
 ______________________________________________________________________
 
-## Phase 5 – Core-backed GitHub label workflows and diagnostics
+## 5. Core-backed GitHub label workflows and diagnostics
 
 Adopt the Simulacat Core slices needed for mutable repository labels,
 client-library payload compatibility, and simulator-side diagnostics. This
@@ -280,12 +280,12 @@ phase depends on Simulacat Core roadmap steps 1.4, 1.5, 9.3, and 9.5, plus the
 Simulacat Core architecture sections "GitHub client compatibility", "Repository
 label slice", and "Simulator control APIs".
 
-### Step 5.1 – Repository label scenarios for github3.py
+### 5.1. Repository label scenarios for github3.py
 
 Replace downstream Betamax or handwritten GitHub-shaped HTTP handlers for
 label create, lookup, and update tests with real simulacat-backed workflows.
 
-#### Tasks (Step 5.1)
+**Tasks (Step 5.1):**
 
 - [ ] Add Python-side label models and builders:
 
@@ -333,12 +333,12 @@ label create, lookup, and update tests with real simulacat-backed workflows.
     - reference-project documentation names the required Simulacat Core
       version.
 
-### Step 5.2 – Simulator state, request log, and fault fixtures
+### 5.2. Simulator state, request log, and fault fixtures
 
 Expose the simulator-control features from Simulacat Core in pytest-friendly
 forms, so tests can assert effects without replacing the backend.
 
-#### Tasks (Step 5.2)
+**Tasks (Step 5.2):**
 
 - [ ] Add optional fixture access to simulator diagnostics:
 
@@ -366,12 +366,12 @@ forms, so tests can assert effects without replacing the backend.
       `BaseHTTPRequestHandler` code,
     - injected faults are isolated to the intended test.
 
-### Step 5.3 – Client compatibility recipes and coverage tracking
+### 5.3. Client compatibility recipes and coverage tracking
 
 Keep simulacat's public guidance aligned with the client contracts that
 Simulacat Core supports.
 
-#### Tasks (Step 5.3)
+**Tasks (Step 5.3):**
 
 - [ ] Document supported client setup recipes:
 
