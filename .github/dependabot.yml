@@ -9,9 +9,12 @@ updates:
       - "github-actions"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
 
-  # Enable version updates for Python (pip / requirements*.txt)
-  - package-ecosystem: "pip"
+  # Enable version updates for Python (uv-managed pyproject.toml + uv.lock)
+  - package-ecosystem: "uv"
     directory: "/"
     open-pull-requests-limit: 5
     labels:
@@ -19,3 +22,34 @@ updates:
       - "python"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+
+  # Enable version updates for Python reference projects (pip / pyproject.toml)
+  - package-ecosystem: "pip"
+    directories:
+      - "/examples/reference-projects/basic-pytest"
+      - "/examples/reference-projects/authenticated-pytest"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+
+  # Enable version updates for bun (package.json + bun.lock)
+  - package-ecosystem: "bun"
+    directory: "/"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "bun"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
