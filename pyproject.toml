@@ -145,6 +145,24 @@ markers = [
 ]
 addopts = "-m 'not slow'"
 
+[tool.mutmut]
+source_paths = ["simulacat/"]
+pytest_add_cli_args_test_selection = ["tests/", "simulacat/unittests/"]
+# In-package unit tests must run against mutants but never be mutated.
+do_not_mutate = ["simulacat/unittests/*"]
+# mutmut copies only tests/, pyproject.toml, and setup.cfg into its
+# mutants/ working copy; the suite also reads these path-relative assets
+# (docs/changelog.md, docs/users-guide.md, workflow files, reference
+# projects, and the bundled simulator entrypoint).
+also_copy = [
+    "docs",
+    ".github/workflows",
+    "examples/reference-projects",
+    "src",
+    "package.json",
+    "bun.lock",
+]
+
 [tool.uv]
 package = true
 
