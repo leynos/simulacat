@@ -1,6 +1,6 @@
 # Scripting standards
 
-Project scripts must prioritise clarity, reproducibility, and testability. The
+Project scripts must prioritize clarity, reproducibility, and testability. The
 baseline tooling is Python and the [`uv`](https://github.com/astral-sh/uv)
 launcher so that scripts remain dependency‑self‑contained and easy to execute
 in Continuous Integration (CI) or locally.
@@ -442,6 +442,19 @@ def test_spy_and_record(cmd_mox, monkeypatch, tmp_path):
 ```
 
 ## Operational guidelines
+
+### Spelling-policy automation
+
+Run `make spelling` to enforce en-GB-oxendict spelling. The tracked
+`typos.toml` is rendered from the shared Oxford dictionary and the repository's
+focused `typos.local.toml` overlay by `typos-config-builder`. The builder
+refreshes its untracked local dictionary cache only when the authoritative
+shared copy is newer.
+
+Use `make spelling-config-write` to regenerate `typos.toml`, and use
+`make spelling-config` to verify that the tracked configuration is current.
+Keep repository-specific identifiers and quoted machine interfaces in the
+overlay; do not edit the generated configuration by hand.
 
 - Scripts must be idempotent. Re‑running should converge state without
   destructive side effects. Guard conditions (for example, checking the secrets

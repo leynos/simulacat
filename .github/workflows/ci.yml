@@ -29,6 +29,7 @@ jobs:
       - name: Install CLI tools
         run: |
           for tool in mbake ty ruff; do uv tool install ${tool}; done
+          uv tool install nixie-cli==1.1.0
           bun install -g markdownlint-cli2
           bun install -g @typescript/native-preview
           bun install -g @biomejs/biome
@@ -46,6 +47,20 @@ jobs:
       - name: Check formatting
         run: make check-fmt
 
+      - name: Enforce en-GB-oxendict spelling
+        run: make spelling
+
+      - name: Set up Rust for Merman
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: 1.95.0
+
+      - name: Install Merman
+        run: cargo +1.95.0 install merman-cli --version '=0.7.0' --locked
+
+      - name: Validate Mermaid diagrams
+        run: make nixie
+
       - name: Run ruff
         run: make lint
 
@@ -62,7 +77,7 @@ jobs:
             --out coverage.xml \
             -m pytest --forked -v
 
-      - name: Upload coverage artifact
+      - name: Upload coverage artefact
         uses: actions/upload-artifact@v4
         with:
           name: coverage

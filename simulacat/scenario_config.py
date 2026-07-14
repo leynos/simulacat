@@ -90,7 +90,7 @@ class ScenarioConfig:
     )
 
     def __post_init__(self) -> None:
-        """Normalise scenario collections into tuples for immutability."""
+        """Normalize scenario collections into tuples for immutability."""
         object.__setattr__(self, "users", tuple(self.users))
         object.__setattr__(self, "organizations", tuple(self.organizations))
         object.__setattr__(self, "repositories", tuple(self.repositories))

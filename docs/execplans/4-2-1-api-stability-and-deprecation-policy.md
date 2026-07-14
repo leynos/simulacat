@@ -352,7 +352,7 @@ Acceptance criteria for Step 4.2 completion:
   and fix the corresponding module or test.
 - Documentation updates are additive and do not remove existing content.
 
-## Artifacts and notes
+## Artefacts and notes
 
 Capture and retain these logs during implementation:
 

@@ -105,8 +105,8 @@ class TestAppInstallationModel:
         )
 
     @staticmethod
-    def test_app_installation_normalises_collections() -> None:
-        """AppInstallation normalises list inputs to tuples."""
+    def test_app_installation_normalizes_collections() -> None:
+        """AppInstallation normalizes list inputs to tuples."""
         installation = AppInstallation(
             installation_id=1,
             app_slug="my-bot",
@@ -116,10 +116,10 @@ class TestAppInstallationModel:
         )
 
         assert installation.repositories == ("octocat/repo",), (
-            "Expected list to be normalised to tuple"
+            "Expected list to be normalized to tuple"
         )
         assert installation.permissions == ("contents",), (
-            "Expected list to be normalised to tuple"
+            "Expected list to be normalized to tuple"
         )
 
     @staticmethod

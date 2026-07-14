@@ -42,7 +42,7 @@ class User:
     user_id: int | None = None
 
     def __post_init__(self) -> None:
-        """Normalise organizations into a tuple for immutability."""
+        """Normalize organizations into a tuple for immutability."""
         object.__setattr__(self, "organizations", tuple(self.organizations))
 
     def to_dict(self) -> GitHubUserConfig:
