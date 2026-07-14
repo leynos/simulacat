@@ -191,7 +191,7 @@ class TestAuthTokens:
             scenario.validate()
 
     @staticmethod
-    def test_access_token_normalises_collections() -> None:
+    def test_access_token_normalizes_collections() -> None:
         """AccessToken should normalize permissions and repositories to tuples."""
         token = AccessToken(
             value="ghs_norm",

@@ -490,7 +490,7 @@ behaviour. These limitations apply across all three modes.
 | Conditional requests  | ETag and Last-Modified support                      | Not implemented         |
 | OAuth applications    | Full OAuth 2.0 flow                                 | Explicitly out of scope |
 | Audit logging         | Authentication events logged                        | Not modelled            |
-| SAML/SSO enforcement  | Organisation-level SSO requirements                 | Not modelled            |
+| SAML/SSO enforcement  | Organization-level SSO requirements                 | Not modelled            |
 | API versioning        | `X-GitHub-Api-Version` header                       | Not modelled            |
 
 #### Unauthenticated mode

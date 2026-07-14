@@ -341,9 +341,9 @@ Behavioural evidence:
 - Keep logs in `/tmp/step-3-2-*.log` and `/tmp/simulacat-*.log` for failure
   diagnosis.
 
-## Artifacts and notes
+## Artefacts and notes
 
-Expected implementation artifacts:
+Expected implementation artefacts:
 
 - two runnable reference project directories under
   `examples/reference-projects/`;
@@ -352,7 +352,7 @@ Expected implementation artifacts:
 - users-guide and design-document updates;
 - roadmap checkboxes moved to done for Step 3.2.
 
-Expected log artifacts:
+Expected log artefacts:
 
 - `/tmp/step-3-2-unit-pre.log`
 - `/tmp/step-3-2-bdd-pre.log`
@@ -396,4 +396,4 @@ Revision note (2026-02-20, implementation update):
 - Updated Status from `DRAFT` to `COMPLETE`.
 - Recorded completed progress steps and final validation evidence.
 - Added implementation discoveries and a path-resolution design decision.
-- Captured delivered artifacts, documentation updates, and roadmap completion.
+- Captured delivered artefacts, documentation updates, and roadmap completion.

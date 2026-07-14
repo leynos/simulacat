@@ -285,7 +285,7 @@ def test_simulacat_single_repo_fixture_returns_expected_config(
 def test_simulacat_empty_org_fixture_returns_expected_config(
     request: pytest.FixtureRequest,
 ) -> None:
-    """simulacat_empty_org returns a config with an empty organisation."""
+    """simulacat_empty_org returns a config with an empty organization."""
     config = request.getfixturevalue("simulacat_empty_org")
 
     assert isinstance(config, dict)

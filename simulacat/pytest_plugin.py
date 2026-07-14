@@ -63,7 +63,7 @@ def _split_simulacat_config(
 def _normalize_github_sim_mapping(
     raw_config: object,
 ) -> cabc.Mapping[str, typ.Any]:
-    """Normalise raw fixture input into a config mapping."""
+    """Normalize raw fixture input into a config mapping."""
     if raw_config is None:
         return {}
 
@@ -89,7 +89,7 @@ def _normalize_github_sim_mapping(
 
 
 def _validate_sim_config(config: cabc.Mapping[str, typ.Any]) -> GitHubSimConfig:
-    """Validate and materialise simulator config values."""
+    """Validate and materialize simulator config values."""
     materialized: dict[str, typ.Any] = dict(config)
 
     if materialized:
@@ -161,7 +161,7 @@ def simulacat_single_repo() -> GitHubSimConfig:
 
 @pytest.fixture
 def simulacat_empty_org() -> GitHubSimConfig:
-    """Return an empty-organisation scenario configuration."""
+    """Return an empty-organization scenario configuration."""
     from simulacat.scenario_factories import empty_org_scenario
 
     scenario = empty_org_scenario("octo-org")

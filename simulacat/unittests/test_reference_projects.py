@@ -1,4 +1,4 @@
-"""Unit tests for Step 3.2 reference project artifacts.
+"""Unit tests for Step 3.2 reference project artefacts.
 
 These tests verify static contracts for the reference projects used to
 demonstrate CI integration:

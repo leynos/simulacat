@@ -268,7 +268,7 @@ missing `markdownlint-cli2`, set `MDLINT=/root/.bun/bin/markdownlint-cli2` or
 add `/root/.bun/bin` to `PATH`. Use `git status` to inspect and revert local
 changes if you need to restart.
 
-## Artifacts and notes
+## Artefacts and notes
 
 Example usage (expected to work after implementation):
 

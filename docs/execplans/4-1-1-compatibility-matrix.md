@@ -366,7 +366,7 @@ Acceptance criteria for Step 4.1 completion:
 - If documentation and workflow drift, treat the tests as the source of
   reconciliation and update either docs or workflow in the same change.
 
-## Artifacts and notes
+## Artefacts and notes
 
 Capture and retain these logs during implementation:
 
