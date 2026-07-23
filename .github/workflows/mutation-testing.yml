@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: read
       id-token: write # OIDC workflow-source resolution
-    uses: leynos/shared-actions/.github/workflows/mutation-mutmut.yml@dfddcb6cf53a2583e55bf0c3536c01ed1f67dc16
+    uses: leynos/shared-actions/.github/workflows/mutation-mutmut.yml@1c1a46f0b4fde6dd78a9757fc475a5d06ee891c7
     with:
       # Flat package layout: mutable source lives in simulacat/, not src/
       # (src/ holds the TypeScript simulator, which mutmut cannot mutate).
