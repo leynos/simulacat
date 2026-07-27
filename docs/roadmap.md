@@ -282,8 +282,8 @@ label slice", and "Simulator control APIs".
 
 ### Step 5.1 – Repository label scenarios for github3.py
 
-Replace downstream Betamax or handwritten GitHub-shaped HTTP handlers for
-label create, lookup, and update tests with real simulacat-backed workflows.
+Replace downstream Betamax or handwritten GitHub-shaped HTTP handlers for label
+create, lookup, and update tests with real simulacat-backed workflows.
 
 #### Tasks (Step 5.1)
 

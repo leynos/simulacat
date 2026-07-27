@@ -161,7 +161,7 @@ Implementation complete. All acceptance criteria met:
 - Documentation updated in users' guide, design document, and roadmap.
 
 Key implementation note: the `default_token` validation was moved to a dedicated
- `_validate_default_token` method called after both `_validate_tokens` and
+`_validate_default_token` method called after both `_validate_tokens` and
 `_validate_app_installations` to allow `default_token` to reference
 installation access tokens.
 
@@ -361,7 +361,7 @@ merged with other scenarios.
 - `simulacat/scenario_factories.py` `__all__`: add `github_app_scenario`.
 
 Validation: re-run the new unit and behavioural tests; they should now pass. Run
- `make check-fmt`, `make typecheck`, `make lint`, `make test`.
+`make check-fmt`, `make typecheck`, `make lint`, `make test`.
 
 ### Stage D: hardening, documentation, cleanup
 

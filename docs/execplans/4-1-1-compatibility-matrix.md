@@ -118,7 +118,7 @@ Success is observable when:
   `pytest-bdd` installed, even for non-BDD targets. Evidence: CI traceback in
   this task (
   `ImportError: Error importing plugin "pytest_bdd": No module named 'pytest_bdd'`).
-   Impact: compatibility workflow now installs `pytest-bdd` explicitly.
+  Impact: compatibility workflow now installs `pytest-bdd` explicitly.
 
 ## Decision log
 

@@ -5,10 +5,10 @@ toolchain hiding in a JSON file: **formatter**, **linter**, and **assist**
 (code actions). Biome enables all three by default, and you toggle them with
 `<tool>.enabled`. ([Biome][1])
 
-Biome expects a config named **`biome.json`** (strict JSON) or
-**`biome.jsonc`** (JSON-with-comments). For a plain `biome.json`, you must
-avoid comments and trailing commas. Biome projects typically put this file at
-the repo root next to `package.json`. ([Biome][1])
+Biome expects a config named **`biome.json`** (strict JSON) or **`biome.jsonc`
+** (JSON-with-comments). For a plain `biome.json`, you must avoid comments and
+trailing commas. Biome projects typically put this file at the repo root next to
+`package.json`. ([Biome][1])
 
 ______________________________________________________________________
 
@@ -19,8 +19,8 @@ parent directories until it finds `biome.json` or `biome.jsonc`. If it finds
 nothing, Biome falls back to defaults. If both `biome.json` and `biome.jsonc`
 exist in the same directory, Biome chooses `biome.json`. ([Biome][1])
 
-Biome also supports **nested** configs since v2.0.0 (handy in big repos).
-([Biome][1])
+Biome also supports **nested** configs since v2.0.0 (handy in big repos). (
+[Biome][1])
 
 ______________________________________________________________________
 
@@ -93,8 +93,8 @@ Put language-specific settings under `<language>.<tool>` (e.g.
 `javascript.formatter.quoteStyle`) and Biome will override the general value
 for that language. ([Biome][1])
 
-Biome lumps **TypeScript, JSX, TSX** under the `javascript` language key.
-([Biome][1])
+Biome lumps **TypeScript, JSX, TSX** under the `javascript` language key. (
+[Biome][1])
 
 ______________________________________________________________________
 
@@ -218,8 +218,8 @@ So the boring baseline is:
 
 ### Opt into a specific group (example: `nursery`)
 
-Biome lets you enable recommended rules for a specific group, e.g. `nursery`.
-([Biome][2])
+Biome lets you enable recommended rules for a specific group, e.g. `nursery`. (
+[Biome][2])
 
 ```json
 {
@@ -322,8 +322,8 @@ ______________________________________________________________________
 ### `root`
 
 By default, every config file counts as a root. If you create a **nested**
-config, set `"root": false` in the nested file or Biome will throw an error.
-([Biome][2])
+config, set `"root": false` in the nested file or Biome will throw an error. (
+[Biome][2])
 
 ### `extends`
 
