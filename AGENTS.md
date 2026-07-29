@@ -17,6 +17,15 @@
   Group related code (e.g., models + utilities + fixtures) close together.
 - **Group by feature, not layer.** Colocate views, logic, fixtures, and helpers
   related to a domain concept rather than splitting by type.
+- **Document public APIs.** Write comprehensive NumPy-style docstrings for
+  public functions, classes, and methods, with clear examples where appropriate.
+- **Keep private docstrings concise.** Prefer single-line docstrings for private
+  helpers. If a helper needs explanatory paragraphs, inspect it for command
+  query responsibility segregation (CQRS) or cohesion failures, then split
+  commands from queries, extract responsibilities, or keep the explanation if
+  the helper remains the clearest design.
+- **Use structured private docstrings selectively.** Add NumPy-style sections
+  to private helpers only when their behaviour is non-obvious.
 
 ## Documentation Maintenance
 
