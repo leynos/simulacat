@@ -207,3 +207,10 @@ target/
 
 .crush/
 node_modules/
+.vtcode/
+.claude/
+.memdb/
+.grepai/
+*.swp
+*.swo
+*~
