@@ -168,11 +168,17 @@ disagree with CI.
 | `slipcover`, `pytest-forked` | version variables in `ci.yml` |
 | `biome`, `tsc` | `package.json` and `bun.lock`, run from `node_modules` |
 
-`tests/workflow_contracts/test_ci_tool_pins.py` enforces it: every install
-command in `ci.yml` must name a version, no Makefile recipe may call `ruff` or
-`ty` from `PATH`, and the Makefile ruff pin must equal the `pyproject.toml`
-requirement. Each assertion matches the command or recipe line itself, not a
-comment near it, and carries a mutation check.
+`tests/workflow_contracts/test_ci_tool_pins.py` enforces it. Every install
+command in `ci.yml` must name an exact version, `cargo install` included, and
+the test resolves a version written as `${VERSION}` back to the value the
+step's `env` gives it, so a variable holding `latest` fails and a misspelt
+variable name fails rather than looking pinned. A moving tag or a range is not
+a pin: `@latest`, `^0.23`, `~0.23.0`, `1.*` and `>=1.4.6` are each rejected by
+name. On the Makefile side, `RUFF` and `TY` must expand to
+`uv tool run <tool>@$(<TOOL>_VERSION)`, no recipe may reach for either from
+`PATH` or through an unversioned `uv tool run`, and the Makefile ruff pin must
+equal the `pyproject.toml` requirement. Each assertion matches the command or
+recipe line itself, not a comment near it, and carries a mutation check.
 
 ## Refactoring Heuristics & Workflow
 
