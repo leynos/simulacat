@@ -599,7 +599,7 @@ dev = [
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "pyyaml" },
-    { name = "ruff" },
+    { name = "ruff", specifier = "==0.15.20" },
 ]
 
 [[package]]

@@ -28,7 +28,7 @@ dev = [
     "pytest",
     "pytest-bdd",
     "pyyaml",
-    "ruff",
+    "ruff==0.15.20",  # keep in step with RUFF_VERSION in the Makefile
     "pytest-timeout",
     "pytest-xdist",
     "hatchling",
