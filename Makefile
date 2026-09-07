@@ -6,11 +6,18 @@ TSC ?= ./node_modules/.bin/tsc
 BUN ?= bun
 UV ?= uv
 NODE_TOOLS = $(BIOME) $(TSC)
-TOOLS = $(MDFORMAT_ALL) ruff ty $(MDLINT) uv $(BUN)
+TOOLS = $(MDFORMAT_ALL) $(MDLINT) uv $(BUN)
 VENV_TOOLS = pytest
 UV_ENV = UV_CACHE_DIR=.uv-cache UV_TOOL_DIR=.uv-tools
-RUFF_VERSION ?= 0.15.12
+# One pinned ruff and one pinned ty for every gate. `uv tool install ruff`
+# with no version is what turned main red: it followed upstream into a release
+# whose noqa-comments rule rejected 59 suppressions the tree already carried,
+# while the Makefile ran whichever ruff happened to be on PATH.
+RUFF_VERSION ?= 0.15.20
+TY_VERSION ?= 0.0.78
 PATHSPEC_VERSION ?= 1.1.1
+RUFF = $(UV_ENV) $(UV) tool run ruff@$(RUFF_VERSION)
+TY = $(UV_ENV) $(UV) tool run ty@$(TY_VERSION)
 TYPOS_VERSION ?= 1.48.0
 TYPOS_CONFIG_BUILDER_COMMIT := d6da92f02240a79a945c835f69bdd08a888da1d0
 TYPOS_CONFIG_BUILDER_SOURCE := git+https://github.com/leynos/typos-config-builder.git@$(TYPOS_CONFIG_BUILDER_COMMIT)
@@ -85,24 +92,24 @@ $(VENV_TOOLS): ## Verify required CLI tools in venv
 	$(call ensure_tool_venv,$@)
 endif
 
-fmt: $(BIOME) ruff $(MDFORMAT_ALL) ## Format sources
+fmt: $(BIOME) $(MDFORMAT_ALL) ## Format sources
 	$(BIOME) check . --write
-	ruff format $(PROJECT_PY_EXCLUDES)
-	ruff check --select I --fix $(PROJECT_PY_EXCLUDES)
+	$(RUFF) format $(PROJECT_PY_EXCLUDES)
+	$(RUFF) check --select I --fix $(PROJECT_PY_EXCLUDES)
 	$(MDFORMAT_ALL)
 
-check-fmt: $(BIOME) ruff ## Verify formatting
+check-fmt: $(BIOME) ## Verify formatting
 	$(BIOME) check .
-	ruff format --check $(PROJECT_PY_EXCLUDES)
+	$(RUFF) format --check $(PROJECT_PY_EXCLUDES)
 	# mdformat-all doesn't currently do checking
 
-lint: $(BIOME) ruff ## Run linters
-	ruff check $(PROJECT_PY_EXCLUDES)
+lint: $(BIOME) ## Run linters
+	$(RUFF) check $(PROJECT_PY_EXCLUDES)
 	$(BIOME) lint .
 
-typecheck: build ty $(TSC) ## Run typechecking
-	ty --version
-	ty check $(PROJECT_PY_EXCLUDES)
+typecheck: build $(TSC) ## Run typechecking
+	$(TY) --version
+	$(TY) check $(PROJECT_PY_EXCLUDES)
 	$(TSC) --noEmit
 
 markdownlint: spelling $(MDLINT) ## Lint Markdown files and enforce spelling
@@ -123,8 +130,8 @@ spelling-config-write: spelling-helper-test ## Generate the spelling configurati
 	@$(TYPOS_CONFIG_BUILDER) --repository .
 
 spelling-helper-test: ## Validate the shared spelling-policy integration
-	@$(UV_ENV) $(UV) tool run ruff@$(RUFF_VERSION) format --isolated --target-version py313 --check $(SPELLING_PY_SRCS)
-	@$(UV_ENV) $(UV) tool run ruff@$(RUFF_VERSION) check --isolated --target-version py313 $(SPELLING_PY_SRCS)
+	@$(RUFF) format --isolated --target-version py313 --check $(SPELLING_PY_SRCS)
+	@$(RUFF) check --isolated --target-version py313 $(SPELLING_PY_SRCS)
 	@$(SPELLING_HELPER_PYTEST) $(SPELLING_PY_TESTS) -c /dev/null --rootdir=. -p no:cacheprovider $(SPELLING_COVERAGE_ARGS)
 
 nixie: ## Validate Mermaid diagrams

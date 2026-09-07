@@ -27,13 +27,21 @@ jobs:
         uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
 
       - name: Install CLI tools
+        env:
+          # Pin every tool this job installs. `uv tool install ruff` with no
+          # version is what turned main red at "Run ruff": it followed upstream
+          # into a release rejecting 59 suppressions the tree already carried.
+          # ruff and ty are no longer installed here; the Makefile runs one
+          # pinned copy of each. biome and tsc come from bun.lock through
+          # node_modules, which is what the Makefile invokes, so the global
+          # copies and the tsgo symlink shadowing them are gone.
+          MBAKE_VERSION: '1.4.6'
+          NIXIE_CLI_VERSION: '1.1.0'
+          MARKDOWNLINT_CLI2_VERSION: '0.23.2'
         run: |
-          for tool in mbake ty ruff; do uv tool install ${tool}; done
-          uv tool install nixie-cli==1.1.0
-          bun install -g markdownlint-cli2
-          bun install -g @typescript/native-preview
-          bun install -g @biomejs/biome
-          ln -s $(which tsgo) ${HOME}/.bun/bin/tsc
+          uv tool install "mbake==${MBAKE_VERSION}"
+          uv tool install "nixie-cli==${NIXIE_CLI_VERSION}"
+          bun install -g "markdownlint-cli2@${MARKDOWNLINT_CLI2_VERSION}"
 
       - name: Install Node dependencies
         run: bun install
@@ -68,8 +76,13 @@ jobs:
         run: make typecheck
 
       - name: Run tests with coverage
+        env:
+          SLIPCOVER_VERSION: '1.1.0'
+          PYTEST_FORKED_VERSION: '1.7.5'
         run: |
-          uv pip install slipcover pytest-forked
+          uv pip install \
+            "slipcover==${SLIPCOVER_VERSION}" \
+            "pytest-forked==${PYTEST_FORKED_VERSION}"
           uv run python -m slipcover \
             --source=./simulacat \
             --omit="*/unittests/*,*/.venv/*" \
