@@ -210,45 +210,45 @@ Stage D: hardening, documentation, cleanup.
 
 1. Inspect simulator authentication support.
 
-```shell
-rg -n "token|auth|permission|visibility" \
-  node_modules/@simulacrum/github-api-simulator
-rg -n "auth|token" src/github-sim-server.ts simulacat
-```
+   ```shell
+   rg -n "token|auth|permission|visibility" \
+     node_modules/@simulacrum/github-api-simulator
+   rg -n "auth|token" src/github-sim-server.ts simulacat
+   ```
 
    Capture findings in the Decision Log (what fields are supported, expected
    shapes, and any limitations).
 
-1. Add unit tests first.
+2. Add unit tests first.
 
-```shell
-touch simulacat/unittests/test_github_auth_tokens.py
-```
+   ```shell
+   touch simulacat/unittests/test_github_auth_tokens.py
+   ```
 
    Populate tests for scenario validation and token selection for
    `github_simulator`. Run targeted tests and confirm failure before
    implementation:
 
-```shell
-pytest simulacat/unittests/test_github_auth_tokens.py -v
-```
+   ```shell
+   pytest simulacat/unittests/test_github_auth_tokens.py -v
+   ```
 
-1. Add behavioural tests first.
+3. Add behavioural tests first.
 
-```shell
-touch tests/features/github_auth_tokens.feature
-touch tests/steps/test_github_auth_tokens.py
-pytest tests/steps/test_github_auth_tokens.py -v
-```
+   ```shell
+   touch tests/features/github_auth_tokens.feature
+   touch tests/steps/test_github_auth_tokens.py
+   pytest tests/steps/test_github_auth_tokens.py -v
+   ```
 
    Confirm these fail before implementation.
 
-1. Implement token-aware scenario configuration and client construction.
+4. Implement token-aware scenario configuration and client construction.
 
    Update scenario models, validation, serialization, and `github_simulator`
    logic. Re-run targeted tests until they pass.
 
-2. Update documentation and roadmap.
+5. Update documentation and roadmap.
 
    Edit:
 
@@ -256,18 +256,18 @@ pytest tests/steps/test_github_auth_tokens.py -v
    - `docs/simulacat-design.md`
    - `docs/roadmap.md`
 
-3. Run quality gates (capture logs to avoid truncation).
+6. Run quality gates (capture logs to avoid truncation).
 
-```shell
-set -o pipefail
-make check-fmt | tee /tmp/simulacat-check-fmt.log
-make typecheck | tee /tmp/simulacat-typecheck.log
-make lint | tee /tmp/simulacat-lint.log
-make test | tee /tmp/simulacat-test.log
-MDLINT=/root/.bun/bin/markdownlint-cli2 \
-  make markdownlint | tee /tmp/simulacat-markdownlint.log
-make nixie | tee /tmp/simulacat-nixie.log
-```
+   ```shell
+   set -o pipefail
+   make check-fmt | tee /tmp/simulacat-check-fmt.log
+   make typecheck | tee /tmp/simulacat-typecheck.log
+   make lint | tee /tmp/simulacat-lint.log
+   make test | tee /tmp/simulacat-test.log
+   MDLINT=/root/.bun/bin/markdownlint-cli2 \
+     make markdownlint | tee /tmp/simulacat-markdownlint.log
+   make nixie | tee /tmp/simulacat-nixie.log
+   ```
 
    Expected result: each command exits 0 and logs report success.
 

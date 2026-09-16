@@ -1,12 +1,19 @@
 MDLINT ?= markdownlint-cli2
+# `make fmt` and `make check-fmt` call mdtablefix directly. `--git` selects the
+# Markdown files Git tracks and `--include-untracked` adds the untracked files
+# Git does not ignore, so a new document is formatted before it is staged.
+# Both modes need mdtablefix 0.6.0 or later; CI pins the version at the
+# install-mdtablefix step.
+MDTABLEFIX ?= mdtablefix
+MDTABLEFIX_SELECT = --git --include-untracked
+MDTABLEFIX_RULES = --wrap --renumber --breaks --ellipsis --fences
 NIXIE ?= nixie
-MDFORMAT_ALL ?= mdformat-all
 BIOME ?= ./node_modules/.bin/biome
 TSC ?= ./node_modules/.bin/tsc
 BUN ?= bun
 UV ?= uv
 NODE_TOOLS = $(BIOME) $(TSC)
-TOOLS = $(MDFORMAT_ALL) $(MDLINT) uv $(BUN)
+TOOLS = $(MDLINT) uv $(BUN)
 VENV_TOOLS = pytest
 UV_ENV = UV_CACHE_DIR=.uv-cache UV_TOOL_DIR=.uv-tools
 # One pinned ruff and one pinned ty for every gate. `uv tool install ruff`
@@ -92,16 +99,17 @@ $(VENV_TOOLS): ## Verify required CLI tools in venv
 	$(call ensure_tool_venv,$@)
 endif
 
-fmt: $(BIOME) $(MDFORMAT_ALL) ## Format sources
+fmt: $(BIOME) ## Format sources
 	$(BIOME) check . --write
 	$(RUFF) format $(PROJECT_PY_EXCLUDES)
 	$(RUFF) check --select I --fix $(PROJECT_PY_EXCLUDES)
-	$(MDFORMAT_ALL)
+	$(MDTABLEFIX) --in-place $(MDTABLEFIX_SELECT) $(MDTABLEFIX_RULES)
+	@unset FORCE_COLOR; $(MDLINT) --fix "**/*.md"
 
 check-fmt: $(BIOME) ## Verify formatting
 	$(BIOME) check .
 	$(RUFF) format --check $(PROJECT_PY_EXCLUDES)
-	# mdformat-all doesn't currently do checking
+	$(MDTABLEFIX) --check $(MDTABLEFIX_SELECT) $(MDTABLEFIX_RULES)
 
 lint: $(BIOME) ## Run linters
 	$(RUFF) check $(PROJECT_PY_EXCLUDES)
