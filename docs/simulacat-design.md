@@ -32,6 +32,15 @@ This document focuses on the orchestration pattern. The exact configuration
 shape expected by the simulator will depend on the version of
 `@simulacrum/github-api-simulator` in use.
 
+## Coverage publication
+
+Pull-request CI generates serial, source-scoped Python coverage and compares it
+with the local ratchet baseline written by `main`. It does not invoke
+CodeScene, receive `CS_ACCESS_TOKEN`, or require full Git history. On every
+push to `main`, `coverage-main.yml` generates the same ratcheted report and
+publishes it to CodeScene. This keeps the CodeScene comparison baseline aligned
+with the analysed main branch while preserving the pull-request boundary.
+
 ## Design decisions
 
 ### Step 1.1 – Simulator orchestration
