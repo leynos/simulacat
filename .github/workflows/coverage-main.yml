@@ -1,20 +1,33 @@
 name: Coverage (main)
 
 # CodeScene analyses main, so this workflow is the sole coverage publisher.
-# Pull requests use the local ratchet baseline this workflow advances.
+# Pull requests use the local ratchet baseline this workflow advances, so
+# ci.yml's generate-coverage selection has to match the one below field for
+# field. tests/workflow_contracts holds that shape.
+#
+# workflow_dispatch lets the upload be re-run on demand, because merges made
+# by the automerge workflow's GITHUB_TOKEN fire no push event.
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+# One publisher generation at a time, never cancelled. GitHub keeps at most
+# one pending run per group, so a newer push replaces an older pending run
+# and the newest baseline wins; a cancelled run would abandon both its upload
+# and its baseline write.
+concurrency:
+  group: coverage-main
+  cancel-in-progress: false
 
 jobs:
   coverage-upload:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      CS_ACCESS_TOKEN: ${{ secrets.CS_ACCESS_TOKEN || '' }}
-      CODESCENE_CLI_SHA256: ${{ vars.CODESCENE_CLI_SHA256 || '' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
@@ -34,7 +47,7 @@ jobs:
         run: bun install
 
       - name: Generate coverage
-        uses: leynos/shared-actions/.github/actions/generate-coverage@152d9c4784d0ae5877938a984fe6d1f04d718fd8
+        uses: leynos/shared-actions/.github/actions/generate-coverage@dbe2e22ceaf498d85512679ccded38be9dbe7777
         with:
           language: python
           python-source: ./simulacat
@@ -44,11 +57,15 @@ jobs:
           with-ratchet: 'true'
 
       - name: Upload coverage data to CodeScene
-        if: env.CS_ACCESS_TOKEN
-        uses: leynos/shared-actions/.github/actions/upload-codescene-coverage@152d9c4784d0ae5877938a984fe6d1f04d718fd8
+        env:
+          CS_ACCESS_TOKEN: ${{ secrets.CS_ACCESS_TOKEN }}
+        # The ref as well as the token: a dispatch can name any branch, and
+        # without this guard it would upload that branch's coverage as main's.
+        # With no CS_ACCESS_TOKEN secret the upload skips.
+        if: env.CS_ACCESS_TOKEN != '' && github.ref == 'refs/heads/main'
+        uses: leynos/shared-actions/.github/actions/upload-codescene-coverage@dbe2e22ceaf498d85512679ccded38be9dbe7777
         with:
           path: coverage.xml
           format: cobertura
           mode: upload
           access-token: ${{ env.CS_ACCESS_TOKEN }}
-          installer-checksum: ${{ env.CODESCENE_CLI_SHA256 }}

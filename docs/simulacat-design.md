@@ -34,12 +34,38 @@ shape expected by the simulator will depend on the version of
 
 ## Coverage publication
 
-Pull-request CI generates serial, source-scoped Python coverage and compares it
-with the local ratchet baseline written by `main`. It does not invoke
-CodeScene, receive `CS_ACCESS_TOKEN`, or require full Git history. On every
-push to `main`, `coverage-main.yml` generates the same ratcheted report and
-publishes it to CodeScene. This keeps the CodeScene comparison baseline aligned
-with the analysed main branch while preserving the pull-request boundary.
+Main owns CodeScene. Pull-request CI measures `simulacat` serially with the
+shared `generate-coverage` action, compares the result with the ratchet
+baseline written by `main` (`with-ratchet: 'true'`), and uploads no artefact
+(`publish-artefact: 'false'`). It does not invoke CodeScene, receive
+`CS_ACCESS_TOKEN`, or require full Git history. The step is guarded to the
+`pull_request` event, because `generate-coverage` saves its baseline on a push
+to `main` and `coverage-main.yml` must be the only workflow writing it.
+
+After each merge, `coverage-main.yml` generates the same ratcheted report and
+uploads it with `upload-codescene-coverage` in explicit `mode: upload`. The
+upload step binds the secret itself and runs only when
+`github.ref == 'refs/heads/main'` and the token is non-empty, so a
+`workflow_dispatch` aimed at a branch cannot publish that branch as `main`. Its
+concurrency group never cancels: a newer push replaces an older pending run,
+and the newest baseline wins. With no `CS_ACCESS_TOKEN` repository secret the
+upload skips; the ratchet baseline is still written. The retired
+`installer-checksum` input, the `CODESCENE_CLI_SHA256` variable, and the
+`get-codescene-sha.yml` refresher are gone; the shared uploader verifies the
+`cs-coverage` archive from its own manifest.
+
+`tests/workflow_contracts/` holds this shape. `loading.py` parses workflows
+through a loader that refuses duplicate keys, and `reading.py` reads the `on:`
+triggers in scalar, sequence, and mapping form under either key.
+`codescene_reach.py` follows local reusable-workflow calls (`./` and `$/`) from
+every pull-request-started workflow and refuses any key or value in that
+closure naming the CodeScene host, the credential, the client, or the uploader.
+`codescene_publisher.py` and `coverage_lanes.py` hold the publisher and the
+lanes to the rules above. Each rule returns its findings as text, so the rule
+tests beside them can drive it over a constructed tree; every refusal case
+changes one thing in the compliant tree in `fixtures.py`. Keep a new rule to
+that pattern: a pure reading, a repository assertion, and a refusal case that
+fails when the rule's clause is deleted.
 
 ## Design decisions
 
