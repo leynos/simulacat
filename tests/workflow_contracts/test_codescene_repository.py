@@ -29,8 +29,10 @@ from .codescene_token import (
     upload_token_violations,
 )
 from .coverage_lanes import (
+    generator_envs,
     publisher_lane_violations,
     pull_request_lane_violations,
+    report_violations,
     second_writer_violations,
 )
 from .loading import Document, read_workflows
@@ -165,3 +167,17 @@ def test_the_pull_request_lane_only_reads_contents(
     """The lint-test job measures coverage with a read-only token."""
     granted = jobs(documents["ci.yml"])["lint-test"].get("permissions")
     assert granted == {"contents": "read"}, granted
+
+
+def test_the_uploader_reads_the_generated_report(publisher: Document) -> None:
+    """The upload names the path and format the generator writes."""
+    found = report_violations(publisher)
+    assert not found, found
+
+
+def test_the_publisher_measures_on_the_pinned_interpreter(
+    publisher: Document,
+) -> None:
+    """The publisher's generator runs on the Python setup-python installs."""
+    found = [env.get("UV_PYTHON") for env in generator_envs(publisher)]
+    assert found == ["3.13"], found
