@@ -33,9 +33,11 @@ DEFINITION_RE = re.compile(
     r"\ttypos-config-builder$",
     re.MULTILINE,
 )
-# The recipe must go through the variable, not a bare `uv tool run`.
+# The recipe must go through the variable, not a bare `uv tool run`, and must
+# end there: a further tab-prefixed line would run after the gate unchecked.
 RECIPE_RE = re.compile(
-    r"^spelling:.*\n\t\$\(TYPOS_CONFIG_BUILDER\) gate --repository \.$",
+    r"^spelling:.*\n\t\$\(TYPOS_CONFIG_BUILDER\) gate --repository \."
+    r"(?:\n(?!\t)|\Z)",
     re.MULTILINE,
 )
 
@@ -100,8 +102,27 @@ def test_the_definition_predicate_requires_the_version_variable(
             "spelling: ## x\n\t$(TYPOS_CONFIG_BUILDER) gate --repository . --check\n",
             False,
         ),
+        (
+            (
+                "spelling: ## x\n\t$(TYPOS_CONFIG_BUILDER) gate --repository .\n"
+                "\tprintf 'extra command'\n"
+            ),
+            False,
+        ),
+        ("spelling: ## x\n\t$(TYPOS_CONFIG_BUILDER) gate --repository .", True),
+        (
+            "spelling: ## x\n\t$(TYPOS_CONFIG_BUILDER) gate --repository .\n\nnext:\n",
+            True,
+        ),
     ],
-    ids=["variable", "bare-uv-run", "extra-flag"],
+    ids=[
+        "variable",
+        "bare-uv-run",
+        "extra-flag",
+        "extra-recipe-line",
+        "end-of-file",
+        "next-rule",
+    ],
 )
 def test_the_recipe_predicate_requires_the_pinned_variable(
     text: str, *, goes_through_variable: bool
