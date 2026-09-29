@@ -445,16 +445,16 @@ def test_spy_and_record(cmd_mox, monkeypatch, tmp_path):
 
 ### Spelling-policy automation
 
-Run `make spelling` to enforce en-GB-oxendict spelling. The tracked
-`typos.toml` is rendered from the shared Oxford dictionary and the repository's
-focused `typos.local.toml` overlay by `typos-config-builder`. The builder
+Run `make spelling` to enforce en-GB-oxendict spelling. It runs the pinned
+`typos-config-builder gate`, which renders the tracked `typos.toml` from the
+shared Oxford dictionary and the repository's focused `typos.local.toml`
+overlay, runs Typos, and checks the shared phrase corrections. The builder
 refreshes its untracked local dictionary cache only when the authoritative
 shared copy is newer.
 
-Use `make spelling-config-write` to regenerate `typos.toml`, and use
-`make spelling-config` to verify that the tracked configuration is current.
-Keep repository-specific identifiers and quoted machine interfaces in the
-overlay; do not edit the generated configuration by hand.
+Commit the `typos.toml` that `make spelling` regenerates. Keep
+repository-specific identifiers and quoted machine interfaces in the overlay;
+do not edit the generated configuration by hand.
 
 - Scripts must be idempotent. Re‑running should converge state without
   destructive side effects. Guard conditions (for example, checking the secrets

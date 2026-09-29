@@ -163,7 +163,7 @@ disagree with CI.
 | ----------------------------------------- | --------------------------------------------------------------------------------------- |
 | `ruff`                                    | `RUFF_VERSION` in the Makefile, matched by the `ruff==` requirement in `pyproject.toml` |
 | `ty`                                      | `TY_VERSION` in the Makefile                                                            |
-| `typos`                                   | `TYPOS_VERSION` in the Makefile                                                         |
+| `typos-config-builder`                    | `TYPOS_CONFIG_BUILDER_VERSION` in the Makefile; the builder pins Typos itself           |
 | `mbake`, `nixie-cli`, `markdownlint-cli2` | version variables in `ci.yml`                                                           |
 | `slipcover`, `pytest-forked`              | version variables in `ci.yml`                                                           |
 | `biome`, `tsc`                            | `package.json` and `bun.lock`, run from `node_modules`                                  |
@@ -214,13 +214,6 @@ recipe line itself, not a comment near it, and carries a mutation check.
 ## Markdown Guidance
 
 - Validate Markdown files using `make markdownlint`.
-- The Markdown lint target also runs `make spelling` to enforce
-  en-GB-oxendict spelling with Typos.
-- `typos.toml` is generated from the shared Oxford dictionary and the local
-  `typos.local.toml` overlay. Do not edit the generated file by hand.
-- Run `make spelling-config-write` to regenerate the configuration, or
-  `make spelling-config` to verify it. The focused shared builder refreshes the
-  untracked dictionary cache only when the authoritative copy is newer.
 - Run `make fmt` after any documentation changes to format all Markdown
   files and fix table markup.
 - Validate Mermaid diagrams in Markdown files by running `make nixie`.
@@ -230,6 +223,22 @@ recipe line itself, not a comment near it, and carries a mutation check.
 - Use dashes (`-`) for list bullets.
 - Use GitHub-flavoured Markdown footnotes (`[^1]`) for references and
   footnotes.
+
+<!-- typos-config-builder:agents-md:start -->
+
+## Spelling
+
+- `make spelling` runs the pinned `typos-config-builder gate`, which
+  regenerates `typos.toml` from the shared en-GB-oxendict dictionary and
+  `typos.local.toml`, then checks spelling and the shared phrase corrections.
+- `typos.toml` is generated: never edit it by hand. Put narrow
+  repository-specific exceptions in `typos.local.toml`, as exact or full-line
+  patterns rather than bare accepted words.
+- When `make spelling` changes `typos.toml`, commit the regenerated file. If
+  the change is unrelated to your work, commit it in a separate base pull
+  request and stack your branch on it, so each review diff stays focused.
+
+<!-- typos-config-builder:agents-md:end -->
 
 ## TypeScript Guidance
 

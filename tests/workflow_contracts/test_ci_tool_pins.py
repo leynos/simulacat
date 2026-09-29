@@ -81,7 +81,7 @@ TY_DEFINITION_RE = re.compile(
 RUFF_REQUIREMENT_RE = re.compile(r'"ruff==(?P<version>[^"]+)"')
 # A recipe reaching for ruff or ty other than through `$(RUFF)` or `$(TY)`:
 # either from `PATH`, or through an unversioned `uv tool run`. The `\b` after
-# the tool name matters, or `ty` also matches inside `typos@$(TYPOS_VERSION)`.
+# the tool name matters, or `ty` also matches inside `typos-config-builder`.
 UNPINNED_INVOCATION_RE = re.compile(
     rf"^\t@?(?:ruff|ty)\b|^\t@?.*{UV_COMMAND} tool run (?:ruff|ty)\b(?!@)",
     re.MULTILINE,
@@ -419,7 +419,7 @@ def test_no_recipe_reaches_for_an_unpinned_linter() -> None:
         ("check-fmt:\n\t$(UV) tool run ruff format\n", True),
         ("typecheck:\n\t@$(UV) tool run ty check\n", True),
         ("check-fmt:\n\t$(UV) tool run ruff@0.15.20 format\n", False),
-        ("spelling:\n\t$(UV) tool run typos@$(TYPOS_VERSION) --config x\n", False),
+        ("spelling:\n\t$(UV) tool run typos-config-builder gate\n", False),
         ("check-fmt:\n\t$(RUFF) format --check\n", False),
         ("typecheck:\n\t$(TY) check\n", False),
     ],
