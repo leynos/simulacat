@@ -99,7 +99,7 @@ jobs:
       # compared, not published.
       - name: Generate coverage
         if: github.event_name == 'pull_request'
-        uses: leynos/shared-actions/.github/actions/generate-coverage@dbe2e22ceaf498d85512679ccded38be9dbe7777
+        uses: leynos/shared-actions/.github/actions/generate-coverage@8250c914bd32aeacfdf8d9e87b804ec0024ee83e
         # Pinned to the interpreter setup-python installs, in both lanes:
         # the action builds its coverage environment with whatever
         # interpreter uv finds first, which an earlier step's managed
