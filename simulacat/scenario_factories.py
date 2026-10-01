@@ -242,7 +242,7 @@ def monorepo_with_apps_scenario(
     )
 
 
-def github_app_scenario(  # noqa: PLR0913 — FIXME: consider a config object to reduce arity
+def github_app_scenario(  # ruff: ignore[too-many-arguments] — FIXME: consider a config object to reduce arity
     app_slug: str,
     name: str,
     *,

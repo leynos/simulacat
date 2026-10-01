@@ -9,7 +9,7 @@ projects by:
 
 from __future__ import annotations
 
-import subprocess  # noqa: S404  # trusted static commands in repository tests
+import subprocess  # ruff: ignore[suspicious-subprocess-import]  # trusted static commands in repository tests
 import sys
 import typing as typ
 

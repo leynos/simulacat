@@ -12,7 +12,7 @@ The command resolves the installed simulacat JavaScript package root and runs
 from __future__ import annotations
 
 # S404: subprocess is required to invoke Bun without shell expansion.
-import subprocess  # noqa: S404  # simulacat#123: run Bun install via explicit args; shell=False
+import subprocess  # ruff: ignore[suspicious-subprocess-import]  # simulacat#123: run Bun install via explicit args; shell=False
 import sys
 import typing as typ
 
@@ -47,7 +47,7 @@ def install_simulator_dependencies(*, bun_executable: str = "bun") -> Path:
     timeout_seconds = 300
     try:
         # S603: command arguments are fixed executable + validated path.
-        result = subprocess.run(command, check=False, timeout=timeout_seconds)  # noqa: S603  # simulacat#123: explicit command list only; shell=False
+        result = subprocess.run(command, check=False, timeout=timeout_seconds)  # ruff: ignore[subprocess-without-shell-equals-true]  # simulacat#123: explicit command list only; shell=False
     except FileNotFoundError as exc:
         msg = f"Bun executable not found: {bun_executable}"
         raise GitHubSimProcessError(msg) from exc

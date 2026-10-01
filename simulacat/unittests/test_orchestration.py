@@ -30,7 +30,7 @@ import http.client
 import os
 
 # S404: tests spawn controlled local helpers only; no shell usage.
-import subprocess  # noqa: S404  # simulacat#123: test helpers spawn controlled subprocesses; shell=False
+import subprocess  # ruff: ignore[suspicious-subprocess-import]  # simulacat#123: test helpers spawn controlled subprocesses; shell=False
 import sys
 import typing as typ
 import zipfile
@@ -171,7 +171,7 @@ class TestPackaging:
         dist_dir.mkdir(parents=True, exist_ok=True)
 
         # S603: build wheel in test only with explicit args and shell disabled.
-        build = subprocess.run(  # noqa: S603  # simulacat#123: wheel build uses explicit args; shell=False
+        build = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]  # simulacat#123: wheel build uses explicit args; shell=False
             [
                 sys.executable,
                 "-m",

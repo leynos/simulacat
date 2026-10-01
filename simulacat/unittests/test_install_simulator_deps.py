@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses as dc
 
 # S404: tests patch subprocess.run and raise TimeoutExpired only.
-import subprocess  # noqa: S404  # simulacat#123: test-only subprocess objects
+import subprocess  # ruff: ignore[suspicious-subprocess-import]  # simulacat#123: test-only subprocess objects
 import typing as typ
 
 import pytest
