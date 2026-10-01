@@ -153,7 +153,7 @@ def given_installation_with_static_token(
                 installation_id=1,
                 app_slug="token-bot",
                 account="octocat",
-                access_token="ghs_literal_static_value",  # noqa: S106 — FIXME: use env or fixture for test tokens
+                access_token="ghs_literal_static_value",  # ruff: ignore[hardcoded-password-func-arg] — FIXME: use env or fixture for test tokens
             ),
         ),
     )
@@ -248,6 +248,6 @@ def then_no_app_fields(limitations_context: LimitationsContext) -> None:
 def then_literal_token(limitations_context: LimitationsContext) -> None:
     """Assert that the resolved token is the literal static string."""
     token = limitations_context["token"]
-    assert token == "ghs_literal_static_value", (  # noqa: S105 — FIXME: use env or fixture for test tokens
+    assert token == "ghs_literal_static_value", (  # ruff: ignore[hardcoded-password-string] — FIXME: use env or fixture for test tokens
         "Expected resolved token to be the literal access_token value"
     )

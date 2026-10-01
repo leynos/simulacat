@@ -31,7 +31,7 @@ _REQUIRED_SIMULATOR_KEYS: tuple[str, ...] = (
     "blobs",
 )
 _SIMULACAT_METADATA_KEY = "__simulacat__"
-_SIMULACAT_AUTH_TOKEN_KEY = "auth_token"  # noqa: S105 # TODO(simulacat#123): metadata key is not a credential
+_SIMULACAT_AUTH_TOKEN_KEY = "auth_token"  # ruff: ignore[hardcoded-password-string] # TODO(simulacat#123): metadata key is not a credential
 
 
 def _split_simulacat_config(

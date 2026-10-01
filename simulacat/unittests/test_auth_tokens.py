@@ -93,7 +93,7 @@ class TestAuthTokens:
                 AccessToken(value="ghs_one", owner="alice"),
                 AccessToken(value="ghs_two", owner="alice"),
             ),
-            default_token="ghs_two",  # noqa: S106 # TODO(simulacat#123): test token value
+            default_token="ghs_two",  # ruff: ignore[hardcoded-password-func-arg] # TODO(simulacat#123): test token value
         )
 
         assert scenario.resolve_auth_token() == "ghs_two", (
@@ -257,7 +257,7 @@ class TestAuthTokens:
         scenario = ScenarioConfig(
             users=(User(login="alice"),),
             tokens=(AccessToken(value="ghs_one", owner="alice"),),
-            default_token="ghs_missing",  # noqa: S106 # TODO(simulacat#123): add secure token value
+            default_token="ghs_missing",  # ruff: ignore[hardcoded-password-func-arg] # TODO(simulacat#123): add secure token value
         )
 
         with pytest.raises(

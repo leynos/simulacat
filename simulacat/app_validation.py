@@ -148,7 +148,7 @@ def validate_apps(
     return _ensure_unique(slugs, "app slug")
 
 
-def validate_app_installations(  # noqa: PLR0913, PLR0917 — FIXME: consider a config object to reduce arity
+def validate_app_installations(  # ruff: ignore[too-many-arguments, too-many-positional-arguments] — FIXME: consider a config object to reduce arity
     app_installations: tuple[AppInstallation, ...],
     app_slugs: set[str],
     user_logins: set[str],
@@ -304,7 +304,7 @@ def validate_default_token(
     """
     all_values = collect_all_token_values(tokens, app_installations)
     _select_auth_token_value(all_values, default_token)
-    return  # noqa: PLR1711 — R503: explicit end-of-function return
+    return  # ruff: ignore[useless-return] — R503: explicit end-of-function return
 
 
 __all__ = [

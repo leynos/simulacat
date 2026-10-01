@@ -90,7 +90,7 @@ class TestAppInstallationModel:
             account="octocat",
             repositories=("octocat/hello-world",),
             permissions=("contents", "pull_requests"),
-            access_token="ghs_install_token",  # noqa: S106 — FIXME: use env or fixture for test tokens
+            access_token="ghs_install_token",  # ruff: ignore[hardcoded-password-func-arg] — FIXME: use env or fixture for test tokens
         )
 
         assert installation.installation_id == 42, "Expected installation_id to match"
@@ -100,7 +100,7 @@ class TestAppInstallationModel:
         assert installation.permissions == ("contents", "pull_requests"), (
             "Expected permissions to match"
         )
-        assert installation.access_token == "ghs_install_token", (  # noqa: S105 — FIXME: use env or fixture for test tokens
+        assert installation.access_token == "ghs_install_token", (  # ruff: ignore[hardcoded-password-string] — FIXME: use env or fixture for test tokens
             "Expected access_token to match"
         )
 
@@ -348,7 +348,7 @@ class TestInstallationTokenIntegration:
                     installation_id=1,
                     app_slug="my-bot",
                     account="alice",
-                    access_token="ghs_install",  # noqa: S106 — FIXME: use env or fixture for test tokens
+                    access_token="ghs_install",  # ruff: ignore[hardcoded-password-func-arg] — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -371,7 +371,7 @@ class TestInstallationTokenIntegration:
                     installation_id=1,
                     app_slug="my-bot",
                     account="alice",
-                    access_token="ghs_install",  # noqa: S106 — FIXME: use env or fixture for test tokens
+                    access_token="ghs_install",  # ruff: ignore[hardcoded-password-func-arg] — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -396,10 +396,10 @@ class TestInstallationTokenIntegration:
                     installation_id=1,
                     app_slug="my-bot",
                     account="alice",
-                    access_token="ghs_install",  # noqa: S106 — FIXME: use env or fixture for test tokens
+                    access_token="ghs_install",  # ruff: ignore[hardcoded-password-func-arg] — FIXME: use env or fixture for test tokens
                 ),
             ),
-            default_token="ghs_install",  # noqa: S106 — FIXME: use env or fixture for test tokens
+            default_token="ghs_install",  # ruff: ignore[hardcoded-password-func-arg] — FIXME: use env or fixture for test tokens
         )
 
         assert scenario.resolve_auth_token() == "ghs_install", (
@@ -420,7 +420,7 @@ class TestInstallationTokenIntegration:
                     installation_id=1,
                     app_slug="my-bot",
                     account="alice",
-                    access_token="ghs_same",  # noqa: S106 — FIXME: use env or fixture for test tokens
+                    access_token="ghs_same",  # ruff: ignore[hardcoded-password-func-arg] — FIXME: use env or fixture for test tokens
                 ),
             ),
         )
@@ -475,7 +475,7 @@ class TestGitHubAppHappyPath:
                     account="octocat",
                     repositories=("octocat/hello-world",),
                     permissions=("contents", "pull_requests"),
-                    access_token="ghs_installation_token",  # noqa: S106 — FIXME: use env or fixture for test tokens
+                    access_token="ghs_installation_token",  # ruff: ignore[hardcoded-password-func-arg] — FIXME: use env or fixture for test tokens
                 ),
             ),
         )

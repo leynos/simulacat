@@ -45,7 +45,7 @@ from __future__ import annotations
 import typing as typ
 
 
-def __getattr__(name: str) -> typ.Any:  # noqa: ANN401 - module __getattr__ returns dynamic types
+def __getattr__(name: str) -> typ.Any:  # ruff: ignore[any-type] - module __getattr__ returns dynamic types
     """Lazily import pytest-dependent fixtures to avoid hard runtime dependency.
 
     This allows ``import simulacat.fixtures`` to succeed even when pytest is not
@@ -83,8 +83,8 @@ def __dir__() -> list[str]:
 
 
 __all__ = [
-    "github_sim_config",  # noqa: F822 - dynamically available via __getattr__
-    "github_simulator",  # noqa: F822 - dynamically available via __getattr__
-    "simulacat_empty_org",  # noqa: F822 - dynamically available via __getattr__
-    "simulacat_single_repo",  # noqa: F822 - dynamically available via __getattr__
+    "github_sim_config",  # ruff: ignore[undefined-export] - dynamically available via __getattr__
+    "github_simulator",  # ruff: ignore[undefined-export] - dynamically available via __getattr__
+    "simulacat_empty_org",  # ruff: ignore[undefined-export] - dynamically available via __getattr__
+    "simulacat_single_repo",  # ruff: ignore[undefined-export] - dynamically available via __getattr__
 ]
