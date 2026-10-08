@@ -4,20 +4,20 @@ This guide records internal conventions for maintaining simulacat.
 
 ## Coverage workflow contract
 
-Both coverage lanes set up Python 3.13 with `actions/setup-python` and name it
-again with a step-level `UV_PYTHON`, inside the project's `requires-python`
-(`>=3.12`). generate-coverage chooses its interpreter from its `python-version`
-input, then `UV_PYTHON`, then `.python-version`, then the `python3` on `PATH`,
-which is the most recent `setup-python` step before the call in its job;
-`uv sync` refuses an interpreter outside `requires-python`.
-`tests/workflow_contracts/test_coverage_python_version.py`, with its reader in
-`tests/workflow_contracts/coverage_python_sources.py`, requires every
-generate-coverage call in the pull-request lane and the publisher to declare at
-least one of those sources, every declared source to name the same version,
-that version to be inside `requires-python`, and both lanes to measure on that
-one version. A `setup-python` step guarded by `if:` or allowed to fail with
-`continue-on-error` declares nothing. The ratchet baseline key already carries
-the interpreter (`ratchet-baseline-<os>-py<major.minor>-`), so a lane on
-another Python would miss its baseline rather than compare against the wrong
-one; the contract turns that silent restart into a failure. It uses
-`packaging`, a development dependency.
+`make test-workflow-contracts` holds this shape by running
+`cv005-contracts check`, the shared contract library in `leynos/shared-actions`
+(`packages/cv005-contracts`), from the full commit named by
+`CV005_CONTRACTS_REF` in the Makefile. The library follows local
+reusable-workflow calls from every workflow a pull request can start, refuses
+the CodeScene host, credential, client and uploader in that closure, and holds
+the publisher, the lanes, the environment placement and the lanes' selection
+parity to the CV-005 rules. A fix to a rule reaches this repository as a pin
+bump. The target needs `uv`, which fetches the Python 3.13 the library runs
+under. `.github/cv005.toml` holds the repository's parameters, and its
+`interpreter = "3.13"` makes the library require every generate-coverage call
+to pin `UV_PYTHON` to that version, inside the project's `requires-python`
+(`>=3.12`), so both lanes measure on one Python. The decision is recorded in
+[ADR 001](adr-001-adopt-the-shared-cv005-contract-library.md).
+`tests/workflow_contracts/test_cv005_wiring.py` fails if the pin is not a full
+commit, the target stops running the pinned checker, the repository parameter
+is wrong, `make all` drops the target or CI stops running it.
