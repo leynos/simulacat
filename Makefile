@@ -134,7 +134,7 @@ nixie: ## Validate Mermaid diagrams
 	$(call ensure_tool,$(NIXIE))
 	$(NIXIE) --no-sandbox
 
-test: build node_modules uv $(VENV_TOOLS) ## Run tests
+test: build node_modules uv $(VENV_TOOLS) test-workflow-contracts ## Run tests
 	$(UV_ENV) uv run pytest -v -n auto
 	$(BUN) test
 
