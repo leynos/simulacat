@@ -16,6 +16,15 @@ NODE_TOOLS = $(BIOME) $(TSC)
 TOOLS = $(MDLINT) uv $(BUN)
 VENV_TOOLS = pytest
 UV_ENV = UV_CACHE_DIR=.uv-cache UV_TOOL_DIR=.uv-tools
+
+# The CV-005 CodeScene contracts live in shared-actions and run from a full
+# commit, so a fix is a pin bump. `.github/cv005.toml` holds this repository's
+# only parameters.
+CV005_CONTRACTS_REF ?= 88977798a5c3bae1549afb99642529488c665276
+CV005_CONTRACTS = $(UV_ENV) $(UV) tool run --python 3.13 \
+	--from 'git+https://github.com/leynos/shared-actions@$(CV005_CONTRACTS_REF)\#subdirectory=packages/cv005-contracts' \
+	cv005-contracts
+
 # One pinned ruff and one pinned ty for every gate. `uv tool install ruff`
 # with no version is what turned main red: it followed upstream into a release
 # whose noqa-comments rule rejected 59 suppressions the tree already carried,
@@ -30,12 +39,15 @@ RUFF = $(UV_ENV) $(UV) tool run ruff@$(RUFF_VERSION)
 TY = $(UV_ENV) $(UV) tool run ty@$(TY_VERSION)
 
 .PHONY: help all clean build build-release lint fmt check-fmt markdownlint \
-        nixie spelling test typecheck $(TOOLS) $(VENV_TOOLS)
+        nixie spelling test typecheck $(TOOLS) $(VENV_TOOLS) test-workflow-contracts
 .PHONY: $(NODE_TOOLS)
 
 .DEFAULT_GOAL := all
 
-all: check-fmt lint typecheck test spelling
+test-workflow-contracts: ## Check the CV-005 CodeScene workflow contracts
+	$(CV005_CONTRACTS) check --repository .
+
+all: check-fmt lint typecheck test spelling test-workflow-contracts
 
 .venv: pyproject.toml
 	$(UV_ENV) uv venv --clear
@@ -122,7 +134,7 @@ nixie: ## Validate Mermaid diagrams
 	$(call ensure_tool,$(NIXIE))
 	$(NIXIE) --no-sandbox
 
-test: build node_modules uv $(VENV_TOOLS) ## Run tests
+test: build node_modules uv $(VENV_TOOLS) test-workflow-contracts ## Run tests
 	$(UV_ENV) uv run pytest -v -n auto
 	$(BUN) test
 

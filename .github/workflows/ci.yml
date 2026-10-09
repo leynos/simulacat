@@ -27,6 +27,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
+      - name: Check the CV-005 contracts
+        run: make test-workflow-contracts
       - name: Install CLI tools
         env:
           # Pin every tool this job installs. `uv tool install ruff` with no
