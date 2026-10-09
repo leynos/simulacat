@@ -97,6 +97,7 @@ def test_the_repository_parameter_names_this_repository() -> None:
     """Hold ``.github/cv005.toml`` to this repository's name."""
     config = tomllib.loads((ROOT / ".github" / "cv005.toml").read_text("utf-8"))
     assert config.get("repository") == REPOSITORY, config
+    assert config.get("interpreter") == "3.13", config
 
 
 def test_make_all_includes_the_target() -> None:
@@ -104,6 +105,12 @@ def test_make_all_includes_the_target() -> None:
     source = SOURCE.format(ref=_pinned_commit())
     commands = _make_n("all")
     assert f"--from '{source}'" in commands, commands
+    assert "cv005-contracts check --repository ." in commands, commands
+
+
+def test_make_test_includes_the_target() -> None:
+    """Run the checker from the standard test gate as well."""
+    commands = _make_n("test")
     assert "cv005-contracts check --repository ." in commands, commands
 
 
@@ -121,3 +128,8 @@ def test_ci_runs_the_target_unconditionally() -> None:
     assert holders, f"ci.yml must run `make {TARGET}` in a step"
     assert all("if" not in step for _, step in holders), holders
     assert all("if" not in job for job, _ in holders), holders
+    assert all("continue-on-error" not in step for _, step in holders), holders
+    assert all("continue-on-error" not in job for job, _ in holders), holders
+    assert all(
+        str(step.get("run", "")).strip() == f"make {TARGET}" for _, step in holders
+    ), holders
