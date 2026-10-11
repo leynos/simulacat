@@ -73,17 +73,18 @@ UV_COMMAND = r"(?:uv|\$\(UV\))"
 RUFF_VERSION_RE = re.compile(r"^RUFF_VERSION \?= (?P<version>\S+)$", re.MULTILINE)
 TY_VERSION_RE = re.compile(r"^TY_VERSION \?= (?P<version>\S+)$", re.MULTILINE)
 RUFF_DEFINITION_RE = re.compile(
-    rf"^RUFF = .*{UV_COMMAND} tool run ruff@\$\(RUFF_VERSION\)", re.MULTILINE
+    r"^RUFF = \$\(UV_GATE\) tool --from ruff@\$\(RUFF_VERSION\) -- ruff$", re.MULTILINE
 )
 TY_DEFINITION_RE = re.compile(
-    rf"^TY = .*{UV_COMMAND} tool run ty@\$\(TY_VERSION\)", re.MULTILINE
+    r"^TY = \$\(UV_GATE\) tool --from ty@\$\(TY_VERSION\) -- ty$", re.MULTILINE
 )
 RUFF_REQUIREMENT_RE = re.compile(r'"ruff==(?P<version>[^"]+)"')
 # A recipe reaching for ruff or ty other than through `$(RUFF)` or `$(TY)`:
 # either from `PATH`, or through an unversioned `uv tool run`. The `\b` after
 # the tool name matters, or `ty` also matches inside `typos-config-builder`.
 UNPINNED_INVOCATION_RE = re.compile(
-    rf"^\t@?(?:ruff|ty)\b|^\t@?.*{UV_COMMAND} tool run (?:ruff|ty)\b(?!@)",
+    rf"^\t@?(?:ruff|ty)\b|^\t@?.*{UV_COMMAND} tool run (?:ruff|ty)\b(?!@)"
+    r"|^\t@?.*\$\(UV_GATE\) tool --from (?:ruff|ty)\b(?!@)",
     re.MULTILINE,
 )
 
@@ -402,7 +403,7 @@ def test_the_variable_invokes_the_pinned_release(
 
     """
     assert pattern.search(MAKEFILE_PATH.read_text(encoding="utf-8")), (
-        f"{name} must be defined as `uv tool run <tool>@$({name}_VERSION)`"
+        f"{name} must be defined as `$(UV_GATE) tool --from <tool>@$({name}_VERSION)`"
     )
 
 
@@ -418,6 +419,7 @@ def test_no_recipe_reaches_for_an_unpinned_linter() -> None:
         ("typecheck:\n\tty check\n", True),
         ("check-fmt:\n\t$(UV) tool run ruff format\n", True),
         ("typecheck:\n\t@$(UV) tool run ty check\n", True),
+        ("check-fmt:\n\t$(UV_GATE) tool --from ruff format\n", True),
         ("check-fmt:\n\t$(UV) tool run ruff@0.15.20 format\n", False),
         ("spelling:\n\t$(UV) tool run typos-config-builder gate\n", False),
         ("check-fmt:\n\t$(RUFF) format --check\n", False),
@@ -428,6 +430,7 @@ def test_no_recipe_reaches_for_an_unpinned_linter() -> None:
         "bare-ty",
         "unversioned-uv-run-ruff",
         "unversioned-uv-run-ty",
+        "unversioned-gate-ruff",
         "versioned-uv-run",
         "typos-is-not-ty",
         "ruff-variable",

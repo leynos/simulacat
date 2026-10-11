@@ -11,19 +11,42 @@ NIXIE ?= nixie
 BIOME ?= ./node_modules/.bin/biome
 TSC ?= ./node_modules/.bin/tsc
 BUN ?= bun
+# Every uv call goes through the vendored helper, which cleans the environment,
+# uses the global uv cache, runs offline first and goes online at most once. See
+# https://github.com/leynos/shared-actions/tree/main/uv_gate for the contract.
+# The one exception is typos-config-builder at a release tag, which the spelling
+# baseline requires to be called directly.
+UV_GATE ?= python3 scripts/uv_gate.py
 UV ?= uv
+# The helper finds uv on PATH, so a caller's UV=/path/to/uv is honoured by putting
+# that uv's directory first on PATH for every recipe.
+export PATH := $(if $(findstring /,$(UV)),$(patsubst %/,%,$(dir $(UV))):)$(PATH)
+# A UV given on the command line or in the environment must be uv itself or an executable
+# file named uv: the helper finds uv on PATH by that name and would otherwise use another.
+ifneq ($(filter command line environment,$(origin UV)),)
+ifneq ($(UV),uv)
+ifeq ($(findstring /,$(UV)),)
+$(error UV=$(UV) must be uv or a path to an executable file named uv)
+endif
+ifeq ($(shell test -f '$(UV)' -a -x '$(UV)' && printf y),)
+$(error UV=$(UV) is not an executable file)
+endif
+ifneq ($(notdir $(UV)),uv)
+$(error UV=$(UV) must be named uv)
+endif
+endif
+endif
+
+
 NODE_TOOLS = $(BIOME) $(TSC)
 TOOLS = $(MDLINT) uv $(BUN)
 VENV_TOOLS = pytest
-UV_ENV = UV_CACHE_DIR=.uv-cache UV_TOOL_DIR=.uv-tools
 
 # The CV-005 CodeScene contracts live in shared-actions and run from a full
 # commit, so a fix is a pin bump. `.github/cv005.toml` holds this repository's
 # only parameters.
 CV005_CONTRACTS_REF ?= 88977798a5c3bae1549afb99642529488c665276
-CV005_CONTRACTS = $(UV_ENV) $(UV) tool run --python 3.13 \
-	--from 'git+https://github.com/leynos/shared-actions@$(CV005_CONTRACTS_REF)\#subdirectory=packages/cv005-contracts' \
-	cv005-contracts
+CV005_CONTRACTS = $(UV_GATE) tool --python 3.13 --from 'git+https://github.com/leynos/shared-actions@$(CV005_CONTRACTS_REF)\#subdirectory=packages/cv005-contracts' -- cv005-contracts
 
 # One pinned ruff and one pinned ty for every gate. `uv tool install ruff`
 # with no version is what turned main red: it followed upstream into a release
@@ -32,14 +55,17 @@ CV005_CONTRACTS = $(UV_ENV) $(UV) tool run --python 3.13 \
 RUFF_VERSION ?= 0.15.20
 TY_VERSION ?= 0.0.78
 TYPOS_CONFIG_BUILDER_VERSION ?= v0.1.3
-TYPOS_CONFIG_BUILDER = $(UV_ENV) $(UV) tool run --python 3.14 --from \
+TYPOS_CONFIG_BUILDER = $(UV) tool run --python 3.14 --from \
 	"git+https://github.com/leynos/typos-config-builder.git@$(TYPOS_CONFIG_BUILDER_VERSION)" \
 	typos-config-builder
-RUFF = $(UV_ENV) $(UV) tool run ruff@$(RUFF_VERSION)
-TY = $(UV_ENV) $(UV) tool run ty@$(TY_VERSION)
+RUFF = $(UV_GATE) tool --from ruff@$(RUFF_VERSION) -- ruff
+TY = $(UV_GATE) tool --from ty@$(TY_VERSION) -- ty
 
-.PHONY: help all clean build build-release lint fmt check-fmt markdownlint \
+.PHONY: prepare help all clean build build-release lint fmt check-fmt markdownlint \
         nixie spelling test typecheck $(TOOLS) $(VENV_TOOLS) test-workflow-contracts
+
+prepare: ## Install the locked development environment, offline first
+	$(UV_GATE) prepare --group dev
 .PHONY: $(NODE_TOOLS)
 
 .DEFAULT_GOAL := all
@@ -49,11 +75,7 @@ test-workflow-contracts: ## Check the CV-005 CodeScene workflow contracts
 
 all: check-fmt lint typecheck test spelling test-workflow-contracts
 
-.venv: pyproject.toml
-	$(UV_ENV) uv venv --clear
-
-build: uv .venv ## Build virtual-env and install deps
-	$(UV_ENV) uv sync --group dev
+build: uv prepare ## Build virtual-env and install deps
 
 build-release: ## Build artefacts (sdist & wheel)
 	python -m build --sdist --wheel
@@ -76,7 +98,7 @@ define ensure_tool
 endef
 
 define ensure_tool_venv
-	@$(UV_ENV) uv run which $(1) >/dev/null 2>&1 || { \
+	@$(UV_GATE) run -- which $(1) >/dev/null 2>&1 || { \
 	  printf "Error: '%s' is required in the virtualenv, but is not installed\n" "$(1)" >&2; \
 	  exit 1; \
 	}
@@ -95,7 +117,7 @@ endif
 
 ifneq ($(strip $(VENV_TOOLS)),)
 .PHONY: $(VENV_TOOLS)
-$(VENV_TOOLS): ## Verify required CLI tools in venv
+$(VENV_TOOLS): prepare ## Verify required CLI tools in venv
 	$(call ensure_tool_venv,$@)
 endif
 
@@ -135,7 +157,7 @@ nixie: ## Validate Mermaid diagrams
 	$(NIXIE) --no-sandbox
 
 test: build node_modules uv $(VENV_TOOLS) test-workflow-contracts ## Run tests
-	$(UV_ENV) uv run pytest -v -n auto
+	$(UV_GATE) run -- pytest -v -n auto
 	$(BUN) test
 
 help: ## Show available targets
