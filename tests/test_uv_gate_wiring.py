@@ -13,7 +13,7 @@ import hashlib
 import os
 import re
 import shutil
-import subprocess  # noqa: S404 - fixed argv only, no shell
+import subprocess  # ruff: ignore[suspicious-subprocess-import] - fixed argv only, no shell
 from pathlib import Path
 
 import pytest
@@ -44,18 +44,12 @@ PREPARE_TARGETS: tuple[str, ...] = ("prepare",)
 # Every Makefile line that mentions uv without going through the helper. A new
 # mention fails the test until it is reviewed and added here.
 ALLOWED_UV_LINES: tuple[str, ...] = (
-    "$(error UV=$(UV) is not an executable file)",
-    "$(error UV=$(UV) must be named uv)",
-    "$(error UV=$(UV) must be uv or a path to an executable file named uv)",
     "TOOLS = $(MDLINT) uv $(BUN)",
-    'TYPOS_CONFIG_BUILDER = $(UV) tool run --python 3.14 --from "git+https://github.com/leynos/typos-config-builder.git@$(TYPOS_CONFIG_BUILDER_VERSION)" typos-config-builder',  # noqa: E501
+    'TYPOS_CONFIG_BUILDER = $(UV) tool run --python 3.14 --from "git+https://github.com/leynos/typos-config-builder.git@$(TYPOS_CONFIG_BUILDER_VERSION)" typos-config-builder',  # ruff: ignore[line-too-long]
     "UV ?= uv",
+    "UV_SELECTION_CHECK := $(if $(filter command line environment,$(origin UV)),$(if $(filter uv,$(UV)),,$(if $(findstring /,$(UV)),$(if $(shell test -f '$(UV)' -a -x '$(UV)' && printf y),$(if $(filter uv,$(notdir $(UV))),,$(error UV=$(UV) must be named uv)),$(error UV=$(UV) is not an executable file)),$(error UV=$(UV) must be uv or a path to an executable file named uv))))",  # ruff: ignore[line-too-long]
     "build: uv prepare",
     "export PATH := $(if $(findstring /,$(UV)),$(patsubst %/,%,$(dir $(UV))):)$(PATH)",
-    "ifeq ($(findstring /,$(UV)),)",
-    "ifeq ($(shell test -f '$(UV)' -a -x '$(UV)' && printf y),)",
-    "ifneq ($(UV),uv)",
-    "ifneq ($(notdir $(UV)),uv)",
     "test: build node_modules uv $(VENV_TOOLS) test-workflow-contracts",
 )
 MAKE = shutil.which("make")
@@ -163,7 +157,7 @@ def make(
 ) -> subprocess.CompletedProcess[str]:
     """Run GNU make in the repository root; fail on an unexpected exit status."""
     environment = {k: v for k, v in os.environ.items() if k != "UV_GATE"}
-    done = subprocess.run(  # noqa: S603 - fixed argv, no shell
+    done = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
         [MAKE or "make", "--no-print-directory", "-f", "Makefile", *arguments],
         cwd=ROOT,
         env=environment,
