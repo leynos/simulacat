@@ -218,6 +218,7 @@ def _start_stdout_reader(
     line_queue: queue.Queue[str | None] = queue.Queue()
 
     def _reader() -> None:
+        """Copy stdout lines into the queue, then push a ``None`` end marker."""
         for line in iter(stdout.readline, ""):
             line_queue.put(line)
         line_queue.put(None)
@@ -326,6 +327,7 @@ def _drain_process_output(
 
 
 def _stop_process(proc: subprocess.Popen[str], *, timeout: float = 1.0) -> None:
+    """Terminate the process, escalating to kill if it outlives the timeout."""
     with contextlib.suppress(OSError):
         proc.terminate()
 

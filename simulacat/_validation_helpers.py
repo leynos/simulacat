@@ -19,6 +19,7 @@ _ALLOWED_REPOSITORY_VISIBILITIES = frozenset({"all", "private", "public"})
 
 
 def _require_text(value: object, label: str) -> str:
+    """Return the value if it is a non-blank string, otherwise raise."""
     if not isinstance(value, str) or not value.strip():
         msg = f"{label} must be a non-empty string"
         raise ConfigValidationError(msg)
@@ -26,6 +27,7 @@ def _require_text(value: object, label: str) -> str:
 
 
 def _require_positive_int(value: object, label: str) -> int:
+    """Return the value if it is a positive int (booleans excluded), else raise."""
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         msg = f"{label} must be a positive integer"
         raise ConfigValidationError(msg)
@@ -33,6 +35,7 @@ def _require_positive_int(value: object, label: str) -> int:
 
 
 def _ensure_unique(values: list[str], label: str) -> set[str]:
+    """Return the values as a set, raising on the first duplicate."""
     seen: set[str] = set()
     for value in values:
         if value in seen:
@@ -43,6 +46,7 @@ def _ensure_unique(values: list[str], label: str) -> set[str]:
 
 
 def _parse_repo_reference(value: str) -> RepositoryKey:
+    """Split an ``owner/repo`` reference into a validated key, or raise."""
     if "/" not in value:
         msg = "Token repository must be in the form 'owner/repo'"
         raise ConfigValidationError(msg)

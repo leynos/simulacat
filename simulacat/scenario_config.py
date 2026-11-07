@@ -193,6 +193,7 @@ class ScenarioConfig:
         )
 
     def _ensure_indexes(self) -> _ScenarioIndexes:
+        """Return the cached indexes, building and caching them on first use."""
         indexes = self._indexes
         if indexes is None:
             indexes = self._build_indexes()
@@ -200,6 +201,7 @@ class ScenarioConfig:
         return indexes
 
     def _build_indexes(self) -> _ScenarioIndexes:
+        """Run every validation stage and return the assembled indexes."""
         org_logins = self._validate_organizations()
         user_logins = self._validate_users(org_logins)
         repo_index = self._validate_repositories(user_logins, org_logins)
@@ -218,12 +220,14 @@ class ScenarioConfig:
         return _ScenarioIndexes(org_logins, user_logins, repo_index, branch_index)
 
     def _validate_organizations(self) -> set[str]:
+        """Check organization logins are non-blank and unique."""
         logins = [
             _require_text(org.login, "Organization login") for org in self.organizations
         ]
         return _ensure_unique(logins, "organization login")
 
     def _validate_users(self, org_logins: set[str]) -> set[str]:
+        """Check user logins are unique and their organizations are defined."""
         logins: list[str] = []
         for user in self.users:
             logins.append(_require_text(user.login, "User login"))
@@ -242,6 +246,7 @@ class ScenarioConfig:
         user_logins: set[str],
         org_logins: set[str],
     ) -> dict[RepositoryKey, Repository]:
+        """Index repositories by key, checking owners are known and keys unique."""
         repo_index: dict[RepositoryKey, Repository] = {}
         for repo in self.repositories:
             owner = _require_text(repo.owner, "Repository owner")
@@ -266,6 +271,7 @@ class ScenarioConfig:
     def _validate_branches(
         self, repo_index: dict[RepositoryKey, Repository]
     ) -> dict[RepositoryKey, dict[str, Branch]]:
+        """Validate explicit and default branches, returning them per repository."""
         branch_index = self._validate_explicit_branches(repo_index)
         self._attach_default_branches(repo_index, branch_index)
         return branch_index
@@ -273,6 +279,7 @@ class ScenarioConfig:
     def _validate_explicit_branches(
         self, repo_index: dict[RepositoryKey, Repository]
     ) -> dict[RepositoryKey, dict[str, Branch]]:
+        """Index explicit branches per repository, rejecting conflicting duplicates."""
         branch_index: dict[RepositoryKey, dict[str, Branch]] = {}
         for branch in self.branches:
             key = self._validate_branch_core(branch, repo_index)
@@ -288,6 +295,7 @@ class ScenarioConfig:
         branch: Branch,
         repo_index: dict[RepositoryKey, Repository],
     ) -> RepositoryKey:
+        """Check a branch's fields and repository, returning its repository key."""
         owner = _require_text(branch.owner, "Branch owner")
         repo = _require_text(branch.repository, "Branch repository")
         _require_text(branch.name, "Branch name")
@@ -304,6 +312,7 @@ class ScenarioConfig:
         repo_index: dict[RepositoryKey, Repository],
         branch_index: dict[RepositoryKey, dict[str, Branch]],
     ) -> None:
+        """Merge each repository's default branch into the branch index."""
         for key, repo in repo_index.items():
             if repo.default_branch is None:
                 continue
@@ -315,6 +324,7 @@ class ScenarioConfig:
         default_branch: DefaultBranch,
         branch_index: dict[RepositoryKey, dict[str, Branch]],
     ) -> None:
+        """Add the default branch, merging it with an explicit branch of that name."""
         repo_branches = branch_index.setdefault(key, {})
         default_as_branch = default_branch.to_branch(*key)
         existing = repo_branches.get(default_as_branch.name)
@@ -347,6 +357,7 @@ class ScenarioConfig:
         *,
         is_default: bool = False,
     ) -> None:
+        """Raise if two branch definitions disagree on sha or protection state."""
         mismatch: list[str] = []
         if existing.sha and incoming.sha and existing.sha != incoming.sha:
             mismatch.append("sha")

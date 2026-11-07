@@ -147,6 +147,7 @@ def _resolve(text: str, environment: dict[str, str]) -> str:
     """
 
     def substitute(match: re.Match[str]) -> str:
+        """Replace a variable with its value, or ``<undefined>`` if unset."""
         return environment.get(match.group("name"), "<undefined>")
 
     return SHELL_VARIABLE.sub(substitute, text)

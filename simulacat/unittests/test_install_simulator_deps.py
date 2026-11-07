@@ -37,6 +37,7 @@ class TestInstallSimulatorDependencies:
         def fake_run(
             command: list[str], *, check: bool, timeout: int
         ) -> _FakeCompletedProcess:
+            """Stand in for ``subprocess.run`` that reports a successful install."""
             assert check is False, "Expected subprocess call to disable check mode"
             assert timeout == 300, "Expected subprocess timeout to be 300 seconds"
             assert command == ["bun", "install", "--cwd", str(tmp_path)]
@@ -65,6 +66,7 @@ class TestInstallSimulatorDependencies:
             check: bool,
             timeout: int,
         ) -> _FakeCompletedProcess:
+            """Stand in for ``subprocess.run`` that reports a missing Bun binary."""
             assert check is False, "Expected subprocess call to disable check mode"
             assert timeout == 300, "Expected subprocess timeout to be 300 seconds"
             raise FileNotFoundError(command[0])
@@ -87,6 +89,7 @@ class TestInstallSimulatorDependencies:
         def fake_run(
             command: list[str], *, check: bool, timeout: int
         ) -> _FakeCompletedProcess:
+            """Stand in for ``subprocess.run`` that exits with status 2."""
             assert check is False, "Expected subprocess call to disable check mode"
             assert timeout == 300, "Expected subprocess timeout to be 300 seconds"
             return _FakeCompletedProcess(returncode=2)
@@ -115,6 +118,7 @@ class TestInstallSimulatorDependencies:
             check: bool,
             timeout: int,
         ) -> _FakeCompletedProcess:
+            """Stand in for ``subprocess.run`` that raises ``TimeoutExpired``."""
             assert check is False, "Expected subprocess call to disable check mode"
             assert timeout == 300, "Expected subprocess timeout to be 300 seconds"
             raise subprocess.TimeoutExpired(
@@ -167,6 +171,7 @@ class TestInstallSimulatorDepsMain:
         """Failures are reported to stderr with exit code 1."""
 
         def fail_install() -> typ.NoReturn:
+            """Stand in for the installer, raising a ``GitHubSimProcessError``."""
             msg = "dependency install failed"
             raise GitHubSimProcessError(msg)
 
