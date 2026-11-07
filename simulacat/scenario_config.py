@@ -271,7 +271,7 @@ class ScenarioConfig:
     def _validate_branches(
         self, repo_index: dict[RepositoryKey, Repository]
     ) -> dict[RepositoryKey, dict[str, Branch]]:
-        """Validate explicit and default branches, returning them per repository."""
+        """Validate explicit branches and merge repository defaults into the index."""
         branch_index = self._validate_explicit_branches(repo_index)
         self._attach_default_branches(repo_index, branch_index)
         return branch_index

@@ -327,7 +327,7 @@ def _drain_process_output(
 
 
 def _stop_process(proc: subprocess.Popen[str], *, timeout: float = 1.0) -> None:
-    """Terminate the process, escalating to kill if it outlives the timeout."""
+    """Attempt termination, then kill the process if it is still running."""
     with contextlib.suppress(OSError):
         proc.terminate()
 
