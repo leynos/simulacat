@@ -404,7 +404,11 @@ class TestStopSimProcess:
             self._returncode = -9
 
         def wait(self, timeout: float | None = None) -> int | None:
-            """Exit once the timeout allows, otherwise raise ``TimeoutExpired``."""
+            """Return the recorded return code if set, else exit or time out.
+
+            When no return code is set yet, exit with 0 once the timeout allows,
+            otherwise raise ``TimeoutExpired``.
+            """
             self.wait_timeouts.append(timeout)
             if self._returncode is not None:
                 return self._returncode
