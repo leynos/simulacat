@@ -201,7 +201,7 @@ class ScenarioConfig:
         return indexes
 
     def _build_indexes(self) -> _ScenarioIndexes:
-        """Run every validation stage and return the assembled indexes."""
+        """Validate core scenario data and build the indexes."""
         org_logins = self._validate_organizations()
         user_logins = self._validate_users(org_logins)
         repo_index = self._validate_repositories(user_logins, org_logins)
