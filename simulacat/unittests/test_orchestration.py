@@ -58,6 +58,7 @@ class _PipeProcess:
     """Minimal Popen-like object backed by an OS pipe for testing."""
 
     def __init__(self, lines: list[str], returncode: int | None = None) -> None:
+        """Write the lines into a pipe and expose its read end as stdout."""
         read_fd, write_fd = os.pipe()
         with os.fdopen(write_fd, "w", encoding="utf-8") as writer:
             for line in lines:
@@ -71,23 +72,28 @@ class _PipeProcess:
         self.communicate_timeout: float | None = None
 
     def poll(self) -> int | None:
+        """Return the stored return code without consulting a real process."""
         return self.returncode
 
     def terminate(self) -> None:
+        """Mark the process terminated, giving it exit status 0 if still running."""
         self.terminated = True
         if self.returncode is None:
             self.returncode = 0
 
     def kill(self) -> None:
+        """Mark the process killed, giving it exit status -9 if still running."""
         self.killed = True
         if self.returncode is None:
             self.returncode = -9
 
     def wait(self, timeout: float | None = None) -> int | None:
+        """Record the requested timeout and return the stored return code."""
         self.wait_timeout = timeout
         return self.returncode
 
     def communicate(self, timeout: float | None = None) -> tuple[str, str]:
+        """Record the requested timeout, close stdout and return empty output."""
         self.communicate_timeout = timeout
         if not self.stdout.closed:
             self.stdout.close()
@@ -257,6 +263,7 @@ class TestStartSimProcess:
         """A silent simulator that never writes stdout triggers the timeout."""
 
         def silent_proc(*_args: object) -> subprocess.Popen[str]:
+            """Spawn a Python child that sleeps without writing any output."""
             return subprocess.Popen(  # simulacat#123: controlled test process
                 [sys.executable, "-c", "import time; time.sleep(60)"],
                 stdout=subprocess.PIPE,
@@ -373,6 +380,7 @@ class TestStopSimProcess:
         """Popen-like stub that only exits if given enough wait timeout."""
 
         def __init__(self, *, exit_after_seconds: float) -> None:
+            """Store the exit delay and start with no return code."""
             self._exit_after_seconds = exit_after_seconds
             self._returncode: int | None = None
             self._terminated = False
@@ -383,16 +391,24 @@ class TestStopSimProcess:
             self.args = ["fake-process"]
 
         def poll(self) -> int | None:
+            """Return the stored return code, or None while still running."""
             return self._returncode
 
         def terminate(self) -> None:
+            """Record that terminate was called without changing the exit state."""
             self._terminated = True
 
         def kill(self) -> None:
+            """Record that kill was called and set the return code to -9."""
             self._killed = True
             self._returncode = -9
 
         def wait(self, timeout: float | None = None) -> int | None:
+            """Return the recorded return code if set, else exit or time out.
+
+            When no return code is set yet, exit with 0 once the timeout allows,
+            otherwise raise ``TimeoutExpired``.
+            """
             self.wait_timeouts.append(timeout)
             if self._returncode is not None:
                 return self._returncode

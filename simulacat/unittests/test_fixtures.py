@@ -119,7 +119,7 @@ class TestIsJsonSerializable:
         from simulacat.config import is_json_serializable
 
         class Custom:
-            pass
+            """Plain class whose instances cannot be serialized to JSON."""
 
         config = {"obj": Custom()}
 

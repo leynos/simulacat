@@ -25,6 +25,7 @@ _ALLOWED_STATES = frozenset({"open", "closed"})
 
 
 def _require_state(state: str, label: str) -> None:
+    """Raise if the state is not ``open`` or ``closed``."""
     if state not in _ALLOWED_STATES:
         msg = f"{label} must be one of {sorted(_ALLOWED_STATES)}"
         raise ConfigValidationError(msg)
@@ -119,6 +120,7 @@ def _validate_pull_request_branches(
     key: RepositoryKey,
     branch_index: dict[RepositoryKey, dict[str, Branch]],
 ) -> None:
+    """Check each set base or head branch is configured for the repository."""
     repo_branches = branch_index.get(key, {})
     for label, name in ("base", pr.base_branch), ("head", pr.head_branch):
         if name is None:

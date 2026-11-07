@@ -46,6 +46,7 @@ def scenario_context() -> ScenarioContext:
 
 
 def _find_repo(config: GitHubSimConfig, full_name: str) -> GitHubRepositoryConfig:
+    """Return the repository whose ``owner/name`` matches, or fail the step."""
     repos = config.get("repositories", [])
     for repo in repos:
         owner = repo.get("owner")
@@ -59,6 +60,7 @@ def _find_repo(config: GitHubSimConfig, full_name: str) -> GitHubRepositoryConfi
 def _find_branch(
     config: GitHubSimConfig, full_name: str, branch: str
 ) -> GitHubBranchConfig:
+    """Return the named branch of the repository, or fail the step."""
     branches = config.get("branches", [])
     for entry in branches:
         owner = entry.get("owner")

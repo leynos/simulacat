@@ -50,6 +50,7 @@ def scenario_factory_context() -> ScenarioFactoryContext:
 
 
 def _find_repo(config: GitHubSimConfig, full_name: str) -> dict[str, object]:
+    """Return the repository whose ``owner/name`` matches, or fail the step."""
     repos = typ.cast("list[dict[str, object]]", config.get("repositories", []))
     for repo in repos:
         owner = repo.get("owner")
@@ -61,6 +62,7 @@ def _find_repo(config: GitHubSimConfig, full_name: str) -> dict[str, object]:
 
 
 def _find_branch_names(config: GitHubSimConfig, full_name: str) -> set[str]:
+    """Return the branch names defined for the repository ``owner/name``."""
     branches = typ.cast("list[dict[str, object]]", config.get("branches", []))
     names: set[str] = set()
     for entry in branches:
