@@ -144,7 +144,7 @@ INTERROGATE_TARGETS ?= simulacat tests scripts examples
 # `interrogate` recipe below looks for: the rounded percentage alone can pass a
 # lone gap.
 INTERROGATE_FLAGS ?= -vv --fail-under 100
-INTERROGATE ?= $(UV) tool run --python 3.14 --from 'interrogate==$(INTERROGATE_VERSION)' interrogate
+INTERROGATE ?= $(UV_GATE) tool --python 3.14 --from 'interrogate==$(INTERROGATE_VERSION)' -- interrogate
 
 # Interrogate rounds its percentage to one decimal, so `--fail-under 100` alone
 # can pass a lone gap. This recipe also fails when `grep` finds a MISSED row in
