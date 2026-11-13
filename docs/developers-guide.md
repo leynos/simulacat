@@ -17,7 +17,7 @@ under. `.github/cv005.toml` holds the repository's parameters, and its
 `interpreter = "3.13"` makes the library require every generate-coverage call
 to pin `UV_PYTHON` to that version, inside the project's `requires-python`
 (`>=3.12`), so both lanes measure on one Python. The decision is recorded in
-[ADR 001](adr-001-adopt-the-shared-cv005-contract-library.md).
+[ADR 001](adrs/adr-0001-adopt-the-shared-cv005-contract-library.md).
 `tests/workflow_contracts/test_cv005_wiring.py` fails if the pin is not a full
 commit, the target stops running the pinned checker, the repository parameter
 is wrong, `make all` drops the target or CI stops running it.
